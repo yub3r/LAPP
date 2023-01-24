@@ -1,0 +1,26 @@
+{% extends 'base.html' %} {% block content %}
+
+<h1>Tareas</h1>
+
+<ul>
+  {% for task in tasks %}
+  <li>
+    <a href="{% url 'task_detail' task.id %}">
+      {{task.id}} {{task.tarea}} ||
+      {{task.created|date:'j M / H:i'}} || {{task.datecompleted|date:'j M / H:i'}}
+    {% comment %} </a>    <a href="{% url 'task_detail' task.id %}">
+      {% if task.important %}
+      <strong>{{task.title}}</strong>
+      {% else %} {{task.id}} {{task.title}} {% endif %}
+      <p>{{task.description}}</p>
+
+      {{task.datecompleted|date:'M j Y:i'}}
+    </a> {% endcomment %}
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}
+
+
+date:"Y-m-d H:i:s"

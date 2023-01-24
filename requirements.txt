@@ -1,0 +1,8 @@
+asgiref
+autopep8
+backports.zoneinfo;python_version<"3.9"
+#backports.zoneinfo==0.2.1
+Django
+pycodestyle
+sqlparse
+toml
