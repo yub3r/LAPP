@@ -4,7 +4,8 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.utils import timezone
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.exceptions import ObjectDoesNotExist
 from .models import Task
 
 from .forms import TaskForm
@@ -16,19 +17,15 @@ def signup(request):
     if request.method == 'GET':
         return render(request, 'signup.html', {"form": UserCreationForm})
     else:
-
         if request.POST["password1"] == request.POST["password2"]:
             try:
-                user = User.objects.create_user(
-                    request.POST["username"], password=request.POST["password1"])
+                user = User.objects.create_user(request.POST["username"], password=request.POST["password1"])
                 user.save()
                 login(request, user)
                 return redirect('tasks')
             except IntegrityError:
                 return render(request, 'signup.html', {"form": UserCreationForm, "error": "Username ya existe."})
-
         return render(request, 'signup.html', {"form": UserCreationForm, "error": "Contraseña no coincide"})
-
 
 @login_required
 def tasks(request):
@@ -40,7 +37,7 @@ def tasks(request):
 def tasks_completed(request):
     tasks = Task.objects.filter(
         user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
-    return render(request, 'tasks.html', {"tasks": tasks})
+    return render(request, 'completed_tasks.html', {"tasks": tasks})
 
 
 @login_required
@@ -65,7 +62,8 @@ def home(request):
 @login_required
 def signout(request):
     logout(request)
-    return redirect('home')
+    return render(request, 'logout.html')
+    #return redirect('home')
 
 
 def signin(request):
@@ -78,8 +76,24 @@ def signin(request):
             return render(request, 'signin.html', {"form": AuthenticationForm, "error": "Usuario o contraseña incorrecta."})
 
         login(request, user)
-        return redirect('tasks')
+        return render(request, 'home.html', {'mensaje':f"Bienvenido {user}"}) 
+        #return redirect('home')
 
+def admin_o_ususario(user):
+    if not user.is_authenticated:
+        return False
+    if user.is_staff:
+        return True 
+    try:
+        user = user.objects.get(usuario=user.id)
+    except ObjectDoesNotExist:
+        user = None
+
+    return user is not None
+
+
+def es_admin(user):
+    return user.is_authenticated and user.is_staff
 
 @login_required
 def task_detail(request, task_id):
@@ -96,14 +110,13 @@ def task_detail(request, task_id):
         except ValueError:
             return render(request, 'task_detail.html', {'task': task, 'form': form, 'error': 'Error actualizando la tarea.'})
 
-
 @login_required
 def complete_task(request, task_id):
     task = get_object_or_404(Task, pk=task_id, user=request.user)
     if request.method == 'POST':
         task.datecompleted = timezone.now()
         task.save()
-        return redirect('tasks')
+        return redirect('tasks_completed')
 
 
 @login_required
@@ -112,3 +125,7 @@ def delete_task(request, task_id):
     if request.method == 'POST':
         task.delete()
         return redirect('tasks')
+        
+@user_passes_test(es_admin)
+def sobremi(request):
+    return render(request, "about.html")

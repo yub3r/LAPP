@@ -1,7 +1,21 @@
 {% extends 'base.html' %} {% block content %}
 
-<div class="container">
-  <h1>Home</h1>
-</div>
+<h3 class="text-center">{{mensaje}}</h3>
 
+<main class="container" style="max-width:480px;">
+  <section class="card card-body">
+  <h1 class="display-3 text-center">LAPP</h1>
+  <p><br></p>
+  
+  <a class="btn btn-primary" href="/create_task/" style=margin-top:6px;><i class="bi bi-clipboard2-pulse"></i><br>Nueva Tarea</a>
+  <a class="btn btn-success" href="/tasks/" style=margin-top:8px;><i class="bi bi-alarm-fill"></i><br>Tareas en Ejecución</a>
+  <a class="btn btn-secondary" href="/tasks_completed/" style=margin-top:8px;><i class="bi bi-check-square-fill"></i><br>Tareas completadas</a>
+  
+  
+  </section>
+
+  
+  </main>
 {% endblock %}
+
+

@@ -1,0 +1,45 @@
+{% extends 'base.html' %} {% block content %}
+
+<h1 class="display-5 text-center">Tareas Completadas</h1>
+<div class="text-center py-4"><a class="btn btn-primary" href="{% url 'create_task' %}">
+        <i class="bi bi-clipboard2-pulse"></i> Nueva Tarea</a></div>
+{% comment %} <ul style="max-width: 50vw;"> {% endcomment %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Tarea</th>
+                <th scope="col">Mod</th>
+                <th scope="col">L</th>
+                <th scope="col">CF</th>
+                <th scope="col" style="text-align:right;">Creado</th>
+                <th scope="col" style="text-align:right;">Completa</th>
+                <!-- <th scope="col" style="float: right;">Opciones</th> -->
+            </tr>
+        </thead>
+        {% for task in tasks %}
+        <tbody>
+            <tr>
+                <td style="max-width: 200px;">{{task.tarea}} </a></td>
+                <td style="max-width: 200px;">{{task.modulo}} </a></td>
+                <td style="max-width: 200px;">{{task.zona}} </a></td>
+                <td style="max-width: 200px;">{{task.cortafuego}} </a></td>
+                <td style="max-width: 200px; text-align:right;">{{task.created|date:'j M H:i'}}</a></td>
+                <td style="max-width: 200px; text-align:right;">{{task.datecompleted|date:'j M H:i'}}</a></td>
+                <!-- <td>
+                    <div style="float: right;">
+                        
+                        <a class="btn btn-success" href="{% url 'complete_task' task.id %}"><i class="bi bi-check-square-fill"></i></a>
+                        <form action="{% url 'complete_task' task.id %}" method="POST"
+                            style="display: flex; flex-direction: column; max-width: 40vw; margin-inline: auto">
+                            {% csrf_token %}
+                            <button class="btn btn-success">
+                                <i class="bi bi-check-square-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td> -->
+            </tr>
+        </tbody>
+        {% endfor %}
+    </table>
+    {% endblock %}

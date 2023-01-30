@@ -2,31 +2,37 @@
 
 {% block content %}
 
-{{task.title}}
+<h1 class="display-5 text-center">Tarea en ejecución</h1>
 
 {{error}}
 
-<form method="POST">
+<form method="POST" style="display: flex; flex-direction: column; max-width: 40vw; margin-inline: auto">
   {% csrf_token %}
   {{form.as_p}}
 
-  <button>
+  <!-- <button>
     Update
-  </button>
+  </button> -->
 </form>
 
-<form action="{% url 'complete_task' task.id %}" method="POST">
+<form action="{% url 'complete_task' task.id %}" method="POST" style="display: flex; flex-direction: column; max-width: 40vw; margin-inline: auto">
   {% csrf_token %}
-  <button>
+  <button class="btn btn-success">
     Terminar
   </button>
 </form>
-
+<!-- 
 <form action="{% url 'delete_task' task.id %}" method="POST">
   {% csrf_token %}
   <button>
     delete
   </button>
-</form>
+</form> -->
 
 {% endblock %}
+
+
+
+
+
+

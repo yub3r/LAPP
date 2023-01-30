@@ -2,13 +2,13 @@
 
 {% block content %}
 
-<h1>Crear Tarea</h1>
+<h1 class="display-5 text-center">Tarea Nueva</h1>
 
 {{error}}
-<form action="/create_task/" method="POST">
+<form action="/create_task/" method="POST" style="display: flex; flex-direction: column; max-width: 40vw; margin-inline: auto">
   {% csrf_token %}
   {{form}}
-
-  <button>Save</button>
+  <p><br></p>
+  <input class="btn btn-secondary" type="submit" value="Iniciar">
 </form>
 {% endblock %}
