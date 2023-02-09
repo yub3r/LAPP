@@ -1,4 +1,24 @@
-{% extends 'base.html' %} {% block content %}
+{% extends 'base.html' %}
+
+{% block js%}
+{% if messages %}
+{% for m in messages %}
+<script>
+    Swal.fire({
+        "position": 'top',
+        "timer": 3000,
+        "title": "Excelente...!!!",
+        "text": "{{m}}",
+        "icon": "success",
+    })
+</script>
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+
+
+{% block content %}
 
 <h1 class="display-5 text-center">Tareas Completadas</h1>
 <div class="text-center py-4"><a class="btn btn-primary" href="{% url 'create_task' %}">
@@ -7,10 +27,10 @@
     <table class="table">
         <thead>
             <tr>
+                <th scope="col">Location</th>
+                <th scope="col">Lado</th>
+                <th scope="col">Area</th>
                 <th scope="col">Tarea</th>
-                <th scope="col">Mod</th>
-                <th scope="col">L</th>
-                <th scope="col">CF</th>
                 <th scope="col" style="text-align:right;">Creado</th>
                 <th scope="col" style="text-align:right;">Completa</th>
                 <!-- <th scope="col" style="float: right;">Opciones</th> -->
@@ -19,10 +39,10 @@
         {% for task in tasks %}
         <tbody>
             <tr>
-                <td style="max-width: 200px;">{{task.tarea}} </a></td>
-                <td style="max-width: 200px;">{{task.modulo}} </a></td>
+                <td style="max-width: 200px;">{{task.location}} </a></td>
                 <td style="max-width: 200px;">{{task.zona}} </a></td>
-                <td style="max-width: 200px;">{{task.cortafuego}} </a></td>
+                <td style="max-width: 200px;">{{task.area}} </a></td>
+                <td style="max-width: 200px;">{{task.tarea}} </a></td>
                 <td style="max-width: 200px; text-align:right;">{{task.created|date:'j M H:i'}}</a></td>
                 <td style="max-width: 200px; text-align:right;">{{task.datecompleted|date:'j M H:i'}}</a></td>
                 <!-- <td>

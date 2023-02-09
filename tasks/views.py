@@ -5,9 +5,9 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Task
-
 from .forms import TaskForm
 
 # Create your views here.
@@ -38,6 +38,12 @@ def tasks_completed(request):
     tasks = Task.objects.filter(
         user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
     return render(request, 'completed_tasks.html', {"tasks": tasks})
+    
+
+@login_required
+def all_tasks(request):
+    tasks = Task.objects.all()
+    return render(request, 'all_tasks.html', {"tasks": tasks})
 
 
 @login_required
@@ -50,7 +56,9 @@ def create_task(request):
             new_task = form.save(commit=False)
             new_task.user = request.user
             new_task.save()
+            messages.success(request, "Tarea Creada")
             return redirect('tasks')
+            #return redirect('last_tasks')
         except ValueError:
             return render(request, 'create_task.html', {"form": TaskForm, "error": "Error creando la tarea."})
 
@@ -111,11 +119,26 @@ def task_detail(request, task_id):
             return render(request, 'task_detail.html', {'task': task, 'form': form, 'error': 'Error actualizando la tarea.'})
 
 @login_required
+def last_task(request):
+    if request.method == "GET":
+        #task = Task.objects.filter(user=request.user).order_by('-id')[:10]
+        task = Task.objects.latest('id') 
+        #task = get_object_or_404(Task, pk=task_id, user=request.user)
+        #task = get_object_or_404(Task, user=request.user)
+        #form = TaskForm(instance=task)
+        form = TaskForm(instance=task)
+        return render(request, 'create_task.html', {'task': task, 'form': form})
+    else:
+        return render(request, 'create_task.html', {"form": TaskForm})
+
+
+@login_required
 def complete_task(request, task_id):
     task = get_object_or_404(Task, pk=task_id, user=request.user)
     if request.method == 'POST':
         task.datecompleted = timezone.now()
         task.save()
+        messages.success(request, "Tarea Completada")
         return redirect('tasks_completed')
 
 

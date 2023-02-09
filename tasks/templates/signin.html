@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load crispy_forms_tags %}
 
 <main class="container">
   <div class="row">
@@ -8,10 +9,9 @@
         <h1 class="display-5 text-center">Signin</h1>
         <p><br></p>
         {% csrf_token %}
-        {{form}}
+        {{form | crispy }}
         <p><br></p>
         <h5 class="text-center">{{error}}</h5>
-        <p><br></p>
         <button class="btn btn-primary">
           Signin
         </button>

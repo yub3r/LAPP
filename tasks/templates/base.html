@@ -19,6 +19,7 @@
     <div style="display: flex; flex-direction: column; min-height:94vh;">
       <div style="flex-grow: 1; padding-inline: 0rem;">
       <div class="container mt-2 pt-2">
+
           {% block content %}
           
           {% endblock %}
@@ -35,5 +36,12 @@
             </p>
         </footer>
       </div>
+
+      <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+      {% block js %}
+      {% endblock %}
+
+
   </body>
 </html>
