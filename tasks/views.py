@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Task
 from .forms import TaskForm
+from django.http import HttpResponse
 
 # Create your views here.
 
@@ -32,7 +33,6 @@ def tasks(request):
     tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True)
     return render(request, 'tasks.html', {"tasks": tasks})
 
-
 @login_required
 def tasks_completed(request):
     tasks = Task.objects.filter(
@@ -48,8 +48,12 @@ def all_tasks(request):
 
 @login_required
 def create_task(request):
+    # if 'ultima_task' in request.GET:
+    #     task = Task.objects.filter(user=request.user).latest('id')
+    #     form = TaskForm(instance=task)
+    #     return render(request, 'create_task.html', {'task': task, 'form': form})
     if request.method == "GET":
-        return render(request, 'create_task.html', {"form": TaskForm})
+        return render(request, 'create_task.html', {"form": TaskForm, 'last_task': False})
     else:
         try:
             form = TaskForm(request.POST)
@@ -58,21 +62,20 @@ def create_task(request):
             new_task.save()
             messages.success(request, "Tarea Creada")
             return redirect('tasks')
-            #return redirect('last_tasks')
         except ValueError:
-            return render(request, 'create_task.html', {"form": TaskForm, "error": "Error creando la tarea."})
+            return render(request, 'create_task.html', {"form": TaskForm, "error": "Error creando la tarea.", 'last_task': False})
 
-
+@login_required
 def home(request):
+    # count_tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True).count()
+    # return render(request, 'home.html', {"count_tasks": count_tasks})
     return render(request, 'home.html')
-
 
 @login_required
 def signout(request):
     logout(request)
     return render(request, 'logout.html')
     #return redirect('home')
-
 
 def signin(request):
     if request.method == 'GET':
@@ -96,9 +99,7 @@ def admin_o_ususario(user):
         user = user.objects.get(usuario=user.id)
     except ObjectDoesNotExist:
         user = None
-
     return user is not None
-
 
 def es_admin(user):
     return user.is_authenticated and user.is_staff
@@ -121,16 +122,11 @@ def task_detail(request, task_id):
 @login_required
 def last_task(request):
     if request.method == "GET":
-        #task = Task.objects.filter(user=request.user).order_by('-id')[:10]
-        task = Task.objects.latest('id') 
-        #task = get_object_or_404(Task, pk=task_id, user=request.user)
-        #task = get_object_or_404(Task, user=request.user)
-        #form = TaskForm(instance=task)
+        task = Task.objects.filter(user=request.user).latest('id')
         form = TaskForm(instance=task)
-        return render(request, 'create_task.html', {'task': task, 'form': form})
+        return render(request, template_name='create_task.html', context= {'task': task, 'form': form, 'last_task': True})
     else:
-        return render(request, 'create_task.html', {"form": TaskForm})
-
+        return render(request, 'create_task.html', {"form": TaskForm, 'last_task': True})
 
 @login_required
 def complete_task(request, task_id):
@@ -140,7 +136,6 @@ def complete_task(request, task_id):
         task.save()
         messages.success(request, "Tarea Completada")
         return redirect('tasks_completed')
-
 
 @login_required
 def delete_task(request, task_id):

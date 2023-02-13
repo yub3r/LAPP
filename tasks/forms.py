@@ -7,3 +7,4 @@ class TaskForm(ModelForm):
         fields = ['location', 'zona', 'area', 'tarea']
         widgets = {
         }
+    

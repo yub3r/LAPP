@@ -6,7 +6,7 @@ pycodestyle
 sqlparse
 toml
 django-admin-interface
-django-crispy-forms
 django-rest-framework
 django-import-export
+django-crispy-forms
 crispy-bootstrap5

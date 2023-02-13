@@ -1,4 +1,5 @@
-{% extends 'base.html' %} {% block content %}
+{% extends 'base.html' %}
+{% block content %}
 
 <h3 class="text-center">{{mensaje}}</h3>
 
@@ -6,16 +7,12 @@
   <section class="card card-body">
   <h1 class="display-3 text-center">LAPP</h1>
   <p><br></p>
-  
+  <!-- {% csrf_token %}
+  {% if count_tasks == 0 %}
   <a class="btn btn-primary" href="/create_task/" style=margin-top:6px;><i class="bi bi-clipboard2-pulse"></i><br>Nueva Tarea</a>
+  {% endif %} -->
   <a class="btn btn-success" href="/tasks/" style=margin-top:8px;><i class="bi bi-alarm-fill"></i><br>Tareas en Ejecución</a>
   <a class="btn btn-secondary" href="/tasks_completed/" style=margin-top:8px;><i class="bi bi-check-square-fill"></i><br>Tareas completadas</a>
-  
-  
-  </section>
-
-  
+  </section>  
   </main>
 {% endblock %}
-
-
