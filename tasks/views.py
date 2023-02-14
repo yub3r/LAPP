@@ -176,7 +176,7 @@ def delete_task(request, task_id):
     
 #     return render(request, 'home.html', {'plot_html': plot_html})
 
-
+@login_required
 def crypto_prices(request):
     prices = cache.get('prices')
     if prices is not None:
