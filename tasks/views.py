@@ -7,9 +7,16 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-from .models import Task
+from .models import Task, CryptoPrice
 from .forms import TaskForm
-from django.http import HttpResponse
+import requests
+import mpld3
+import ccxt
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from django.core.cache import cache
+import pandas as pd
+
 
 # Create your views here.
 
@@ -65,11 +72,11 @@ def create_task(request):
         except ValueError:
             return render(request, 'create_task.html', {"form": TaskForm, "error": "Error creando la tarea.", 'last_task': False})
 
-@login_required
-def home(request):
-    # count_tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True).count()
-    # return render(request, 'home.html', {"count_tasks": count_tasks})
-    return render(request, 'home.html')
+
+# def home(request):
+#     # count_tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True).count()
+#     # return render(request, 'home.html', {"count_tasks": count_tasks})
+#     return render(request, 'home.html')
 
 @login_required
 def signout(request):
@@ -143,7 +150,61 @@ def delete_task(request, task_id):
     if request.method == 'POST':
         task.delete()
         return redirect('tasks')
+
+# def bitcoin_price(request):
+#     plot_html = cache.get('plot_html')
+#     if plot_html is not None:
+#         return render(request, 'home.html', {'plot_html': plot_html})
+
+#     exchange = ccxt.binance()
+#     symbol = 'BTC/USD'
+#     timeframe = '1d'
+#     candles = exchange.fetch_ohlcv(symbol, timeframe)
+#     dates = [candle[0] for candle in candles]
+#     prices = [candle[4] for candle in candles]
+    
+    
+#     fig, ax = plt.subplots(figsize=(300/80, 200/80), dpi=130)
+#     ax.plot(dates, prices)
+#     # ax.set(xlabel='Date', ylabel='Price (USD)', title='Bitcoin Price in the Last 24 Hours')
+#     plt.xticks([], [])
+    
+#     plt.tight_layout()
+    
+#     plot_html = mpld3.fig_to_html(fig)
+#     cache.set('plot_html', plot_html, 14400)
+    
+#     return render(request, 'home.html', {'plot_html': plot_html})
+
+
+def crypto_prices(request):
+    prices = cache.get('prices')
+    if prices is not None:
+        return render(request, 'home.html', {'prices': prices})
+    
+    exchange = ccxt.binance()
+    symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'ADA/USD', 'DOT/USD']
+    prices = {}
+    for symbol in symbols:
+        ticker = exchange.fetch_ticker(symbol)
+        price = ticker['last']
+        prices[symbol] = {'price': price}
         
+        # Check if previous price exists in the database
+        previous_price = CryptoPrice.objects.filter(symbol=symbol).first()
+        if previous_price:
+            prices[symbol]['previous_price'] = previous_price.price
+        else:
+            prices[symbol]['previous_price'] = 0
+        
+        # Save the current price to the database
+        CryptoPrice.objects.create(symbol=symbol, price=price)
+    
+    cache.set('prices', prices, 3600)
+    
+    return render(request, 'home.html', {'prices': prices})
+
+
 @user_passes_test(es_admin)
 def sobremi(request):
     return render(request, "about.html")

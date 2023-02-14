@@ -52,3 +52,12 @@ class Task(models.Model):
 
     def __str__(self):
         return self.tarea + ' - ' + self.user.username
+
+
+class CryptoPrice(models.Model):
+    symbol = models.CharField(max_length=10)
+    price = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']

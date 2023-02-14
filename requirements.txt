@@ -10,3 +10,7 @@ django-rest-framework
 django-import-export
 django-crispy-forms
 crispy-bootstrap5
+matplotlib
+mpl_finance
+ccxt
+mpld3

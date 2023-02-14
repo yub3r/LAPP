@@ -18,7 +18,8 @@ from django.urls import path
 from tasks import views
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    # path('', views.home, name='home'),
+    path('', views.crypto_prices, name='crypto_prices'),
     # path('completed_tasks', views.completed_tasks, name='completed_tasks'),
     path("about", views.sobremi, name="About"),
     path('admin/', admin.site.urls),
