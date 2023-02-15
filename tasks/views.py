@@ -9,13 +9,9 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Task, CryptoPrice
 from .forms import TaskForm
-import requests
-import mpld3
 import ccxt
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 from django.core.cache import cache
-import pandas as pd
+
 
 
 # Create your views here.
