@@ -1,7 +1,8 @@
+Django
+psycopg2-binary
 asgiref
 autopep8
 backports.zoneinfo;python_version<"3.9"
-Django
 pycodestyle
 sqlparse
 toml
