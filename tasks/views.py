@@ -11,8 +11,10 @@ from .models import Task, CryptoPrice
 from .forms import TaskForm
 import ccxt
 from django.core.cache import cache
+from django.views.generic.base import RedirectView
 
 
+favicon_view = RedirectView.as_view(url='/media/favicon.ico', permanent=True)
 
 # Create your views here.
 
@@ -90,8 +92,10 @@ def signin(request):
             return render(request, 'signin.html', {"form": AuthenticationForm, "error": "Usuario o contraseña incorrecta."})
 
         login(request, user)
-        return render(request, 'home.html', {'mensaje':f"Bienvenido {user}"}) 
-        #return redirect('home')
+        messages.success(request, f"Bienvenido {user}")
+        # return render(request, 'home.html') 
+        return redirect('crypto_prices')
+
 
 def admin_o_ususario(user):
     if not user.is_authenticated:
