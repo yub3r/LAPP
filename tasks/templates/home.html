@@ -21,10 +21,6 @@
 {% endif %}
 {% endblock %}
 
-
-
-
-
 {% block content %}
 
 <h3 class="text-center">{{mensaje}}</h3>
@@ -32,13 +28,10 @@
 <main class="container" style="max-width:580px;">
   <section class="card card-body">
     <!-- <h1 class="display-6 text-center">LAPP</h1> -->
-
-    <!--  {% if count_tasks == 0 %}
-  {% csrf_token %}
-  <a class="btn btn-primary" href="/create_task/" style=margin-top:6px;><i class="bi bi-clipboard2-pulse"></i><br>Nueva Tarea</a>
-  {% endif %} -->
-    <a class="btn btn-success" href="/tasks/" style=margin-top:5px;><i class="bi bi-alarm-fill"></i><br>Tareas en
-      Ejecución</a>
+    {% if count_tasks == 0 %}
+    <a class="btn btn-primary" href="/create_task/" style=margin-top:6px;><i class="bi bi-clipboard2-pulse"></i><br>Nueva Tarea</a>
+    {% endif %}
+    <a class="btn btn-success" href="/tasks/" style=margin-top:5px;><i class="bi bi-alarm-fill"></i><br>Tareas en Ejecución</a>
     <a class="btn btn-secondary" href="/tasks_completed/" style=margin-top:5px;><i
         class="bi bi-check-square-fill"></i><br>Tareas completadas</a>
   </section>
@@ -49,10 +42,14 @@
     <!-- <h1 class="display-6 text-center">Enlaces</h1> -->
     <a class="btn btn-outline-primary" href="http://10.45.0.103/share/page/site/bitfarms-arg/links-linkedit"
       style=margin-top:8px; target="_blank" rel="noopener noreferrer">Alfresco - Bitfarms ARG</a>
-    <a class="btn btn-outline-primary" href="https://bitfarms.com/" style=margin-top:8px; target="_blank" rel="noopener noreferrer">Bitfarms</a>
-    <a class="btn btn-outline-primary" href="https://expense.certify.com/Login.aspx" style=margin-top:8px; target="_blank" rel="noopener noreferrer">Certify</a>
-    <a class="btn btn-outline-primary" href="https://mgmt.bitfarms.com/login" style=margin-top:8px; target="_blank" rel="noopener noreferrer">MGMT Bitfamrs</a>
-    <a class="btn btn-outline-primary" href="https://www.whatsminer.com/" style=margin-top:8px; target="_blank" rel="noopener noreferrer">Whatsminer</a>
+    <a class="btn btn-outline-primary" href="https://bitfarms.com/" style=margin-top:8px; target="_blank"
+      rel="noopener noreferrer">Bitfarms</a>
+    <a class="btn btn-outline-primary" href="https://expense.certify.com/Login.aspx" style=margin-top:8px;
+      target="_blank" rel="noopener noreferrer">Certify</a>
+    <a class="btn btn-outline-primary" href="https://mgmt.bitfarms.com/login" style=margin-top:8px; target="_blank"
+      rel="noopener noreferrer">MGMT Bitfamrs</a>
+    <a class="btn btn-outline-primary" href="https://www.whatsminer.com/" style=margin-top:8px; target="_blank"
+      rel="noopener noreferrer">Whatsminer</a>
   </section>
 
   <!-- ***************************************************************************************************************************************************** -->
@@ -81,9 +78,9 @@
             {% if data.price > data.previous_price %}
             <i class="fas fa-arrow-up text-success"></i>
             {% elif data.price < data.previous_price %} <i class="fas fa-arrow-down text-danger"></i>
-            {% else %}
-            <i class="fas fa-minus text-secondary"></i>
-            {% endif %}
+              {% else %}
+              <i class="fas fa-minus text-secondary"></i>
+              {% endif %}
           </td>
         </tr>
         {% endfor %}

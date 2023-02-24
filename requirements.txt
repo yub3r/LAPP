@@ -1,6 +1,7 @@
 Django
 #psycopg2-binary
 psycopg2
+gunicorn
 asgiref
 autopep8
 backports.zoneinfo;python_version<"3.9"

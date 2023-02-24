@@ -25,7 +25,7 @@ urlpatterns = [
     path('', views.crypto_prices, name='crypto_prices'),
     # path('completed_tasks', views.completed_tasks, name='completed_tasks'),
     path("about", views.sobremi, name="About"),
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls, name="Admin"),
     path('signup/', views.signup, name='signup'),
     path('tasks/', views.tasks, name='tasks'),
     path('tasks_completed/', views.tasks_completed, name='tasks_completed'),

@@ -25,7 +25,8 @@ def signup(request):
     else:
         if request.POST["password1"] == request.POST["password2"]:
             try:
-                user = User.objects.create_user(request.POST["username"], password=request.POST["password1"])
+                user = User.objects.create_user(
+                    request.POST["username"], password=request.POST["password1"])
                 user.save()
                 login(request, user)
                 return redirect('tasks')
@@ -33,17 +34,19 @@ def signup(request):
                 return render(request, 'signup.html', {"form": UserCreationForm, "error": "Username ya existe."})
         return render(request, 'signup.html', {"form": UserCreationForm, "error": "Contraseña no coincide"})
 
+
 @login_required
 def tasks(request):
     tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True)
     return render(request, 'tasks.html', {"tasks": tasks})
+
 
 @login_required
 def tasks_completed(request):
     tasks = Task.objects.filter(
         user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
     return render(request, 'completed_tasks.html', {"tasks": tasks})
-    
+
 
 @login_required
 def all_tasks(request):
@@ -71,16 +74,13 @@ def create_task(request):
             return render(request, 'create_task.html', {"form": TaskForm, "error": "Error creando la tarea.", 'last_task': False})
 
 
-# def home(request):
-#     # count_tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True).count()
-#     # return render(request, 'home.html', {"count_tasks": count_tasks})
-#     return render(request, 'home.html')
 
 @login_required
 def signout(request):
     logout(request)
     return render(request, 'logout.html')
-    #return redirect('home')
+    # return redirect('home')
+
 
 def signin(request):
     if request.method == 'GET':
@@ -93,7 +93,7 @@ def signin(request):
 
         login(request, user)
         messages.success(request, f"Bienvenido {user}")
-        # return render(request, 'home.html') 
+        # return render(request, 'home.html')
         return redirect('crypto_prices')
 
 
@@ -101,15 +101,17 @@ def admin_o_ususario(user):
     if not user.is_authenticated:
         return False
     if user.is_staff:
-        return True 
+        return True
     try:
         user = user.objects.get(usuario=user.id)
     except ObjectDoesNotExist:
         user = None
     return user is not None
 
+
 def es_admin(user):
     return user.is_authenticated and user.is_staff
+
 
 @login_required
 def task_detail(request, task_id):
@@ -126,14 +128,16 @@ def task_detail(request, task_id):
         except ValueError:
             return render(request, 'task_detail.html', {'task': task, 'form': form, 'error': 'Error actualizando la tarea.'})
 
+
 @login_required
 def last_task(request):
     if request.method == "GET":
         task = Task.objects.filter(user=request.user).latest('id')
         form = TaskForm(instance=task)
-        return render(request, template_name='create_task.html', context= {'task': task, 'form': form, 'last_task': True})
+        return render(request, template_name='create_task.html', context={'task': task, 'form': form, 'last_task': True})
     else:
         return render(request, 'create_task.html', {"form": TaskForm, 'last_task': True})
+
 
 @login_required
 def complete_task(request, task_id):
@@ -143,6 +147,7 @@ def complete_task(request, task_id):
         task.save()
         messages.success(request, "Tarea Completada")
         return redirect('tasks_completed')
+
 
 @login_required
 def delete_task(request, task_id):
@@ -162,18 +167,18 @@ def delete_task(request, task_id):
 #     candles = exchange.fetch_ohlcv(symbol, timeframe)
 #     dates = [candle[0] for candle in candles]
 #     prices = [candle[4] for candle in candles]
-    
-    
+
+
 #     fig, ax = plt.subplots(figsize=(300/80, 200/80), dpi=130)
 #     ax.plot(dates, prices)
 #     # ax.set(xlabel='Date', ylabel='Price (USD)', title='Bitcoin Price in the Last 24 Hours')
 #     plt.xticks([], [])
-    
+
 #     plt.tight_layout()
-    
+
 #     plot_html = mpld3.fig_to_html(fig)
 #     cache.set('plot_html', plot_html, 14400)
-    
+
 #     return render(request, 'home.html', {'plot_html': plot_html})
 
 @login_required
@@ -181,7 +186,9 @@ def crypto_prices(request):
     prices = cache.get('prices')
     if prices is not None:
         return render(request, 'home.html', {'prices': prices})
-    
+
+    count_tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True).count()
+
     exchange = ccxt.binance()
     symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'ADA/USD', 'DOT/USD']
     prices = {}
@@ -189,20 +196,21 @@ def crypto_prices(request):
         ticker = exchange.fetch_ticker(symbol)
         price = ticker['last']
         prices[symbol] = {'price': price}
-        
+
         # Check if previous price exists in the database
         previous_price = CryptoPrice.objects.filter(symbol=symbol).first()
         if previous_price:
             prices[symbol]['previous_price'] = previous_price.price
         else:
             prices[symbol]['previous_price'] = 0
-        
+
         # Save the current price to the database
         CryptoPrice.objects.create(symbol=symbol, price=price)
-    
+
     cache.set('prices', prices, 3600)
-    
-    return render(request, 'home.html', {'prices': prices})
+
+    return render(request, 'home.html', {'prices': prices, 'count_tasks': count_tasks})
+    # return redirect('home', {'prices': prices}, {"count_tasks": count_tasks})
 
 
 @user_passes_test(es_admin)

@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  localhost:
+    image: postgres:11
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: your_username
+      POSTGRES_PASSWORD: your_password
+      POSTGRES_DB: your_db_name
+
+  lapp_btf:
+    build: .
+    volumes:
+      - static:/code/static
+      - .:/code
+    depends_on:
+      - localhost
+
+  nginx:
+    image: nginx:1.22
+    ports:
+      - "8000:80"
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      - static:/code/static
+    depends_on:
+      - lapp_btf
+
+volumes:
+  .:
+  postgres_data:
+  static:
