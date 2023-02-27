@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+<h1 class="display-5 text-center">Tarea Nueva</h1>
+
+{{error}}
+
+<form action="/last_task/" method="POST"
+    style="display: flex; flex-direction: column; max-width: 40vw; margin-inline: auto">
+    <div class="d-flex justify-content-end">
+        <a class="btn btn-outline-primary" href="/last_task/"><i class="bi bi-clipboard2-pulse"></i>Last Task</a>
+        &nbsp;
+        <button type="reset" class="btn btn-outline-secondary">Reset</button>
+    </div>
+    {% csrf_token %}
+    {{form | crispy }}
+    <p><br></p>
+    <input class="btn btn-primary" type="submit" value="Iniciar">
+</form>
+
+<form action="/last_task/" method="POST">
+    {% csrf_token %}
+    <button>
+        last_task
+    </button>
+ </form>
+
+
+{% endblock %}
+
+
+
+

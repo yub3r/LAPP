@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  web:
+    container_name: lapp_web
+    build: .
+    working_dir: /usr/src/lapp/
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/lapp/
+    ports:
+      - '8085:8000'
+    expose:
+      - '8000'
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - db
+
+  db:
+    container_name: lapp_db
+    image: postgres:14.7-alpine3.17
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: btf.1234
+      POSTGRES_DB: lapp_db
+
+volumes:
+  postgres_data:
+
+    # version: '3'
+
+    # services:
+    #   localhost:
+    #     image: postgres:11
+    #     volumes:
+    #       - postgres_data:/var/lib/postgresql/data
+    #     environment:
+    #       POSTGRES_USER: your_username
+    #       POSTGRES_PASSWORD: your_password
+    #       POSTGRES_DB: your_db_name
+
+    #   lapp_btf:
+    #     build: .
+    #     volumes:
+    #       - static:/code/static
+    #       - .:/code
+    #     depends_on:
+    #       - localhost
+
+    #   nginx:
+    #     image: nginx:1.22
+    #     ports:
+    #       - "8000:80"
+    #     volumes:
+    #       - ./config/nginx/conf.d:/etc/nginx/conf.d
+    #       - static:/code/static
+    #     depends_on:
+    #       - lapp_btf
+
+    # volumes:
+    #   .:
+    #   postgres_data:
+    #   static:
