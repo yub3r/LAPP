@@ -24,6 +24,8 @@
 
 {% block content %}
 
+<h1 class="display-5 text-center">Tareas Completadas</h1>
+
 {% if tasks|length == 0 %}
 
 <div class="text-center py-4"><a class="btn btn-primary" href="{% url 'create_task' %}">
@@ -32,7 +34,6 @@
 {% endif %}
 
 
-<h1 class="display-5 text-center">Tareas Completadas</h1>
 
 {% comment %} <ul style="max-width: 50vw;"> {% endcomment %}
     <table class="table">

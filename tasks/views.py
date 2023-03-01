@@ -16,7 +16,7 @@ from django.views.generic.base import RedirectView
 
 favicon_view = RedirectView.as_view(url='/media/favicon.ico', permanent=True)
 
-# Create your views here.
+# Create your views here. yes
 
 
 def signup(request):

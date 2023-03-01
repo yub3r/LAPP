@@ -19,6 +19,7 @@ from tasks import views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from django.views.static import serve 
 
 urlpatterns = [
     # path('', views.home, name='home'),
@@ -39,4 +40,6 @@ urlpatterns = [
     #path('tasks/<int:task_id>/delete', views.delete_task, name='delete_task'),
     re_path(r'^favicon\.ico$', views.favicon_view),
     path('favicon.ico',RedirectView.as_view(url='/media/favicon.ico')),
+    re_path(r'^media/(?P<path>.*)$', serve,{'document_root': settings.MEDIA_ROOT}), 
+    re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
