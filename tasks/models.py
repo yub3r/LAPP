@@ -45,7 +45,7 @@ class Task(models.Model):
     location = models.CharField(choices=UBICACION, max_length=3)
     zona = models.CharField(choices=ZONAS, max_length=1, blank=True)
     area = models.CharField(choices=AREA, max_length=4, blank=True)
-    tarea = models.CharField(choices=TASK, max_length=3)
+    tarea = models.CharField(choices=TASK, max_length=3, default=None)
     created = models.DateTimeField(auto_now_add=True)
     datecompleted = models.DateTimeField(null=True, blank=True)
     

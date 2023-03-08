@@ -2,20 +2,20 @@
 
 {% block js%}
 {% if not last_task %}
-<script> 
+<script>
   Swal.fire({
     "position": 'top',
     "title": '<strong>Algunas consideraciones</strong>',
     "icon": 'warning',
-    "html": 
-    '<ul><li>Usa el EPP Correcto.</li><li>Concéntrate en la tarea.</li><li>Si necesitas ayuda, pídela.</li></ul>' +
-    '',
+    "html":
+      '<ul><li>Usa el EPP Correcto.</li><li>Concéntrate en la tarea.</li><li>Si necesitas ayuda, pídela.</li></ul>' +
+      '',
     "showCloseButton": true,
     "showCancelButton": true,
     "focusConfirm": false,
-    "confirmButtonText":'<i class="bi bi-hand-thumbs-up-fill"></i> Genial!',
+    "confirmButtonText": '<i class="bi bi-hand-thumbs-up-fill"></i> Genial!',
     "confirmButtonAriaLabel": 'Thumbs up, great!',
-    "cancelButtonText":'<i class="bi bi-hand-thumbs-down-fill"></i> Nope!',
+    "cancelButtonText": '<i class="bi bi-hand-thumbs-down-fill"></i> Nope!',
     "cancelButtonAriaLabel": 'Thumbs down'
   })
 </script>
@@ -25,52 +25,80 @@
 {% block content %}
 {% load crispy_forms_tags %}
 
+
 <h1 class="display-5 text-center">Tarea Nueva</h1>
 
-{{error}}
+
 <form action="/create_task/" method="POST"
-  style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto">
+  style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto ">
   <div class="d-flex justify-content-end">
     <a class="btn btn-outline-primary" href="{% url 'last_task' %}"><i class="bi bi-clipboard2-pulse"></i>Last Task</a>
     &nbsp;
     <button type="reset" class="btn btn-outline-secondary">Reset</button>
   </div>
-  
+
 
   {% csrf_token %}
-  {{form | crispy }}
+  <div class="form-check-inline">
+    {{form | crispy }}
+    <style type="text/css">
+      #div_id_tarea > * {
+        display: flex;
+        justify-content: center;
+      }
+    </style>
+  </div>
   <p><br></p>
+  <h5 class="display-7 text-center">{{error}}</h5>
   <input class="btn btn-primary" type="submit" value="Iniciar">
   <!-- <button type="button" onclick="call_last_task()" name="ultima_task">Last Task</button> -->
 </form>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  let inputLocation = document.querySelector("#id_location");  
+  $(document).ready(function () {
+    $('.form-check').addClass('form-check-inline');
+  });
+  let inputLocation = document.querySelector("#id_location");
   let inputZona = document.querySelector("#id_zona");
   let inputArea = document.querySelector("#id_area");
-  let inputTarea = document.querySelector("#id_tarea");
-  
-  let call_last_task = function(){
+  let inputTarea1 = document.querySelector("#id_tarea_0");
+  let inputTarea2 = document.querySelector("#id_tarea_1");
+  let inputTarea3 = document.querySelector("#id_tarea_2");
+
+  let call_last_task = function () {
     console.log("llamado")
   }
 
-  window.onload = function(){
+  window.onload = function () {
     inputZona.disabled = true;
     inputArea.disabled = true;
 
-    inputLocation.onchange = function(elemento){
+    inputLocation.onchange = function (elemento) {
       // console.log(elemento.target.value)
-      if (elemento.target.value.startsWith("CF")){
+      if (elemento.target.value.startsWith("CF")) {
         inputZona.disabled = true;
         inputArea.disabled = true;
         inputZona.value = "";
         inputArea.value = "";
       }
-      else{
+      else {
         inputZona.disabled = false;
         inputArea.disabled = false;
         inputZona.required = true;
         inputArea.required = true;
+      }
+    }
+    inputArea.onchange = function (elemento) {
+      if (elemento.target.value.startsWith("PT")) {
+        inputTarea2.disabled = true;
+        inputTarea3.disabled = true;
+        inputTarea1.checked = true;
+      }
+      else {
+        inputTarea1.disabled = false;
+        inputTarea2.disabled = false;
+        inputTarea3.disabled = false;
       }
     }
   }

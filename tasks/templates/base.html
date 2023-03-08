@@ -1,51 +1,78 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LAPP</title>
-    <link rel="icon" type="image/png" href="/media/favicon.ico">
-    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"> -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.2/font/bootstrap-icons.css">
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script> -->
 
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js" integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtW8ANNCe9d5Y3eG5eD" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" integrity="sha384-HzLeBuhoNPvSl5KYnjx0BT+WB0QEEqLprO+NBkkk5gbc67FTaL7XIGa2w1L0Xbgc" crossorigin="anonymous">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAPP</title>
+  <link rel="icon" type="image/png" href="/media/favicon.ico">
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"> -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.2/font/bootstrap-icons.css">
+  <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script> -->
 
-  </head>
-  {% include '_navbar.html' %}
-  <body>
-    <div style="display: flex; flex-direction: column; min-height:94vh;">
-      <div style="flex-grow: 1; padding-inline: 0rem;">
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"
+    integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtW8ANNCe9d5Y3eG5eD"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.14.0/css/all.css"
+    integrity="sha384-HzLeBuhoNPvSl5KYnjx0BT+WB0QEEqLprO+NBkkk5gbc67FTaL7XIGa2w1L0Xbgc" crossorigin="anonymous">
+  <!-- <style>
+    .inline label {
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .form-check-inline .form-check-input {
+      position: static;
+      margin-top: 0;
+      margin-right: 5px;
+      margin-left: 0;
+      vertical-align: middle;
+    }
+
+    .form-check-inline .form-check-label {
+      padding-left: 0;
+      margin-bottom: 0;
+      vertical-align: middle;
+    }
+  </style> -->
+</head>
+{% include '_navbar.html' %}
+
+<body>
+  <div style="display: flex; flex-direction: column; min-height:94vh;">
+    <div style="flex-grow: 1; padding-inline: 0rem;">
       <div class="container mt-2 pt-2">
 
-          {% block content %}
-          
-          {% endblock %}
+        {% block content %}
+
+        {% endblock %}
       </div>
 
-      </div>
-      <div style="flex-wrap: wrap; border-top: 1px solid black; padding-inline: 1rem;">
-        <footer style="display: flex; justify-content: space-between;">
-            <p>
-                Yúber Millán © 2023
-            </p>
-            <p>
-                <a href="{% url 'About' %} ">Sobre mi</a>
-            </p>
-        </footer>
-      </div>
+    </div>
+    <div style="flex-wrap: wrap; border-top: 1px solid black; padding-inline: 1rem;">
+      <footer style="display: flex; justify-content: space-between;">
+        <p>
+          Yúber Millán © 2023
+        </p>
+        <p>
+          <a href="{% url 'About' %} ">Sobre mi</a>
+        </p>
+      </footer>
+    </div>
 
-      <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-      <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
-      {% block js %}
-      {% endblock %}
+    {% block js %}
+    {% endblock %}
 
 
-  </body>
+</body>
+
 </html>
