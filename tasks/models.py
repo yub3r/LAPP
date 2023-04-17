@@ -1,5 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
+
+
+class Guardia(models.Model):
+    usuario1 = models.ForeignKey(User, related_name='usuario1', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Tecnico 1'})
+    usuario2 = models.ForeignKey(User, related_name='usuario2', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Tecnico 2'})
+    usuario3 = models.ForeignKey(User, related_name='usuario3', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'IT'})
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
 
 
 

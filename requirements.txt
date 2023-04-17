@@ -13,6 +13,7 @@ django-rest-framework
 django-import-export
 django-crispy-forms
 crispy-bootstrap5
+django-bootstrap-datepicker-plus
 matplotlib
 mpl_finance
 ccxt

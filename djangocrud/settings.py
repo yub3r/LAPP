@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'bootstrap_datepicker_plus',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -96,13 +97,25 @@ WSGI_APPLICATION = 'djangocrud.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": 'django.db.backends.postgresql_psycopg2',
-        "NAME": os.environ.get("SQL_DATABASE"),
-        "USER": os.environ.get("SQL_USER"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD"),
-        "HOST": os.environ.get("SQL_HOST"),
-        "PORT": os.environ.get("SQL_PORT"),
+        "NAME": "lapp_db",
+        "USER": "admin",
+        "PASSWORD": "btf.1234",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
+
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": 'django.db.backends.postgresql_psycopg2',
+#         "NAME": os.environ.get("SQL_DATABASE"),
+#         "USER": os.environ.get("SQL_USER"),
+#         "PASSWORD": os.environ.get("SQL_PASSWORD"),
+#         "HOST": os.environ.get("SQL_HOST"),
+#         "PORT": os.environ.get("SQL_PORT"),
+#     }
+# }
 
 # DATABASES = {
 #     "default": {
@@ -140,7 +153,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-AR'
 TIME_ZONE = 'America/Argentina/Buenos_Aires'
-USE_I18N = True
+DATE_INPUT_FORMATS = ('%d/%m/%Y','%d-%m-%Y')
+
+USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)

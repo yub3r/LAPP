@@ -20,9 +20,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from django.views.static import serve 
+from django.contrib.auth.decorators import user_passes_test
 
 urlpatterns = [
     # path('', views.home, name='home'),
+    # path('crypto-prices/', views.crypto_prices, name='crypto_prices'),
     path('', views.crypto_prices, name='crypto_prices'),
     # path('completed_tasks', views.completed_tasks, name='completed_tasks'),
     path("about", views.sobremi, name="About"),
@@ -34,6 +36,10 @@ urlpatterns = [
     path('logout/', views.signout, name='logout'),
     path('signin/', views.signin, name='signin'),
     path('create_task/', views.create_task, name='create_task'),
+    path('reservar_guardia/', user_passes_test(views.es_admin)(views.reservar_guardia), name='reservar_guardia'),
+    path('guardias/', views.guardias, name='guardias'),
+    path('eliminar_guardia/<int:guardia_id>/',  user_passes_test(views.es_admin)(views.eliminar_guardia), name='eliminar_guardia'),
+    path('actualizar_guardia/<int:pk>/', user_passes_test(views.es_admin)(views.actualizar_guardia), name='actualizar_guardia'),
     path('last_task/', views.last_task, name='last_task'),
     path('tasks/<int:task_id>/complete', views.complete_task, name='complete_task'),
     #path('tasks/<int:task_id>', views.task_detail, name='task_detail'),
