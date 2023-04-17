@@ -7,8 +7,8 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-from .models import Task, CryptoPrice
-from .forms import TaskForm
+from .models import Task, CryptoPrice, Guardia
+from .forms import TaskForm, GuardiaForm
 import ccxt
 from django.core.cache import cache
 from django.views.generic.base import RedirectView
@@ -16,8 +16,68 @@ from django.views.generic.base import RedirectView
 
 favicon_view = RedirectView.as_view(url='/media/favicon.ico', permanent=True)
 
-# Create your views here. yes
 
+def admin_o_ususario(user):
+    if not user.is_authenticated:
+        return False
+    if user.is_staff:
+        return True
+    try:
+        user = user.objects.get(user=user.id)
+    except ObjectDoesNotExist:
+        user = None
+    return user is not None
+
+
+def es_admin(user):
+    return user.is_authenticated and user.is_staff
+
+def sobremi(request):
+    return render(request, "about.html")
+
+
+########################  GUARDIAS  ######################################################  GUARDIAS  ##############################
+
+@login_required
+def reservar_guardia(request):
+    if request.method == 'POST':
+        form = GuardiaForm(request.POST)
+        if form.is_valid():
+            guardia = form.save(commit=False)
+            guardia.save()
+            # redirigir a la lista de guardias reservadas
+            return redirect('guardias')
+    else:
+        form = GuardiaForm()
+    return render(request, 'reservar_guardia.html', {'form': form})
+
+
+@login_required
+def guardias(request):
+    guardia = Guardia.objects.all()
+    return render(request, 'guardias.html', {"form": guardia})
+
+@user_passes_test(es_admin)
+def eliminar_guardia(request, guardia_id):
+    guardia = get_object_or_404(Guardia, id=guardia_id)
+    guardia.delete()
+    return redirect('guardias')
+
+@user_passes_test(es_admin)
+def actualizar_guardia(request, pk):
+    guardia = get_object_or_404(Guardia, pk=pk)
+    if request.method == 'POST':
+        form = GuardiaForm(request.POST, instance=guardia)
+        if form.is_valid():
+            form.save()
+            # redirigir a la lista de guardias reservadas
+            return redirect('guardias')
+    else:
+        form = GuardiaForm(instance=guardia)
+    return render(request, 'actualizar_guardia.html', {'form': form, 'guardia': guardia})
+
+
+########################  LOGIN  ######################################################  LOGIN  ##############################
 
 def signup(request):
     if request.method == 'GET':
@@ -33,46 +93,6 @@ def signup(request):
             except IntegrityError:
                 return render(request, 'signup.html', {"form": UserCreationForm, "error": "Username ya existe."})
         return render(request, 'signup.html', {"form": UserCreationForm, "error": "Contraseña no coincide"})
-
-
-@login_required
-def tasks(request):
-    tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True)
-    return render(request, 'tasks.html', {"tasks": tasks})
-
-
-@login_required
-def tasks_completed(request):
-    tasks = Task.objects.filter(
-        user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
-    return render(request, 'completed_tasks.html', {"tasks": tasks})
-
-
-@login_required
-def all_tasks(request):
-    tasks = Task.objects.all()
-    return render(request, 'all_tasks.html', {"tasks": tasks})
-
-
-@login_required
-def create_task(request):
-    # if 'ultima_task' in request.GET:
-    #     task = Task.objects.filter(user=request.user).latest('id')
-    #     form = TaskForm(instance=task)
-    #     return render(request, 'create_task.html', {'task': task, 'form': form})
-    if request.method == "GET":
-        return render(request, 'create_task.html', {"form": TaskForm, 'last_task': False})
-    else:
-        try:
-            form = TaskForm(request.POST)
-            new_task = form.save(commit=False)
-            new_task.user = request.user
-            new_task.save()
-            messages.success(request, "Tarea Creada")
-            return redirect('tasks')
-        except ValueError:
-            return render(request, 'create_task.html', {"form": TaskForm, "error": "Error creando la tarea.", 'last_task': False})
-
 
 
 @login_required
@@ -97,20 +117,45 @@ def signin(request):
         return redirect('crypto_prices')
 
 
-def admin_o_ususario(user):
-    if not user.is_authenticated:
-        return False
-    if user.is_staff:
-        return True
-    try:
-        user = user.objects.get(usuario=user.id)
-    except ObjectDoesNotExist:
-        user = None
-    return user is not None
+# def home(request):
+#     crypto_prices_data = crypto_prices(request)
+#     return render(request, "home.html")
+
+########################  TAREAS  ######################################################  TAREAS  ##############################
+
+@login_required
+def tasks(request):
+    tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True)
+    return render(request, 'tasks.html', {"tasks": tasks})
 
 
-def es_admin(user):
-    return user.is_authenticated and user.is_staff
+@login_required
+def tasks_completed(request):
+    tasks = Task.objects.filter(
+        user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
+    return render(request, 'completed_tasks.html', {"tasks": tasks})
+
+
+@login_required
+def all_tasks(request):
+    tasks = Task.objects.all()
+    return render(request, 'all_tasks.html', {"tasks": tasks})
+
+
+@login_required
+def create_task(request):
+    if request.method == "GET":
+        return render(request, 'create_task.html', {"form": TaskForm, 'last_task': False})
+    else:
+        try:
+            form = TaskForm(request.POST)
+            new_task = form.save(commit=False)
+            new_task.user = request.user
+            new_task.save()
+            messages.success(request, "Tarea Creada")
+            return redirect('tasks')
+        except ValueError:
+            return render(request, 'create_task.html', {"form": TaskForm, "error": "Error creando la tarea.", 'last_task': False})
 
 
 @login_required
@@ -181,6 +226,11 @@ def delete_task(request, task_id):
 
 #     return render(request, 'home.html', {'plot_html': plot_html})
 
+
+
+########################  Crypto_Prices  ######################################################  Crypto_Prices  ##############################
+
+
 @login_required
 def crypto_prices(request):
     prices = cache.get('prices')
@@ -209,10 +259,6 @@ def crypto_prices(request):
 
     cache.set('prices', prices, 3600)
 
-    return render(request, 'home.html', {'prices': prices, 'count_tasks': count_tasks})
+    # return render(request, 'home.html', {'prices': prices, 'count_tasks': count_tasks})
+    return render(request, 'home.html', {'prices': prices})
     # return redirect('home', {'prices': prices}, {"count_tasks": count_tasks})
-
-
-@user_passes_test(es_admin)
-def sobremi(request):
-    return render(request, "about.html")
