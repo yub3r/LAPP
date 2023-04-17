@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'import_export',
+    'pwa',
 ]
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
@@ -153,8 +154,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-AR'
 TIME_ZONE = 'America/Argentina/Buenos_Aires'
-DATE_INPUT_FORMATS = ('%d/%m/%Y','%d-%m-%Y')
-
+DATE_INPUT_FORMATS = ('%d/%m/%Y', '%d-%m-%Y')
 USE_L10N = True
 USE_TZ = True
 
@@ -162,9 +162,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = '/static/'
-#STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_ROOT = BASE_DIR / 'static'
-#STATIC_ROOT =  '/static/'
+# STATIC_ROOT =  '/static/'
 
 LOGIN_URL = '/signin'
 
@@ -174,4 +174,23 @@ LOGIN_URL = '/signin'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+PWA_APP_NAME = "LAPP"
+PWA_APP_DESCRIPTION = "Látigo App"
+PWA_APP_THEME_COLOR = "#383580"
+PWA_APP_THEME_BACKGROUND_COLOR = "#8C9BFF"
+
+PWA_APP_ICONS = [
+    {
+    "src": "/media/Lapp_Icono.png",
+    "sizes": "160x160"
+    }
+]
+
+PWA_APP_ICONS_APPLE = [
+    {
+    "src": "/media/Lapp_Icono.png",
+    "sizes": "160x160"
+    }
+]

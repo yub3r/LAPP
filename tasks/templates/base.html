@@ -21,6 +21,7 @@
   footer {
     position: fixed;
     bottom: 0;
+    background-color: white;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -71,6 +72,10 @@
       vertical-align: middle;
     }
   </style> -->
+
+  {% load pwa %}
+  {% progressive_web_app_meta %}
+
 </head>
 {% include '_navbar.html' %}
 

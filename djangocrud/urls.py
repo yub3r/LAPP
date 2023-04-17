@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, re_path
+from django.urls import path, re_path, include
 from tasks import views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -25,8 +25,9 @@ from django.contrib.auth.decorators import user_passes_test
 urlpatterns = [
     # path('', views.home, name='home'),
     # path('crypto-prices/', views.crypto_prices, name='crypto_prices'),
-    path('', views.crypto_prices, name='crypto_prices'),
     # path('completed_tasks', views.completed_tasks, name='completed_tasks'),
+    path('', views.crypto_prices, name='crypto_prices'),
+    path('', include('pwa.urls')),
     path("about", views.sobremi, name="About"),
     path('admin/', admin.site.urls, name="Admin"),
     path('signup/', views.signup, name='signup'),
