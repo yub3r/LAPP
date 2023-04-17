@@ -95,28 +95,28 @@ WSGI_APPLICATION = 'djangocrud.wsgi.application'
 #     }
 # }
 
-DATABASES = {
-    "default": {
-        "ENGINE": 'django.db.backends.postgresql_psycopg2',
-        "NAME": "lapp_db",
-        "USER": "admin",
-        "PASSWORD": "btf.1234",
-        "HOST": "localhost",
-        "PORT": "5432",
-    }
-}
-
-
 # DATABASES = {
 #     "default": {
 #         "ENGINE": 'django.db.backends.postgresql_psycopg2',
-#         "NAME": os.environ.get("SQL_DATABASE"),
-#         "USER": os.environ.get("SQL_USER"),
-#         "PASSWORD": os.environ.get("SQL_PASSWORD"),
-#         "HOST": os.environ.get("SQL_HOST"),
-#         "PORT": os.environ.get("SQL_PORT"),
+#         "NAME": "lapp_db",
+#         "USER": "admin",
+#         "PASSWORD": "btf.1234",
+#         "HOST": "localhost",
+#         "PORT": "5432",
 #     }
 # }
+
+
+DATABASES = {
+    "default": {
+        "ENGINE": 'django.db.backends.postgresql_psycopg2',
+        "NAME": os.environ.get("SQL_DATABASE"),
+        "USER": os.environ.get("SQL_USER"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD"),
+        "HOST": os.environ.get("SQL_HOST"),
+        "PORT": os.environ.get("SQL_PORT"),
+    }
+}
 
 # DATABASES = {
 #     "default": {
