@@ -1,6 +1,35 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="en">
+<html lang="es">
+
+<style>
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1;
+  }
+
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+  }
+
+  footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    border-top: 1px solid black;
+    padding-inline: 1rem;
+  }
+</style>
+
 
 <head>
   <meta charset="UTF-8" />
@@ -56,8 +85,8 @@
       </div>
 
     </div>
-    <div style="flex-wrap: wrap; border-top: 1px solid black; padding-inline: 1rem;">
-      <footer style="display: flex; justify-content: space-between;">
+    <div>
+      <footer>
         <p>
           Yúber Millán © 2023
         </p>
@@ -69,10 +98,10 @@
 
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    
+
 
     {% block js %}
-    
+
     {% endblock %}
 
 
