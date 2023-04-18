@@ -26,6 +26,7 @@ urlpatterns = [
     # path('', views.home, name='home'),
     # path('crypto-prices/', views.crypto_prices, name='crypto_prices'),
     path('', views.crypto_prices, name='crypto_prices'),
+    #path('', include('pwa.urls')),
     # path('completed_tasks', views.completed_tasks, name='completed_tasks'),
     path("about", views.sobremi, name="About"),
     path('admin/', admin.site.urls, name="Admin"),

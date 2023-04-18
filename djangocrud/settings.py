@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'import_export',
+    #'pwa',
 ]
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
@@ -94,28 +95,28 @@ WSGI_APPLICATION = 'djangocrud.wsgi.application'
 #     }
 # }
 
+#DATABASES = {
+#    "default": {
+#        "ENGINE": 'django.db.backends.postgresql_psycopg2',
+#        "NAME": "lapp_db",
+#        "USER": "admin",
+#        "PASSWORD": "btf.1234",
+#        "HOST": "localhost",
+#        "PORT": "5432",
+#    }
+#}
+
+
 DATABASES = {
     "default": {
         "ENGINE": 'django.db.backends.postgresql_psycopg2',
-        "NAME": "lapp_db",
-        "USER": "admin",
-        "PASSWORD": "btf.1234",
-        "HOST": "localhost",
-        "PORT": "5432",
+        "NAME": os.environ.get("SQL_DATABASE"),
+        "USER": os.environ.get("SQL_USER"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD"),
+        "HOST": os.environ.get("SQL_HOST"),
+        "PORT": os.environ.get("SQL_PORT"),
     }
 }
-
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": 'django.db.backends.postgresql_psycopg2',
-#         "NAME": os.environ.get("SQL_DATABASE"),
-#         "USER": os.environ.get("SQL_USER"),
-#         "PASSWORD": os.environ.get("SQL_PASSWORD"),
-#         "HOST": os.environ.get("SQL_HOST"),
-#         "PORT": os.environ.get("SQL_PORT"),
-#     }
-# }
 
 # DATABASES = {
 #     "default": {
@@ -154,7 +155,6 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'es-AR'
 TIME_ZONE = 'America/Argentina/Buenos_Aires'
 DATE_INPUT_FORMATS = ('%d/%m/%Y','%d-%m-%Y')
-
 USE_L10N = True
 USE_TZ = True
 
@@ -175,3 +175,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 
+
+
+
+# PWA_APP_NAME = "LAPP"
+# PWA_APP_DESCRIPTION = "Látigo App"
+# PWA_APP_THEME_COLOR = "#383580"
+# PWA_APP_THEME_BACKGROUND_COLOR = "#8C9BFF"
+
+# PWA_APP_ICONS = [
+#     {
+#     "src": "/media/Lapp_Icono.png",
+#     "sizes": "160x160"
+#     }
+# ]
+
+# PWA_APP_ICONS_APPLE = [
+#     {
+#     "src": "/media/Lapp_Icono.png",
+#     "sizes": "160x160"
+#     }
+# ]
