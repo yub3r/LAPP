@@ -1,6 +1,8 @@
 from django.contrib import admin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
+from import_export import fields
+
 
 from .models import Task, Guardia
 
@@ -26,6 +28,9 @@ class TaskAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 
 class GuardiaResource(resources.ModelResource):
+    usuario1 = fields.Field(column_name='usuario1', attribute='usuario1__username')
+    usuario2 = fields.Field(column_name='usuario2', attribute='usuario2__username')
+    usuario3 = fields.Field(column_name='usuario3', attribute='usuario3__username')
 
     class Meta:
         model = Guardia
@@ -35,6 +40,7 @@ class GuardiaResource(resources.ModelResource):
                 'fecha_inicio': {'format': '%d-%m-%Y'},
                 'fecha_fin': {'format': '%d-%m-%Y'},
                 }
+
 
 class GuardiaAdmin(ImportExportModelAdmin, admin.ModelAdmin):
   resource_classes = [GuardiaResource]

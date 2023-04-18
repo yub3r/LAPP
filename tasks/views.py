@@ -237,7 +237,7 @@ def crypto_prices(request):
     if prices is not None:
         return render(request, 'home.html', {'prices': prices})
 
-    count_tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True).count()
+    #count_tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True).count()
 
     exchange = ccxt.binance()
     symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'ADA/USD', 'DOT/USD']
