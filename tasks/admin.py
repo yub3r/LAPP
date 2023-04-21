@@ -28,9 +28,9 @@ class TaskAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
 
 class GuardiaResource(resources.ModelResource):
-    usuario1 = fields.Field(column_name='usuario1', attribute='usuario1__username')
-    usuario2 = fields.Field(column_name='usuario2', attribute='usuario2__username')
-    usuario3 = fields.Field(column_name='usuario3', attribute='usuario3__username')
+    usuario1 = fields.Field(column_name='Técnico 1', attribute='usuario1__username')
+    usuario2 = fields.Field(column_name='Técnico 2', attribute='usuario2__username')
+    usuario3 = fields.Field(column_name='IT', attribute='usuario3__username')
 
     class Meta:
         model = Guardia

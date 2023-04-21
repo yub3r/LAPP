@@ -70,7 +70,6 @@
 
 
   <section class="card card-body mt-2 mb-2">
-    {% csrf_token %} 
     <table class="table sm">
       <thead>
         <tr>
@@ -80,6 +79,7 @@
         </tr>
       </thead>
       <tbody>
+        {% csrf_token %} 
         {% for symbol, data in prices.items %}
         <tr>
           <th scope="row" style="text-align:center;">{{ symbol|cut:"/USD" }}</th>
