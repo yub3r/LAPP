@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User, Group
+from django.conf import settings
 
 
 class Guardia(models.Model):
@@ -8,6 +9,17 @@ class Guardia(models.Model):
     usuario3 = models.ForeignKey(User, related_name='usuario3', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'IT'})
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
+
+
+class Sorteo(models.Model):
+    titulo = models.CharField(max_length=50)
+    fecha = models.DateTimeField(auto_now_add=True)
+    cantidad_ganadores = models.PositiveIntegerField()
+    participantes = models.ManyToManyField(User)
+
+    def __str__(self):
+        return self.titulo
+
 
 
 
@@ -47,7 +59,6 @@ AREA = [
 
 
 class Task(models.Model):
-    #title = models.CharField(max_length=200)
     galpon = models.IntegerField(default=1)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     location = models.CharField(choices=UBICACION, max_length=3)

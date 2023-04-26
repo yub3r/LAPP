@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+
+<h1 class="display-5 text-center">Ganadores</h1>
+<ul>
+    {% for ganador in ganadores %}
+      <li>{{ ganador.username }}</li>
+    {% empty %}
+      <li>No hay ganadores</li>
+    {% endfor %}
+  </ul>
+  <a href="{% url 'ver_sorteo' pk=sorteo.pk %}">Volver al sorteo</a>
+{% endblock %}

@@ -4,7 +4,7 @@ from import_export.admin import ImportExportModelAdmin
 from import_export import fields
 
 
-from .models import Task, Guardia
+from .models import Task, Guardia, Sorteo
 
 
 class TaskResource(resources.ModelResource):
@@ -47,5 +47,10 @@ class GuardiaAdmin(ImportExportModelAdmin, admin.ModelAdmin):
   list_display = ['usuario1', 'usuario2', 'usuario3', 'fecha_inicio', 'fecha_fin']
   list_filter = ['usuario1', 'usuario2', 'usuario3', 'fecha_inicio', 'fecha_fin']
 
+class SorteoAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'fecha')
+
+
 admin.site.register(Task, TaskAdmin)
 admin.site.register(Guardia, GuardiaAdmin)
+admin.site.register(Sorteo, SorteoAdmin)

@@ -7,11 +7,12 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-from .models import Task, CryptoPrice, Guardia
+from .models import Task, CryptoPrice, Guardia, Sorteo
 from .forms import TaskForm, GuardiaForm
 import ccxt
 from django.core.cache import cache
 from django.views.generic.base import RedirectView
+import random
 
 
 favicon_view = RedirectView.as_view(url='/media/favicon.ico', permanent=True)
@@ -77,6 +78,50 @@ def actualizar_guardia(request, pk):
     return render(request, 'actualizar_guardia.html', {'form': form, 'guardia': guardia})
 
 
+########################  SORTEOS  ######################################################  SORTEOS  ##############################
+
+
+@login_required
+def crear_sorteo(request):
+    if request.method == 'POST':
+        titulo = request.POST['titulo']
+        cantidad_ganadores = request.POST['cantidad_ganadores']
+        seleccionados = request.POST.getlist('seleccionados')
+        sorteo = Sorteo.objects.create(titulo=titulo, cantidad_ganadores=cantidad_ganadores)
+        sorteo.participantes.set(seleccionados)
+        return redirect('ver_sorteo', pk=sorteo.pk)
+    else:
+        participantes = User.objects.all()
+        return render(request, 'crear_sorteo.html', {'participantes': participantes})
+
+@login_required
+def ver_sorteo(request, pk):
+    sorteo = get_object_or_404(Sorteo, pk=pk)
+    participantes = sorteo.participantes.all()
+    if request.method == 'POST':
+        seleccionados = request.POST.getlist('seleccionados')
+        sorteo.participantes.add(*seleccionados)
+        sorteo.save()
+        return redirect('ver_sorteo', pk=sorteo.pk)
+    else:
+        return render(request, 'ver_sorteo.html', {'sorteo': sorteo, 'participantes': participantes})
+
+
+@login_required
+def realizar_sorteo(request, pk):
+    sorteo = get_object_or_404(Sorteo, pk=pk)
+    participantes = list(sorteo.participantes.all())
+    cantidad_ganadores = sorteo.cantidad_ganadores
+    ganadores = random.sample(participantes, cantidad_ganadores)
+    return render(request, 'ganadores.html', {'ganadores': ganadores})
+
+@login_required
+def ganadores_sorteo(request, pk):
+    sorteo = get_object_or_404(Sorteo, pk=pk)
+    ganadores = sorteo.ganadores.all()
+    return render(request, 'ganadores.html', {'ganadores': ganadores})
+
+
 ########################  LOGIN  ######################################################  LOGIN  ##############################
 
 def signup(request):
@@ -114,12 +159,11 @@ def signin(request):
         login(request, user)
         messages.success(request, f"Bienvenido {user}")
         # return render(request, 'home.html')
-        return redirect('crypto_prices')
+        return redirect('home')
 
 
-# def home(request):
-#     crypto_prices_data = crypto_prices(request)
-#     return render(request, "home.html")
+def home(request):
+    return render(request, "home.html")
 
 ########################  TAREAS  ######################################################  TAREAS  ##############################
 
@@ -240,7 +284,8 @@ def crypto_prices(request):
     #count_tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True).count()
 
     exchange = ccxt.binance()
-    symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'ADA/USD', 'DOT/USD']
+    # symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'ADA/USD', 'DOT/USD']
+    symbols = ['BTC/USD', 'ETH/USD']
     prices = {}
     for symbol in symbols:
         ticker = exchange.fetch_ticker(symbol)

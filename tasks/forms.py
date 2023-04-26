@@ -23,13 +23,6 @@ class TaskForm(forms.ModelForm):
         'tarea': forms.RadioSelect(attrs={'class': 'form-check-inline'}),
         }
 
-    # model = Task
-    # fields = ['location', 'zona', 'area', 'tarea']
-    # tarea = forms.TypedMultipleChoiceField(
-    # choices = TASK,
-    # widget = forms.RadioSelect(attrs={'class': 'form-check-inline'})
-    # )
-
 
 class GuardiaForm(forms.ModelForm):
     usuario1 = forms.ModelChoiceField(queryset=User.objects.filter(
@@ -41,8 +34,7 @@ class GuardiaForm(forms.ModelForm):
 
     class Meta:
         model = Guardia
-        fields = ['usuario1', 'usuario2',
-            'usuario3', 'fecha_inicio', 'fecha_fin']
+        fields = ['usuario1', 'usuario2', 'usuario3', 'fecha_inicio', 'fecha_fin']
         widgets = {
             # 'fecha_inicio': forms.TextInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'dd/mm/yyyy', 'autocomplete': 'on'}),
             # 'fecha_fin': forms.TextInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'dd/mm/yyyy', 'autocomplete': 'off'}),
