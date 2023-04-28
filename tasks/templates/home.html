@@ -30,14 +30,10 @@
 <main class="container" style="max-width:580px;">
   <section class="card card-body">
     {% csrf_token %}
-    <!-- <h1 class="display-6 text-center">LAPP</h1> -->
-    <!-- {% if count_tasks == 0 %}
-    <a class="btn btn-primary" href="/create_task/" style=margin-top:6px;><i class="bi bi-clipboard2-pulse"></i><br>Nueva Tarea</a>
-    {% endif %} -->
-    <a class="btn btn-success" href="/tasks/";><i class="bi bi-alarm-fill"></i><br>Tareas en
-      Ejecución</a>
-    <a class="btn btn-secondary" href="/tasks_completed/" style=margin-top:5px;><i
-        class="bi bi-check-square-fill"></i><br>Tareas completadas</a>
+    <div class="d-flex justify-content-between">
+      <a class="btn btn-success w-50" href="/tasks/";><i class="bi bi-alarm-fill"></i><br>Tareas en Ejecución</a>
+      <a class="btn btn-secondary w-50" href="/tasks_completed/"><i class="bi bi-check-square-fill"></i><br>Tareas completadas</a>
+    </div>
   </section>
 
     <!-- ***************************************************************************************************************************************************** -->
@@ -46,6 +42,13 @@
     <a class="btn btn-warning" href="/guardias/" ><i
         class="bi bi-calendar-check-fill"></i><br>Fechas de Guardias</a>
   </section>
+
+      <!-- ***************************************************************************************************************************************************** -->
+
+      <section class="card card-body mt-2">
+        <a class="btn btn-info" href="/historial/" ><i
+            class="bi bi-tornado"></i><br>Sorteos</a>
+      </section>
 
   <!-- ***************************************************************************************************************************************************** -->
 
@@ -116,5 +119,10 @@
     </div>
   </section>
 </main>
+<style>
+  .card-body a {
+    margin: 0 4px;
+  }
+  </style>
 
 {% endblock %}

@@ -26,8 +26,10 @@
           {% endfor %}
     <p><br></p>
     <h5 class="display-7 text-center">{{error}}</h5>
+    <a href="{% url 'historial_sorteos' %}" style=margin-top:8px; class="btn btn-secondary">Cancelar</a>
     <input class="btn btn-primary" type="submit" value="Crear sorteo">
-    <a href="{% url 'historial_sorteos' %}" style=margin-top:7px; class="btn btn-secondary">Cancelar</a>
+
+
     <!-- <a href="{% url 'guardias' %}" style=margin-top:8px; class="btn btn-secondary">Cancelar</a> -->
 </form>
 {% endblock %}
