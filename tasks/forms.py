@@ -1,5 +1,5 @@
 from django import forms
-from .models import Task, Guardia
+from .models import Task, Guardia, Sorteo
 from django.contrib.auth.models import User, Group
 from django.utils.safestring import mark_safe
 from django.conf import settings
@@ -60,3 +60,22 @@ class GuardiaForm(forms.ModelForm):
             if guardias_exist.exists():
                 raise ValidationError(
                     "Ya existe una guardia reservada en esa fecha.")
+            
+
+class SorteoForm(forms.ModelForm):
+    class Meta:
+        model = Sorteo
+        fields = ('titulo', 'cantidad_ganadores', 'participantes')
+    
+    participantes = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all().order_by('username'),
+        widget=forms.CheckboxSelectMultiple,
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        cantidad_ganadores = cleaned_data.get('cantidad_ganadores')
+        participantes = cleaned_data.get('participantes')
+        if cantidad_ganadores and participantes and cantidad_ganadores > participantes.count():
+            raise forms.ValidationError('El número de ganadores no puede ser mayor al número de participantes.')
+        return cleaned_data

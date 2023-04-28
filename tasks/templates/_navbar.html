@@ -6,46 +6,56 @@
       aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        {% if user.is_authenticated %}
-        {% if 'auth.admin_group' in perms %}
-        <li class="nav-item active">
-          <a class="nav-item nav-link active" href="/admin/">Admin</a>
-        </li>
-        {% endif %}
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+
+        <!-- Mover el menú desplegable de Tareas a la izquierda -->
         <li class="nav-item dropdown">
-          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-            aria-expanded="true">Tareas</a>
-          <ul class="dropdown-menu">
-            <!-- <li><a class="dropdown-item" href="{% url 'create_task' %}" class="nav-link">Crear Tarea</a></li> -->
+          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="true">Tareas</a>
+          <ul class="dropdown-menu dropdown-menu-start">
             <li><a class="dropdown-item" href="{% url 'tasks' %}" class="nav-link">Tareas Activas</a></li>
             <li><a class="dropdown-item" href="{% url 'tasks_completed' %}" class="nav-link">Tareas Completadas</a></li>
           </ul>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-            aria-expanded="true">Guardias</a>
-          <ul class="dropdown-menu">
+          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="true">Guardias</a>
+          <ul class="dropdown-menu dropdown-menu-start">
             {% if 'auth.admin_group' in perms %}
-            <!-- <li><a class="dropdown-item" href="{% url 'create_task' %}" class="nav-link">Crear Tarea</a></li> -->
             <li><a class="dropdown-item" href="{% url 'reservar_guardia' %}" class="nav-link">Asignar</a></li>
             {% endif %}
             <li><a class="dropdown-item" href="{% url 'guardias' %}" class="nav-link">Reservadas</a></li>
           </ul>
         </li>
-
-        <li class="nav-item"><a style="color:white;" class="nav-link btn btn-outline-secondary" href="/logout"><i
-              class="bi bi-person-circle"></i> {{ user.username }} | Logout</a></li>
-        {% else %}
-        <!-- <li class="nav-item"><a style="color:white; margin-right:10px;" class="nav-link btn btn-outline-secondary"
-          href="/signup">Registrarse</a>
-        </li> -->
-        <li class="nav-item"><a style="color:white; font-weight: bold;" class="nav-link btn btn-outline-secondary"
-            href="/signin"><i class="bi bi-person-circle" style="font-size: 14px"></i> | Login</a>
+  
+        <li class="nav-item dropdown">
+          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="true">Misc</a>
+          <ul class="dropdown-menu dropdown-menu-start">
+            <li><a class="dropdown-item" href="{% url 'sorteo' %}" class="nav-link">Hacer Sorteo</a></li>
+            <li><a class="dropdown-item" href="{% url 'historial_sorteos' %}" class="nav-link">Hist. Sorteos</a></li>
+          </ul>
         </li>
+
       </ul>
+
+
+     <!-- Mover los elementos de Administración y Cierre de Sesión a la derecha -->
+     <ul class="navbar-nav ms-auto">
+      {% if user.is_authenticated %}
+        {% if 'auth.admin_group' in perms %}
+          <li class="nav-item">
+            <a class="nav-item nav-link active" href="/admin/">Admin</a>
+          </li>
+        {% endif %}
+        <li class="nav-item">
+          <a style="color:white;" class="nav-link btn btn-outline-secondary" href="/logout"><i class="bi bi-person-circle"></i> {{ user.username }} | Logout</a>
+        </li>
+      {% else %}
+        <li class="nav-item">
+          <a style="color:white; font-weight: bold;" class="nav-link btn btn-outline-secondary" href="/signin"><i class="bi bi-person-circle" style="font-size: 14px"></i> | Login</a>
+        </li>
       {% endif %}
-    </div>
+    </ul>
+
   </div>
+</div>
 </nav>

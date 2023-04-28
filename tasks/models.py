@@ -13,13 +13,13 @@ class Guardia(models.Model):
 
 class Sorteo(models.Model):
     titulo = models.CharField(max_length=50)
-    fecha = models.DateTimeField(auto_now_add=True)
-    cantidad_ganadores = models.PositiveIntegerField()
+    cantidad_ganadores = models.IntegerField(default=1)
     participantes = models.ManyToManyField(User)
+    fecha = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.titulo
-
+class Ganador(models.Model):
+    sorteo = models.ForeignKey(Sorteo, on_delete=models.CASCADE)
+    ganador = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 

@@ -7,8 +7,8 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-from .models import Task, CryptoPrice, Guardia, Sorteo
-from .forms import TaskForm, GuardiaForm
+from .models import Task, CryptoPrice, Guardia, Sorteo, Ganador
+from .forms import TaskForm, GuardiaForm, SorteoForm
 import ccxt
 from django.core.cache import cache
 from django.views.generic.base import RedirectView
@@ -82,44 +82,29 @@ def actualizar_guardia(request, pk):
 
 
 @login_required
-def crear_sorteo(request):
+def sorteo(request):
     if request.method == 'POST':
-        titulo = request.POST['titulo']
-        cantidad_ganadores = request.POST['cantidad_ganadores']
-        seleccionados = request.POST.getlist('seleccionados')
-        sorteo = Sorteo.objects.create(titulo=titulo, cantidad_ganadores=cantidad_ganadores)
-        sorteo.participantes.set(seleccionados)
-        return redirect('ver_sorteo', pk=sorteo.pk)
+        form = SorteoForm(request.POST)
+        if form.is_valid():
+            sorteo = form.save()
+            ganadores = random.sample(list(sorteo.participantes.all()), sorteo.cantidad_ganadores)
+            for ganador in ganadores:
+                Ganador.objects.create(sorteo=sorteo, ganador=ganador)
+            return render(request, 'sorteo.html', {'ganadores': ganadores})
     else:
-        participantes = User.objects.all()
-        return render(request, 'crear_sorteo.html', {'participantes': participantes})
-
-@login_required
-def ver_sorteo(request, pk):
-    sorteo = get_object_or_404(Sorteo, pk=pk)
-    participantes = sorteo.participantes.all()
-    if request.method == 'POST':
-        seleccionados = request.POST.getlist('seleccionados')
-        sorteo.participantes.add(*seleccionados)
-        sorteo.save()
-        return redirect('ver_sorteo', pk=sorteo.pk)
-    else:
-        return render(request, 'ver_sorteo.html', {'sorteo': sorteo, 'participantes': participantes})
+        form = SorteoForm()
+    return render(request, 'nuevo_sorteo.html', {'form': form})
 
 
 @login_required
-def realizar_sorteo(request, pk):
-    sorteo = get_object_or_404(Sorteo, pk=pk)
-    participantes = list(sorteo.participantes.all())
-    cantidad_ganadores = sorteo.cantidad_ganadores
-    ganadores = random.sample(participantes, cantidad_ganadores)
-    return render(request, 'ganadores.html', {'ganadores': ganadores})
-
-@login_required
-def ganadores_sorteo(request, pk):
-    sorteo = get_object_or_404(Sorteo, pk=pk)
-    ganadores = sorteo.ganadores.all()
-    return render(request, 'ganadores.html', {'ganadores': ganadores})
+def historial_sorteos(request):
+    sorteos = Sorteo.objects.all().order_by('-fecha')
+    historial = []
+    for sorteo in sorteos:
+        ganadores = Ganador.objects.filter(sorteo=sorteo)
+        ganadores_list = [ganador.ganador.username for ganador in ganadores]
+        historial.append({'sorteo': sorteo, 'ganadores': ganadores_list})
+    return render(request, 'historial_sorteos.html', {'historial': historial})
 
 
 ########################  LOGIN  ######################################################  LOGIN  ##############################
@@ -161,7 +146,7 @@ def signin(request):
         # return render(request, 'home.html')
         return redirect('home')
 
-
+@login_required
 def home(request):
     return render(request, "home.html")
 

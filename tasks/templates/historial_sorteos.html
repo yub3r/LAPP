@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="display-5 text-center">Historial de sorteos</h1>
+<div class="text-center py-4"><a class="btn btn-info" href="{% url 'sorteo' %}">
+    <i class="bi bi-tornado"></i> Nuevo Sorteo </a></div>
+
+<div class="container my-3">
+    <table class="table mt-2">
+        <thead>
+            <tr>
+                <th>Título del sorteo</th>
+                <th>Fecha</th>
+                <th>Ganadores</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sorteo in historial %}
+            <tr>
+                <td>{{ sorteo.sorteo.titulo }}</td>
+                <td>{{ sorteo.sorteo.fecha }}</td>
+                <td>{% for ganador in sorteo.ganadores %}{{ ganador }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No hay sorteos registrados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -46,10 +46,8 @@ urlpatterns = [
     path('eliminar_guardia/<int:guardia_id>/',  user_passes_test(views.es_admin)(views.eliminar_guardia), name='eliminar_guardia'),
     path('actualizar_guardia/<int:pk>/', user_passes_test(views.es_admin)(views.actualizar_guardia), name='actualizar_guardia'),
 
-    path('crear/', views.crear_sorteo, name='crear_sorteo'),
-    path('ver/<int:pk>/', views.ver_sorteo, name='ver_sorteo'),
-    path('realizar/<int:pk>/', views.realizar_sorteo, name='realizar_sorteo'),
-    path('ganadores/<int:pk>/', views.ganadores_sorteo, name='ganadores_sorteo'),
+    path('sorteo/', views.sorteo, name='sorteo'),
+    path('historial/', views.historial_sorteos, name='historial_sorteos'),
 
     re_path(r'^favicon\.ico$', views.favicon_view),
     path('favicon.ico',RedirectView.as_view(url='/media/favicon.ico')),
