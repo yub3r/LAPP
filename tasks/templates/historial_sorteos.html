@@ -12,6 +12,11 @@
                 <th>Título del sorteo</th>
                 <th>Fecha</th>
                 <th>Ganadores</th>
+                {% if 'auth.admin_group' in perms %}
+                <th scope="col" style="text-align:right;">Repetir/Eliminar</th>
+                {% else %}
+                <th scope="col" style="text-align:right;">Repetir</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -19,7 +24,21 @@
             <tr>
                 <td>{{ sorteo.sorteo.titulo }}</td>
                 <td>{{ sorteo.sorteo.fecha }}</td>
-                <td>{% for ganador in sorteo.ganadores %}{{ ganador }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                <td>
+                    {% for ganador in sorteo.ganadores %}
+                        {{ ganador }}
+                        {% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    <td>
+                        <div style="float: right;">
+                        <a href="{% url 'repetir_sorteo' sorteo.sorteo.id %}" class="btn btn-info"><i class="bi bi-tornado"></i></a>
+                    
+                        {% if 'auth.admin_group' in perms %}
+                        <a class="btn btn-danger" href="{% url 'eliminar_sorteo' sorteo.sorteo.id %}"
+                        onclick="return confirm('¿Estás seguro de que deseas eliminar este sorteo?');"><i
+                            class="bi bi-trash3"></i></a></td>
+                        {% endif %}
+                        </div>
                 </td>
             </tr>
             {% empty %}
@@ -27,6 +46,8 @@
                 <td colspan="3">No hay sorteos registrados</td>
             </tr>
             {% endfor %}
+    
+            
         </tbody>
     </table>
 </div>

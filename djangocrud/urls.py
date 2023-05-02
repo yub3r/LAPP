@@ -48,6 +48,8 @@ urlpatterns = [
 
     path('sorteo/', views.sorteo, name='sorteo'),
     path('historial/', views.historial_sorteos, name='historial_sorteos'),
+    path('repetir-sorteo/<int:sorteo_id>/', views.repetir_sorteo, name='repetir_sorteo'),
+    path('eliminar_sorteo/<int:sorteo_id>/',  user_passes_test(views.es_admin)(views.eliminar_sorteo), name='eliminar_sorteo'),
 
     re_path(r'^favicon\.ico$', views.favicon_view),
     path('favicon.ico',RedirectView.as_view(url='/media/favicon.ico')),

@@ -68,10 +68,30 @@ class SorteoForm(forms.ModelForm):
         fields = ('titulo', 'cantidad_ganadores', 'participantes')
     
     participantes = forms.ModelMultipleChoiceField(
-        queryset=User.objects.all().order_by('username'),
+        queryset=User.objects.all().exclude(id=1).order_by('username'),
         widget=forms.CheckboxSelectMultiple,
     )
     
+    def clean(self):
+        cleaned_data = super().clean()
+        cantidad_ganadores = cleaned_data.get('cantidad_ganadores')
+        participantes = cleaned_data.get('participantes')
+        if cantidad_ganadores and participantes and cantidad_ganadores > participantes.count():
+            raise forms.ValidationError('El número de ganadores no puede ser mayor al número de participantes.')
+        return cleaned_data
+
+class RepetirSorteoForm(forms.Form):
+    titulo = forms.CharField(max_length=50, label='Título del nuevo sorteo')
+    cantidad_ganadores = forms.IntegerField(label='Cantidad de ganadores')
+
+    def __init__(self, participantes, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['participantes'] = forms.ModelMultipleChoiceField(
+            queryset=participantes,
+            widget=forms.CheckboxSelectMultiple,
+            label='Participantes'
+        )
+
     def clean(self):
         cleaned_data = super().clean()
         cantidad_ganadores = cleaned_data.get('cantidad_ganadores')

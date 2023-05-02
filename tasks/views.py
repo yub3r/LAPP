@@ -8,11 +8,13 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Task, CryptoPrice, Guardia, Sorteo, Ganador
-from .forms import TaskForm, GuardiaForm, SorteoForm
+from .forms import TaskForm, GuardiaForm, SorteoForm, RepetirSorteoForm
 import ccxt
+from django.contrib.sessions.backends.db import SessionStore
 from django.core.cache import cache
 from django.views.generic.base import RedirectView
-import random
+import random, re
+
 
 
 favicon_view = RedirectView.as_view(url='/media/favicon.ico', permanent=True)
@@ -90,6 +92,8 @@ def sorteo(request):
             ganadores = random.sample(list(sorteo.participantes.all()), sorteo.cantidad_ganadores)
             for ganador in ganadores:
                 Ganador.objects.create(sorteo=sorteo, ganador=ganador)
+            # Agregar ID del sorteo a la sesión
+            request.session['sorteo_id'] = sorteo.id
             return render(request, 'sorteo.html', {'ganadores': ganadores})
     else:
         form = SorteoForm()
@@ -106,6 +110,59 @@ def historial_sorteos(request):
         historial.append({'sorteo': sorteo, 'ganadores': ganadores_list})
     return render(request, 'historial_sorteos.html', {'historial': historial})
 
+
+
+@login_required
+def repetir_sorteo(request, sorteo_id):
+    sorteo = get_object_or_404(Sorteo, id=sorteo_id)
+    participantes = sorteo.participantes.all()
+
+    # Obtener una lista de títulos de sorteos existentes
+    titulos_sorteos = [s.titulo for s in Sorteo.objects.all()]
+
+   # Crear un formulario con un título único para el nuevo sorteo
+    form = None
+    titulo_original = sorteo.titulo
+    i = 1
+    while not form:
+        titulo = f"{titulo_original} ({i})" if i > 1 else titulo_original
+        if titulo in titulos_sorteos:
+            # Extraer el número entre paréntesis del título
+            match = re.search(r'\((\d+)\)', titulo)
+            if match:
+                # Incrementar el número entre paréntesis
+                num = int(match.group(1))
+                num += 1
+                titulo = titulo.replace(f"({match.group(1)})",
+                                        f"({num})")
+            else:
+                # Agregar el primer número entre paréntesis
+                titulo = f"{titulo_original} (1)"
+        if titulo not in titulos_sorteos:
+            initial_data = {'titulo': titulo, 'cantidad_ganadores': sorteo.cantidad_ganadores, 'participantes': participantes}
+            form = RepetirSorteoForm(participantes, request.POST or None, initial=initial_data)
+        i += 1
+
+
+    if request.method == 'POST':
+        if form.is_valid():
+            nuevo_sorteo = Sorteo.objects.create(
+                titulo=form.cleaned_data['titulo'],
+                cantidad_ganadores=form.cleaned_data['cantidad_ganadores']
+            )
+            nuevo_sorteo.participantes.set(form.cleaned_data['participantes'])
+            ganadores = random.sample(list(nuevo_sorteo.participantes.all()), nuevo_sorteo.cantidad_ganadores)
+            for ganador in ganadores:
+                Ganador.objects.create(sorteo=nuevo_sorteo, ganador=ganador)
+            return render(request, 'sorteo.html', {'ganadores': ganadores})
+    context = {'form': form, 'sorteo': sorteo}
+    return render(request, 'repetir_sorteo.html', context)
+
+@user_passes_test(es_admin)
+def eliminar_sorteo(request, sorteo_id):
+    sorteo = get_object_or_404(Sorteo, id=sorteo_id)
+    sorteo.delete()
+    return redirect('historial_sorteos')
 
 ########################  LOGIN  ######################################################  LOGIN  ##############################
 

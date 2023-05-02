@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<h1 class="display-5 text-center">Repetir Sorteo</h1>
+<form method="POST" style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto ">
+    <div class="d-flex justify-content-end">
+        <button type="reset" class="btn btn-outline-secondary">Reset</button>
+    </div>
+    <div class="row justify-content-center mt-3">
+        {% csrf_token %}
+        {{form | crispy }}
+
+        <h5 class="display-7 text-center">{{error}}</h5>
+        <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-outline-secondary" id="seleccionar-todos">Selec Todos</button>
+        &nbsp;
+    </div> 
+</div>
+<div class="container mx-auto">
+    <div class="row justify-content-center">
+            <p><br></p>
+            <input class="btn btn-info" type="submit" value="Sortear">
+            <a href="{% url 'historial_sorteos' %}" style=margin-top:8px; class="btn btn-secondary">Cancelar</a>
+    </div>
+</div>
+</form>
+
+<script>
+    // Seleccionar todos los checkboxes de participantes al hacer clic en el botón "Seleccionar todos"
+    const botonSeleccionarTodos = document.querySelector("#seleccionar-todos");
+    botonSeleccionarTodos.addEventListener("click", function () {
+        const checkboxesParticipantes = document.querySelectorAll("input[name='participantes']");
+        checkboxesParticipantes.forEach(function (checkbox) {
+            checkbox.checked = true;
+        });
+    });
+</script>
+
+{% endblock %}
+
