@@ -1,5 +1,5 @@
-{% extends 'base.html' %} {% block content %}
-
+{% extends 'base.html' %}
+{% block content %}
 
 {% block js %}
 <script>
@@ -31,49 +31,52 @@
 </script>
 {% endblock %}
 
-
 <h1 class="display-5 text-center">Guardias Asignadas</h1>
 {% if 'auth.admin_group' in perms %}
-<div class="text-center py-4"><a class="btn btn-warning" href="{% url 'reservar_guardia' %}">
-    <i class="bi bi-calendar-check-fill"></i> Asignar Guardia</a></div>
+<div class="text-center py-4">
+    <a class="btn btn-warning" href="{% url 'reservar_guardia' %}">
+        <i class="bi bi-calendar-check-fill"></i> Asignar Guardia
+    </a>
+</div>
 {% endif %}
 
-{% comment %} <ul style="max-width: 50vw;"> {% endcomment %}
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">Técnico 1</th>
-                <th scope="col">Técnico 2</th>
-                <th scope="col">IT</th>
-                <th scope="col" style="text-align:right;">Fecha Inicio</th>
-                <th scope="col" style="text-align:right;">Fecha Fin</th>
-                {% if 'auth.admin_group' in perms %}
-                <th scope="col" style="text-align:right;">Editar/Eliminar</th>
-                {% endif %}
-            </tr>
-        </thead>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Técnico 1</th>
+            <th scope="col">Técnico 2</th>
+            <th scope="col">IT</th>
+            <th scope="col" style="text-align:right;">Fecha Inicio</th>
+            <th scope="col" style="text-align:right;">Fecha Fin</th>
+            {% if 'auth.admin_group' in perms %}
+            <th scope="col" style="text-align:right;">Editar/Eliminar</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
         {% for guardia in form %}
-        <tbody>
+        <tbody {% if guardia.fecha_inicio >= fecha_actual and guardia.fecha_inicio == fecha_proxima %}style="background-color: lightyellow;"{% endif %}>
             <tr>
                 <td style="max-width: 200px;">{{guardia.usuario1}}</a></td>
                 <td style="max-width: 200px;">{{guardia.usuario2}}</a></td>
                 <td style="max-width: 200px;">{{guardia.usuario3}}</a></td>
                 <td style="max-width: 200px; text-align:right;">{{guardia.fecha_inicio|date:'j M'}}</a></td>
                 <td style="max-width: 200px; text-align:right;">{{guardia.fecha_fin|date:'j M'}}</a></td>
-                {% if 'auth.admin_group' in perms %}
-                <td>
-                    <div style="float: right;">
-                        {% csrf_token %}
-                        <a class="btn btn-warning" href="{% url 'actualizar_guardia' guardia.id %}"><i
-                                class="bi bi-pencil-square"></i></a>
-                        <a class="btn btn-danger" href="{% url 'eliminar_guardia' guardia.id %}"
-                            onclick="return confirm('¿Estás seguro de que deseas eliminar esta guardia?');"><i
-                                class="bi bi-trash3"></i></a>
-                    </div>
-                </td>
-                {% endif %}
-            </tr>
-        </tbody>
+            {% if 'auth.admin_group' in perms %}
+            <td>
+                <div style="float: right;">
+                    {% csrf_token %}
+                    <a class="btn btn-warning" href="{% url 'actualizar_guardia' guardia.id %}">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a class="btn btn-danger" href="{% url 'eliminar_guardia' guardia.id %}"
+                        onclick="return confirm('¿Estás seguro de que deseas eliminar esta guardia?');">
+                        <i class="bi bi-trash3"></i>
+                    </a>
+                </div>
+            </td>
+            {% endif %}
+        </tr>
         {% endfor %}
-    </table>
-    {% endblock %}
+</table>
+{% endblock %}

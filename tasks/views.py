@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Task, CryptoPrice, Guardia, Sorteo, Ganador
 from .forms import TaskForm, GuardiaForm, SorteoForm, RepetirSorteoForm
+from datetime import date
 import ccxt
 from django.contrib.sessions.backends.db import SessionStore
 from django.core.cache import cache
@@ -57,8 +58,17 @@ def reservar_guardia(request):
 
 @login_required
 def guardias(request):
-    guardia = Guardia.objects.all()
-    return render(request, 'guardias.html', {"form": guardia})
+    fecha_actual = date.today()
+    guardias = Guardia.objects.order_by('fecha_inicio').all()
+
+    # Encuentra la fecha más próxima a partir de hoy
+    fecha_proxima = None
+    for guardia in guardias:
+        if guardia.fecha_inicio >= fecha_actual:
+            fecha_proxima = guardia.fecha_inicio
+            break
+
+    return render(request, 'guardias.html', {"form": guardias, "fecha_actual": fecha_actual, "fecha_proxima": fecha_proxima})
 
 @user_passes_test(es_admin)
 def eliminar_guardia(request, guardia_id):

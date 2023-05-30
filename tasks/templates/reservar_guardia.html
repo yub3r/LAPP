@@ -18,7 +18,7 @@
         fechaInicio.addEventListener('change', function () {
             const fechaInicioValue = new Date(this.value);
             // Agregar tres días a la fecha de inicio
-            fechaInicioValue.setDate(fechaInicioValue.getDate() + 3);
+            fechaInicioValue.setDate(fechaInicioValue.getDate() + 1);
             const fechaFinValue = fechaInicioValue.toISOString().slice(0, 10);
             // Establecer el valor del selector de fecha de fin
             fechaFin.value = fechaFinValue;
