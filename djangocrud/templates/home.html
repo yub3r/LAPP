@@ -80,38 +80,62 @@
   </section> -->
 
 
-  <section class="card card-body mt-2 mb-2">
-    <script src="https://widgets.coingecko.com/coingecko-coin-list-widget.js"></script>
-    <coingecko-coin-list-widget coin-ids="bitcoin,ethereum" currency="usd" locale="en"></coingecko-coin-list-widget>
-    <!-- <table class="table sm">
-      <thead>
-        <tr>
-          <th scope="col" style="text-align:center;">Crypto</th>
-          <th scope="col" style="text-align:right;">Price (USD)</th>
-          <th scope="col" style="text-align:center;">Change</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% csrf_token %}
-        {% for symbol, data in prices.items %}
-        <tr>
-          <th scope="row" style="text-align:center;">{{ symbol|cut:"/USD" }}</th>
-          <td style="text-align:right;">{{ data.price|floatformat:"2g" }}</td>
-          <td style="text-align:center;">
-            {% if data.price > data.previous_price %}
-            <i class="fas fa-arrow-up text-success"></i>
-            {% elif data.price < data.previous_price %} <i class="fas fa-arrow-down text-danger"></i>
-              {% else %}
-              <i class="fas fa-minus text-secondary"></i>
-              {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table> -->
+  <section class="card card-body mt-2 mb-2"> 
+    <body>
+      <!-- <h4>Cotización del Dólar</h4> -->
+      <table class="table table-sm">
+        <tbody id="dolarData"></tbody>
+      </table>
+    
+      <script>
+        // Realizar la solicitud HTTP
+        fetch('https://criptoya.com/api/dolar')
+          .then(response => response.json())
+          .then(data => {
+            // Procesar los datos de la respuesta
+            const dolarData = [
+              { descripcion: 'Cotización Banco Nación (Oficial)', valor: data.oficial },
+              { descripcion: 'Cotización con impuesto PAIS + Imp. GANANCIAS (Solidario)', valor: data.solidario },
+              { descripcion: 'Dólar Bolsa (MEP)', valor: data.mep },
+              { descripcion: 'Dólar Bolsa (calculado con el bono GD30)', valor: data.mepgd30 },
+              { descripcion: 'Variación del dólar MEP respecto al día anterior', valor: data.mep_var },
+              { descripcion: 'Dólar Contado con Liquidación (CCL)', valor: data.ccl },
+              { descripcion: 'Dólar Contado con Liquidación (calculado con el bono GD30)', valor: data.cclgd30 },
+              { descripcion: 'Variación del dólar CCL respecto al día anterior', valor: data.ccl_var },
+              { descripcion: 'Dólar Contado con Bitcoin o Dólar Cripto (CCB)', valor: data.ccb },
+              { descripcion: 'Variación del dólar Cripto respecto al día anterior', valor: data.ccb_var },
+              { descripcion: 'Dólar Informal (Blue)', valor: data.blue },
+              { descripcion: 'Variación del dólar Blue respecto al día anterior', valor: data.blue_var },
+              { descripcion: 'Hora de la consulta', valor: new Date(data.time * 1000).toLocaleString() }
+            ];
+    
+            // Mostrar los datos en la tabla
+            const dolarDataElement = document.getElementById('dolarData');
+            dolarData.forEach(item => {
+              const row = document.createElement('tr');
+              const descripcionCell = document.createElement('td');
+              const valorCell = document.createElement('td');
+    
+              descripcionCell.textContent = item.descripcion;
+              valorCell.textContent = item.valor;
+    
+              // Estilo para alinear a la derecha los valores numéricos
+              valorCell.style.textAlign = 'right';
+    
+              row.appendChild(descripcionCell);
+              row.appendChild(valorCell);
+    
+              dolarDataElement.appendChild(row);
+            });
+          })
+          .catch(error => {
+            console.error('Error al obtener los datos del Dólar:', error);
+          });
+      </script>
+    </body>
   </section>
 
-  <section class="card card-body mt-2" style="display:flex; justify-content:center; align-items:center;">
+  <!-- <section class="card card-body mt-2" style="display:flex; justify-content:center; align-items:center;">
     <div style="display:flex;">
       <div style="flex:1; font-size:14px;">
         <iframe style="width:230px;height:260px;border-radius:5px;display:flex;justify-content:center;"
@@ -122,7 +146,7 @@
           src="https://dolarhoy.com/i/cotizaciones/dolar-blue" frameborder="0"></iframe>
       </div>
     </div>
-  </section>
+  </section> -->
 </main>
 <style>
   .card-body a {

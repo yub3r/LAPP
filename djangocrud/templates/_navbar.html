@@ -35,13 +35,21 @@
           </ul>
         </li>
 
+        <li class="nav-item dropdown">
+          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+            aria-expanded="true">Tools</a>
+          <ul class="dropdown-menu dropdown-menu-start">
+            <li><a class="dropdown-item" href="{% url 'ejecutar_swd_script' %}" class="nav-link">SWD Script</a></li>
+          </ul>
+        </li>
+
       </ul>
 
 
      <!-- Mover los elementos de Administración y Cierre de Sesión a la derecha -->
      <ul class="navbar-nav ms-auto">
       {% if user.is_authenticated %}
-        {% if 'auth.admin_group' in perms %}
+        {% if user.is_staff %}
           <li class="nav-item">
             <a class="nav-item nav-link active" href="/admin/">Admin</a>
           </li>

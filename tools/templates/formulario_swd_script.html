@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+    document.getElementById('ejecutar-btn').addEventListener('click', function (event) {
+        // Obtener el valor del número de switch
+        const numSwitchInput = document.getElementById('id_num_switch');
+        const numSwitchValue = numSwitchInput.value.trim(); // Eliminar espacios en blanco al principio y al final
+
+        // Validar si el valor del número de switch es válido (solo números enteros)
+        const numberRegex = /^[0-9]+$/;
+        if (!numberRegex.test(numSwitchValue)) {
+            // Mostrar mensaje de error y detener el envío del formulario
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe ingresar un valor númerico correspondiente al SWD',
+            });
+            event.preventDefault();
+            return; // Detener la ejecución del script
+        }
+
+        // Convertir el valor del número de switch a un entero
+        const numSwitchInt = parseInt(numSwitchValue, 10);
+
+        // Validar si el valor del número de switch está en el rango válido
+        if (numSwitchInt < 1 || numSwitchInt > 20) {
+            // Mostrar mensaje de error y detener el envío del formulario
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe seleccionar un único switch entre 1 y 20.',
+            });
+            event.preventDefault();
+            return; // Detener la ejecución del script
+        }
+
+        // Validar si se ha seleccionado una opción de los RadioSelect
+        const radioSelectInputs = document.querySelectorAll('[name="accion"]');
+        let seleccionado = false;
+        radioSelectInputs.forEach(input => {
+            if (input.checked) {
+                seleccionado = true;
+            }
+        });
+
+        if (!seleccionado) {
+            // Mostrar mensaje de error y detener el envío del formulario
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe seleccionar una opción de acción (Encender o Apagar) antes de continuar.',
+            });
+            event.preventDefault();
+            return; // Detener la ejecución del script
+        }
+
+        // Mostrar SweetAlert de ejecutando el script
+        Swal.fire({
+            title: 'Ejecutando Script',
+            html: 'muy rápido, mira: <b></b> milliseconds.',
+            timer: 20000,
+            timerProgressBar: true,
+            didOpen: () => {
+                Swal.showLoading()
+                const b = Swal.getHtmlContainer().querySelector('b')
+                timerInterval = setInterval(() => {
+                    b.textContent = Swal.getTimerLeft()
+                }, 100)
+            },
+            willClose: () => {
+                clearInterval(timerInterval)
+            }
+        }).then((result) => {
+            /* Read more about handling dismissals below */
+            if (result.dismiss === Swal.DismissReason.timer) {
+                console.log('I was closed by the timer')
+            }
+        });
+    });
+
+    // Obtener la imagen por su identificador
+    const switchImage = document.getElementById('switch-image');
+
+    // Agregar el evento click a la imagen
+    switchImage.addEventListener('click', () => {
+        // Cambiar la clase de la imagen al hacer clic
+        switchImage.classList.toggle('img-expanded');
+    });
+</script>
+<style>
+    .img-minimized {
+        max-height: 30px;
+        /* Altura máxima de la imagen minimizada */
+        cursor: pointer;
+        /* Cambiar el cursor al pasar sobre la imagen */
+        transition: max-height 0.3s ease;
+        /* Animación de transición al cambiar la altura */
+    }
+
+    .img-expanded {
+        max-height: 400px;
+        /* Altura máxima de la imagen ampliada */
+        /* Nuevos estilos para la tabla de registros */
+    }
+
+    .table-container {
+        max-height: 170px;
+        /* Altura máxima de la tabla para mostrar solo 5 registros */
+        overflow-y: auto;
+        /* Mostrar barra de scroll vertical en caso de que haya más de 5 registros */
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<h1 class="display-5 text-center">Script: ON/OFF Port channels</h1>
+<form method="POST" style="display: flex; flex-direction: column; max-width:700px; margin-inline: auto ">
+    <!-- <div class="d-flex justify-content-end"> -->
+    <div class="d-flex justify-content">
+        <!-- <button type="reset" class="btn btn-outline-secondary">Reset</button> -->
+        <p><br>
+            Este Script funciona exclusivamente sobre los SWD (Switches de Distribución), repartidos en cuatro por cada
+            módulo, y quedando distribuidos de la siguiente forma:
+        </p>
+
+
+    </div>
+    <div class="row justify-content-center">
+        <!-- Agrega la clase "img-minimized" y el identificador "switch-image" a la imagen -->
+        <img id="switch-image" class="img-minimized" src="/media/swd_modulos.jpg" alt="Switches de Distribución">
+    </div>
+    <div class="container mx-auto">
+        <div class="row justify-content-center mt-3">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <style type="text/css">
+                #div_id_accion>* {
+                    display: flex;
+                    justify-content: center;
+                    gap: 50px;
+                    margin-right: 20px;
+                    background-color: #c3c2c2; /* Color de fondo gris */
+                    padding: 10px; /* Espaciado interno para el contenido */
+                    border-radius: 10px; /* Bordes redondeados */
+                    max-width: 400px;
+                    margin: 0 auto;
+                    /* margin-top: 3px; */
+                }
+            </style>
+            </div>
+        <div class="container mx-auto">
+            <div class="row justify-content-center">
+                <!-- Agrega el identificador (id) al botón -->
+                <input id="ejecutar-btn" class="btn btn-dark" type="submit" value="Ejecutar Script">
+            </div>
+        </div>
+</form>
+
+<div class="container mx-auto mt-5">
+    <div class="row justify-content-center">
+        <h4>Historial de ejecuciones:</h4>
+        <div class="table-container">
+            <table class="table table-borderless table-sm">
+                <tbody>
+                    {% for registro in historial %}
+                    <tr>
+                        <td style="vertical-align: middle;">{{ registro.usuario.username }}</td>
+                        <td style="text-align: center; vertical-align: middle;">{{ registro.fecha_hora_ejecucion|date:'j M H:i' }}</td>
+                        <td style="text-align: center; vertical-align: middle;">Switch {{ registro.num_switch }}</td>
+                        <td style="text-align: center; vertical-align: middle;">{{ registro.accion }}</td>
+                        <td style="text-align: right; vertical-align: middle;">{{ registro.resultado }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

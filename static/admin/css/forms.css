@@ -18,20 +18,6 @@
     vertical-align: 0;
 }
 
-/* radioselect en la misma linea */
-
-label {
-    
-    margin-right: 10px;
-}
-
-
-
-
-
-
-
-
 form .form-row p {
     padding-left: 0;
 }
@@ -540,5 +526,3 @@ form .related-widget-wrapper ul {
 .clearable-file-input input {
     margin-top: 0;
 }
-
-
