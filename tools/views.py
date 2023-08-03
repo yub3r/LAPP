@@ -61,10 +61,10 @@ def ejecutar_swd_script(request):
 
                     tn.write(b"exit\n")
                     tn.close()
-                    resultado = "Conexión y ejecución de comandos exitosos."
+                    resultado = "Exitoso. Ejecución del script completado."
                 
                 # Guardar registro de ejecución en el historial
-                    resultado = "Exitoso"
+                    # resultado = "Exitoso"
                 historial_ejecucion = HistorialEjecucionSWD(
                     num_switch=num_switch,
                     accion=accion,

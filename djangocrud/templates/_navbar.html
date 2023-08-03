@@ -8,8 +8,7 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
-
-        <!-- Mover el menú desplegable de Tareas a la izquierda -->
+        
         <li class="nav-item dropdown">
           <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="true">Tareas</a>
           <ul class="dropdown-menu dropdown-menu-start">
@@ -45,8 +44,6 @@
 
       </ul>
 
-
-     <!-- Mover los elementos de Administración y Cierre de Sesión a la derecha -->
      <ul class="navbar-nav ms-auto">
       {% if user.is_authenticated %}
         {% if user.is_staff %}
@@ -55,7 +52,9 @@
           </li>
         {% endif %}
         <li class="nav-item">
-          <a style="color:white;" class="nav-link btn btn-outline-secondary" href="/logout"><i class="bi bi-person-circle"></i> {{ user.username }} | Logout</a>
+          <a style="color:white;" class="nav-link btn btn-outline-secondary" href="/logout" 
+          onclick="return confirm('¿Estás seguro de cerrar Sesión?');">
+            <i class="bi bi-person-circle" ></i> {{ user.username }} | Logout</a>
         </li>
       {% else %}
         <li class="nav-item">

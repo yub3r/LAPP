@@ -9,10 +9,6 @@
 <form method="POST" style="display: flex; flex-direction: column; max-width: 40vw; margin-inline: auto">
   {% csrf_token %}
   {{form.as_p}}
-
-  <!-- <button>
-    Update
-  </button> -->
 </form>
 
 <form action="{% url 'complete_task' task.id %}" method="POST" style="display: flex; flex-direction: column; max-width: 40vw; margin-inline: auto">

@@ -22,14 +22,14 @@
         <tbody>
             {% for sorteo in historial %}
             <tr>
-                <td>{{ sorteo.sorteo.titulo }}</td>
-                <td>{{ sorteo.sorteo.fecha }}</td>
-                <td>
+                <td style="vertical-align: middle;">{{ sorteo.sorteo.titulo }}</td>
+                <td style="vertical-align: middle;">{{ sorteo.sorteo.fecha }}</td>
+                <td style="vertical-align: middle;">
                     {% for ganador in sorteo.ganadores %}
                         {{ ganador }}
                         {% if not forloop.last %}, {% endif %}
                     {% endfor %}
-                    <td>
+                    <td style="vertical-align: middle;">
                         <div style="float: right;">
                         <a href="{% url 'repetir_sorteo' sorteo.sorteo.id %}" class="btn btn-info"><i class="bi bi-tornado"></i></a>
                     

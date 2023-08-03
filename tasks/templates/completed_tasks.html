@@ -52,25 +52,12 @@
         {% for task in tasks %}
         <tbody>
             <tr>
-                <td style="max-width: 200px;">{{task.location}} </a></td>
-                <td style="max-width: 200px;">{{task.zona}} </a></td>
-                <td style="max-width: 200px;">{{task.area}} </a></td>
-                <td style="max-width: 200px;">{{task.tarea}} </a></td>
-                <td style="max-width: 200px; text-align:right;">{{task.created|date:'j M H:i'}}</a></td>
-                <td style="max-width: 200px; text-align:right;">{{task.datecompleted|date:'j M H:i'}}</a></td>
-                <!-- <td>
-                    <div style="float: right;">
-                        
-                        <a class="btn btn-success" href="{% url 'complete_task' task.id %}"><i class="bi bi-check-square-fill"></i></a>
-                        <form action="{% url 'complete_task' task.id %}" method="POST"
-                            style="display: flex; flex-direction: column; max-width: 40vw; margin-inline: auto">
-                            {% csrf_token %}
-                            <button class="btn btn-success">
-                                <i class="bi bi-check-square-fill"></i>
-                            </button>
-                        </form>
-                    </div>
-                </td> -->
+                <td style="max-width: 200px; vertical-align: middle;">{{task.location}} </a></td>
+                <td style="max-width: 200px; vertical-align: middle;">{{task.zona}} </a></td>
+                <td style="max-width: 200px; vertical-align: middle;">{{task.area}} </a></td>
+                <td style="max-width: 200px; vertical-align: middle;">{{task.tarea}} </a></td>
+                <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{task.created|date:'j M H:i'}}</a></td>
+                <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{task.datecompleted|date:'j M H:i'}}</a></td>
             </tr>
         </tbody>
         {% endfor %}

@@ -3,15 +3,10 @@
 
 {% block js %}
 <script>
-    // Agrega un evento de click al botón de eliminar
     $('.eliminar-guardia').on('click', function (event) {
-        // Previene el comportamiento predeterminado del enlace
         event.preventDefault();
-
-        // Obtiene el URL del enlace
         var url = $(this).attr('href');
-
-        // Muestra una confirmación utilizando SweetAlert2
+       
         Swal.fire({
             title: '¿Estás seguro de eliminar esta guardia?',
             text: 'Esta acción no se puede deshacer',
@@ -23,7 +18,6 @@
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Si el usuario hace clic en "Sí, eliminar", redirige a la página de eliminación
                 window.location.href = url;
             }
         });
@@ -57,11 +51,11 @@
         {% for guardia in form %}
         <tbody {% if guardia.fecha_inicio >= fecha_actual and guardia.fecha_inicio == fecha_proxima %}style="background-color: lightyellow;"{% endif %}>
             <tr>
-                <td style="max-width: 200px;">{{guardia.usuario1}}</a></td>
-                <td style="max-width: 200px;">{{guardia.usuario2}}</a></td>
-                <td style="max-width: 200px;">{{guardia.usuario3}}</a></td>
-                <td style="max-width: 200px; text-align:right;">{{guardia.fecha_inicio|date:'j M'}}</a></td>
-                <td style="max-width: 200px; text-align:right;">{{guardia.fecha_fin|date:'j M'}}</a></td>
+                <td style="max-width: 200px; vertical-align: middle;">{{guardia.usuario1}}</a></td>
+                <td style="max-width: 200px; vertical-align: middle;">{{guardia.usuario2}}</a></td>
+                <td style="max-width: 200px; vertical-align: middle;">{{guardia.usuario3}}</a></td>
+                <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{guardia.fecha_inicio|date:'j M'}}</a></td>
+                <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{guardia.fecha_fin|date:'j M'}}</a></td>
             {% if 'auth.admin_group' in perms %}
             <td>
                 <div style="float: right;">
