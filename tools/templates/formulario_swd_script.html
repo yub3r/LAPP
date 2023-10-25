@@ -3,35 +3,21 @@
 {% block js %}
 <script>
     document.getElementById('ejecutar-btn').addEventListener('click', function (event) {
-        // Obtener el valor del número de switch
-        const numSwitchInput = document.getElementById('id_num_switch');
-        const numSwitchValue = numSwitchInput.value.trim(); // Eliminar espacios en blanco al principio y al final
+        // Obtener el campo de selección por su identificador
+        const nroSwdSelect = document.getElementById('nro_swd');
 
-        // Validar si el valor del número de switch es válido (solo números enteros)
-        const numberRegex = /^[0-9]+$/;
-        if (!numberRegex.test(numSwitchValue)) {
-            // Mostrar mensaje de error y detener el envío del formulario
+        // Validar si se ha seleccionado la opción inicial "Elija un SWD"
+        if (nroSwdSelect.value === '') {
+            // Evitar que el formulario se envíe
+            event.preventDefault();
+
+            // Mostrar un mensaje de error (puedes personalizarlo)
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Debe ingresar un valor númerico correspondiente al SWD',
+                text: 'Debe elegir un SWD antes de continuar.',
             });
-            event.preventDefault();
-            return; // Detener la ejecución del script
-        }
 
-        // Convertir el valor del número de switch a un entero
-        const numSwitchInt = parseInt(numSwitchValue, 10);
-
-        // Validar si el valor del número de switch está en el rango válido
-        if (numSwitchInt < 1 || numSwitchInt > 20) {
-            // Mostrar mensaje de error y detener el envío del formulario
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Debe seleccionar un único switch entre 1 y 20.',
-            });
-            event.preventDefault();
             return; // Detener la ejecución del script
         }
 
@@ -49,7 +35,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Debe seleccionar una opción de acción (Encender o Apagar) antes de continuar.',
+                text: 'Debe seleccionar una acción (Encender o Apagar) antes de continuar.',
             });
             event.preventDefault();
             return; // Detener la ejecución del script
@@ -58,8 +44,8 @@
         // Mostrar SweetAlert de ejecutando el script
         Swal.fire({
             title: 'Ejecutando Script',
-            html: 'muy rápido, mira: <b></b> milliseconds.',
-            timer: 16000,
+            html: 'no tan rápido, pero mirá: <b></b> milliseconds.',
+            timer: 13000,
             timerProgressBar: true,
             didOpen: () => {
                 Swal.showLoading()
@@ -79,48 +65,46 @@
         });
     });
 
-    // Obtener la imagen por su identificador
-    const switchImage = document.getElementById('switch-image');
+    // Espera a que se cargue completamente el contenido de la página
+    document.addEventListener("DOMContentLoaded", function() {
+            // Obtiene la imagen
+            var switchImage = document.getElementById("switch-image");
 
-    // Agregar el evento click a la imagen
-    switchImage.addEventListener('click', () => {
-        // Cambiar la clase de la imagen al hacer clic
-        switchImage.classList.toggle('img-expanded');
-    });
+            // Variable para rastrear el estado de la imagen
+            var isExpanded = false;
+
+            // Agrega un evento de clic a la imagen
+            switchImage.addEventListener("click", function() {
+                // Verificar si la imagen está expandida
+                if (isExpanded) {
+                    // Cambiar la imagen a "swd_modulos_min.jpg"
+                    switchImage.src = "/media/swd_modulos_min.jpg";
+                    // Establecer la altura máxima a 30px
+                    switchImage.style.maxHeight = "30px";
+                } else {
+                    // Cambiar la imagen a "swd_modulos_trs.jpg"
+                    switchImage.src = "/media/swd_modulos_trs.jpg";
+                    // Establecer la altura máxima a 400px
+                    switchImage.style.maxHeight = "400px";
+                }
+
+                // Invertir el estado de la imagen
+                isExpanded = !isExpanded;
+            });
+        });
+
 </script>
-<style>
-    .img-minimized {
-        max-height: 30px;
-        /* Altura máxima de la imagen minimizada */
-        cursor: pointer;
-        /* Cambiar el cursor al pasar sobre la imagen */
-        transition: max-height 0.3s ease;
-        /* Animación de transición al cambiar la altura */
-    }
 
-    .img-expanded {
-        max-height: 400px;
-        /* Altura máxima de la imagen ampliada */
-        /* Nuevos estilos para la tabla de registros */
-    }
-
-    .table-container {
-        max-height: 170px;
-        /* Altura máxima de la tabla para mostrar  registros */
-        overflow-y: auto;
-        /* Mostrar barra de scroll vertical en caso de que haya más de 5 registros */
-    }
-</style>
 {% endblock %}
 
 
 {% block content %}
 {% load crispy_forms_tags %}
 
-<h1 class="display-5 text-center">Script: ON/OFF Port channels</h1>
+<h1 class="display-6 text-center">Script: ON/OFF | <strong>SWD</strong></h1>
 <form method="POST" style="display: flex; flex-direction: column; max-width:700px; margin-inline: auto ">
     <div class="d-flex justify-content">
-        <p><br>
+        <p class="justificar"><br>
             Este Script funciona exclusivamente sobre los SWD (Switches de Distribución), repartidos en cuatro por cada
             módulo, y quedando distribuidos de la siguiente forma:
         </p>
@@ -128,7 +112,7 @@
 
     </div>
     <div class="row justify-content-center">
-        <img id="switch-image" class="img-minimized" src="/media/swd_modulos.jpg" alt="Switches de Distribución">
+        <img id="switch-image" class="img-minimized" src="/media/swd_modulos_min.jpg" alt="Switches de Distribución">
     </div>
     <div class="container mx-auto">
         <div class="row justify-content-center mt-3">
@@ -142,40 +126,39 @@
                     margin-right: 20px;
                     background-color: #c3c2c2;
                     padding: 10px;
-                    border-radius: 10px; 
+                    border-radius: 10px;
                     max-width: 400px;
                     margin: 0 auto;
                     /* margin-top: 3px; */
                 }
             </style>
-            </div>
+        </div>
         <div class="container mx-auto">
             <div class="row justify-content-center">
-                <input id="ejecutar-btn" class="btn btn-dark" type="submit" value="Ejecutar Script">
+                <input id="ejecutar-btn" class="btn btn-success" type="submit" value="Ejecutar Script">
             </div>
         </div>
 </form>
 
-<div class="container mx-auto mt-5">
-    <div class="row justify-content-center">
-        <h4>Historial de ejecuciones:</h4>
-        <div class="table-container">
-            <table class="table table-borderless table-sm">
-                <tbody>
-                    {% for registro in historial %}
-                    <tr>
-                        <td style="vertical-align: middle;">{{ registro.usuario.username }}</td>
-                        <td style="text-align: center; vertical-align: middle;">{{ registro.fecha_hora_ejecucion|date:'j M H:i' }}</td>
-                        <td style="text-align: center; vertical-align: middle;">Switch {{ registro.num_switch }}</td>
-                        <td style="text-align: center; vertical-align: middle;">{{ registro.accion }}</td>
-                        <td style="text-align: right; vertical-align: middle;">{{ registro.resultado }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<div class="row justify-content-center mt-3">
+    <h4>Historial de ejecuciones:</h4>
+    <div class="table-container">
+        <table class="table table-borderless table-sm table table-striped">
+            <tbody>
+                {% for registro in historial %}
+                <tr>
+                    <td style="vertical-align: middle;">{{ registro.usuario.username }}</td>
+                    <td style="text-align: center; vertical-align: middle;">{{ registro.fecha_hora_ejecucion|date:'j M H:i' }}</td>
+                    <td style="text-align: center; vertical-align: middle;">{{ registro.nro_swd }}</td>
+                    <td style="text-align: center; vertical-align: middle;">{{ registro.accion }}</td>
+                    <td style="text-align: right; vertical-align: middle;">{{ registro.resultado }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+
 
 
 {% endblock %}

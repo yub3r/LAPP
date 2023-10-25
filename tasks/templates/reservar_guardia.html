@@ -6,13 +6,21 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const fechaInicio = document.querySelector('#id_fecha_inicio');
-        fechaInicio.type = 'text';
         fechaInicio.addEventListener('focus', function () {
+            if (this.value === 'dd/mm/yyyy') {
+                this.value = '';
+            }
             this.type = 'date';
+            this.setAttribute('inputmode', 'numeric');
         });
         fechaInicio.addEventListener('blur', function () {
             this.type = 'text';
-            this.value = formatDate(this.value);
+            this.removeAttribute('inputmode');
+            if (this.value === '') {
+                this.value = 'dd/mm/yyyy';
+            } else {
+                this.value = formatDate(this.value);
+            }
         });
 
         fechaInicio.addEventListener('change', function () {
@@ -23,28 +31,33 @@
         });
 
         const fechaFin = document.querySelector('#id_fecha_fin');
-        fechaFin.type = 'text';
         fechaFin.addEventListener('focus', function () {
+            if (this.value === 'dd/mm/yyyy') {
+                this.value = '';
+            }
             this.type = 'date';
+            this.setAttribute('inputmode', 'numeric');
         });
         fechaFin.addEventListener('blur', function () {
             this.type = 'text';
-            this.value = formatDate(this.value);
+            this.removeAttribute('inputmode');
+            if (this.value === '') {
+                this.value = 'dd/mm/yyyy';
+            } else {
+                this.value = formatDate(this.value);
+            }
         });
 
         function formatDate(date) {
             const [year, month, day] = date.split('-');
             return `${day}/${month}/${year}`;
         }
-
-        
-
     });
 </script>
 
 
 
-<h1 class="display-5 text-center">Reservar Guardia</h1>
+<h1 class="display-6 text-center">Reservar Guardia</h1>
 
 
 <form action="/reservar_guardia/" method="POST"

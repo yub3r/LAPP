@@ -1,7 +1,11 @@
-from django.urls import path, re_path
+from django.urls import include, path, re_path
 from tools import views
 
 
 urlpatterns = [
     path('ejecutar_swd_script/', views.ejecutar_swd_script, name='ejecutar_swd_script'),
+    path('ejecutar_swa_script/', views.ejecutar_swa_script, name='ejecutar_swa_script'),
+    path('cargar_racks/', views.cargar_racks, name='cargar_racks'),
+    path('cargar_switches_acceso/', views.cargar_switches_acceso, name='cargar_switches_acceso'),
+    # path("__debug__/", include("debug_toolbar.urls")),
 ]

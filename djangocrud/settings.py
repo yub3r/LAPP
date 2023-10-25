@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+from django.conf.locale.es import formats as es_formats
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # "debug_toolbar",
     'tasks',
     'tools',
     'crispy_forms',
@@ -63,6 +65,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'djangocrud.urls'
@@ -158,9 +161,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-AR'
 TIME_ZONE = 'America/Argentina/Buenos_Aires'
-DATE_INPUT_FORMATS = ('%d/%m/%Y','%d-%m-%Y')
+DATE_INPUT_FORMATS = ['%d/%m/%Y']
+CRISPY_DATE_FORMAT = 'dd/mm/yyyy'
 USE_L10N = True
 USE_TZ = True
+es_formats.DATE_FORMAT = '%d/%m/%Y'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
@@ -182,6 +187,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 
 
 
+INTERNAL_IPS = ["127.0.0.1",]
 
 # PWA_APP_NAME = "LAPP"
 # PWA_APP_DESCRIPTION = "Látigo App"
@@ -201,3 +207,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 #     "sizes": "160x160"
 #     }
 # ]
+

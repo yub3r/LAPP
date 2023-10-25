@@ -29,6 +29,53 @@
     border-top: 1px solid black;
     padding-inline: 1rem;
   }
+  
+  footer p {
+    display: inline;
+    font-size: 12px;
+    margin: 0;
+  }
+
+  .img-minimized {
+        max-height: 30px;
+        cursor: pointer;
+        transition: max-height 0.3s ease;
+    }
+
+    .img-expanded {
+        max-height: 400px;
+        transition: max-height 0.3s ease;
+    }
+
+    .table-container {
+        max-height: 273px;
+        /* Altura máxima de la tabla para mostrar  registros */
+        overflow-y: auto;
+        /* Mostrar barra de scroll vertical en caso de que haya más de 5 registros */
+    }
+
+    .table-container table {
+        font-size: 13px; /* Tamaño de fuente para la tabla */
+    }
+    
+    .justificar {
+        text-align: justify;
+    }
+
+    .icono i {
+    font-size: 20px; /* Ajusta el tamaño del icono según tus preferencias */
+    }
+
+/* Ocultar la barra de desplazamiento */
+    body {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+    }
+
+    body::-webkit-scrollbar {
+      width: 1px;
+    }
+    
 </style>
 
 
@@ -41,7 +88,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.2/font/bootstrap-icons.css">
 
-
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
     integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
     crossorigin="anonymous"></script>
@@ -50,43 +96,37 @@
     crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.14.0/css/all.css"
     integrity="sha384-HzLeBuhoNPvSl5KYnjx0BT+WB0QEEqLprO+NBkkk5gbc67FTaL7XIGa2w1L0Xbgc" crossorigin="anonymous">
-
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
+    integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 </head>
 {% include '_navbar.html' %}
 
 <body>
   <div style="display: flex; flex-direction: column; min-height:94vh;">
-    <div style="flex-grow: 1; padding-inline: 0rem;">
-      <div class="container mt-2 pt-2">
+    <div style="flex-grow: 1; padding-inline: 0rem; margin-top: 58px;"> <!-- Agrega margin-top: 56px; -->
+      <div class="container">
 
         {% block content %}
 
         {% endblock %}
-      <br><br>
+        <br><br>
       </div>
 
     </div>
     <div>
       <footer>
-        <p>
-          Yúber Millán © 2023
-        </p>
-        <p>
-          <a href="{% url 'About' %} ">Sobre mi</a>
-        </p>
+        <p>Yúber Millán © 2023</p>
+        <p><a href="{% url 'About' %} ">Sobre mi</a></p>
       </footer>
     </div>
 
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
-
     {% block js %}
-
     {% endblock %}
-
-
 </body>
 
 </html>

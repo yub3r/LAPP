@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #05193b;">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background-color: #05193b;">
   <div class="container">
     <a class="navbar-brand" href="{% url 'home' %}"><img src="/media/Lapp_Logo_sm_w.png" alt="" width="50"
         height="28"></a>
@@ -39,6 +39,7 @@
             aria-expanded="true">Tools</a>
           <ul class="dropdown-menu dropdown-menu-start">
             <li><a class="dropdown-item" href="{% url 'ejecutar_swd_script' %}" class="nav-link">SWD Script</a></li>
+            <li><a class="dropdown-item" href="{% url 'ejecutar_swa_script' %}" class="nav-link">SWA Script</a></li>
           </ul>
         </li>
 

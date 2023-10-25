@@ -1,26 +1,68 @@
 
 from django import forms
 from django.contrib.auth.models import User
+from .models import SwitchDeDistribucion, Rack, SwitchDeAcceso
 
 
 class SWDScriptForm(forms.Form):
-    num_switch = forms.IntegerField(
-        label="Switch de Distribución número:",
-        min_value=1,
-        max_value=20,
-        widget=forms.NumberInput(attrs={'pattern': '[0-9]*'}),
+    nro_swd = forms.ChoiceField(
+        choices=[('', 'Elija un SWD')] + [(swd.nro_swd,
+                                           f"SWD {swd.nro_swd}") for swd in SwitchDeDistribucion.objects.all()],
+        label="Switch de Distribución",
+        widget=forms.Select(attrs={'id': 'nro_swd'}),
+        required=True
     )
 
     accion = forms.ChoiceField(
         label="",
-        choices=[("encender", "Encender Interfaces"), ("apagar", "Apagar Interfaces")],
-        widget=forms.RadioSelect(attrs={'class': 'form-check-inline'}), 
-        required=False,
+        choices=[("encender", "Encender Interfaces"),
+                 ("apagar", "Apagar Interfaces")],
+        widget=forms.RadioSelect(attrs={'class': 'form-check-inline'}),
+        required=True,
+        error_messages={
+            'required': 'Debe seleccionar una acción.'  # Mensaje de error personalizado
+        }
     )
 
 
+class SWAScriptForm(forms.Form):
+    exclude = ['rack']
+
+    nro_swd = forms.ChoiceField(
+        choices=[('', 'Elija un SWD')] + [(swd.nro_swd, f"SWD {swd.nro_swd}") for swd in SwitchDeDistribucion.objects.all()],
+        label="Switch de Distribución",
+        widget=forms.Select(attrs={'id': 'nro_swd'}),
+        required=True
+    )
+
+    rack = forms.ModelChoiceField(
+        queryset=Rack.objects.none(),  # Inicialmente vacío
+        label="Rack",
+        widget=forms.Select(attrs={'id': 'rack'}),
+        required=True
+    )
+
+    switches_de_acceso = forms.ModelMultipleChoiceField(
+        queryset=SwitchDeAcceso.objects.none(),  # Inicialmente vacío
+        label="Switches de Acceso",
+        widget=forms.CheckboxSelectMultiple(
+            attrs={'class': 'switches-de-acceso'}),
+        required=True
+    )
+
+    portchannels_swa = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=True
+    )
 
 
-# class SWDScriptForm(forms.Form):
-#     num_switch = forms.IntegerField(label="Switch de Distribución número:", min_value=1, max_value=20)
-#     accion = forms.ChoiceField(label="Acción a realizar", choices=[("encender", "Encender interfaces"), ("apagar", "Apagar interfaces")])
+    accion = forms.ChoiceField(
+        label="",
+        choices=[("encender", "Encender Interfaces"),
+                 ("apagar", "Apagar Interfaces")],
+        widget=forms.RadioSelect(attrs={'class': 'form-check-inline'}),
+        required=True,
+        error_messages={
+            'required': 'Debe seleccionar una acción.'  # Mensaje de error personalizado
+        }
+    )

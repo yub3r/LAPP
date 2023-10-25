@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% block js%}
+<style>
+
+</style>
 {% if messages %}
 {% for m in messages %}
 <script>
@@ -22,6 +25,11 @@
 {% endblock %}
 
 {% block content %}
+<style>
+  .card-body a {
+    margin: 0 4px;
+  }
+</style>
 
 <h3 class="text-center">{{mensaje}}</h3>
 
@@ -31,22 +39,29 @@
   <section class="card card-body">
     {% csrf_token %}
     <div class="d-flex justify-content-between">
+      <a class="btn btn-success w-50 icono" href="/tools/ejecutar_swd_script/" ;><i class="bi bi-bezier"></i><br>Script <strong>SWD</strong></a>
+      <a class="btn btn-outline-success w-50 icono" href="/tools/ejecutar_swa_script/"><i class="bi bi-bezier2"></i><br>Script <strong>SWA</strong></a>
+    </div>
+  <!-- <section class="card card-body">
+    {% csrf_token %}
+    <div class="d-flex justify-content-between">
       <a class="btn btn-success w-50" href="/tasks/" ;><i class="bi bi-alarm-fill"></i><br>Tareas en Ejecución</a>
       <a class="btn btn-secondary w-50" href="/tasks_completed/"><i class="bi bi-check-square-fill"></i><br>Tareas
         completadas</a>
-    </div>
+    </div> -->
   <!-- </section> -->
 
   <!-- ***************************************************************************************************************************************************** -->
 
   <!-- <section class="card card-body mt-2"> -->
-    <a class="btn btn-warning" href="/guardias/" style=margin-top:8px;><i class="bi bi-calendar-check-fill"></i><br>Fechas de Guardias</a>
+    <a class="btn btn-warning icono" href="/guardias/" style=margin-top:8px;><i class="bi bi-calendar-check-fill"></i><br>Fechas de Guardias</a>
   <!-- </section> -->
 
   <!-- ***************************************************************************************************************************************************** -->
 
   <!-- <section class="card card-body mt-2"> -->
-    <a class="btn btn-info" href="/historial/" style=margin-top:9px;><i class="bi bi-tornado"></i><br>Sorteos</a>
+
+    <a class="btn btn-info icono" href="/historial/" style=margin-top:9px;><i class="bi bi-person-arms-up"></i><br>Sorteos</a>
   </section>
 
   <!-- ***************************************************************************************************************************************************** -->
@@ -65,16 +80,17 @@
       rel="noopener noreferrer"><strong>HiBob</strong> HR platform</a>
     <a class="btn btn-outline-primary" href="https://mgmt.bitfarms.com/login" style=margin-top:5px; target="_blank"
       rel="noopener noreferrer"><strong>MGMT</strong> Bitfamrs</a>
-    <a class="btn btn-outline-primary" href="https://tickets.binfra.ca/" style=margin-top:5px; target="_blank"
-      rel="noopener noreferrer"><strong>Tickets</strong>.binfra.ca</a>
+    <a class="btn btn-outline-primary" href="https://expense.certify.com/Login.aspx" style=margin-top:5px; target="_blank"
+      rel="noopener noreferrer"><strong>Certify |</strong> Expense</a>
     <a class="btn btn-outline-primary"
       href="https://app.powerbi.com/view?r=eyJrIjoiMjAwZmEwZmItNjdkNi00YjgzLTg4NTktMjAwMTcxMGU5YWVkIiwidCI6ImFlNWI1YThmLTVmYzAtNDU3Yi05OGJhLTk3ZDYyZWZhMmFhMiIsImMiOjR9"
       style=margin-top:5px; target="_blank" rel="noopener noreferrer"><strong>Dashboard PowerBi |</strong> Central
       Termica</a>
+
   </section>
   <!-- ***************************************************************************************************************************************************** -->
 
-  <section class="card card-body mt-2 mb-2">
+  <section class="card card-body mt-2">
 
     <body>
       <table class="table table-sm">
@@ -86,10 +102,10 @@
         .then(response => response.json())
         .then(data => {
           const dolarData = [
-            { descripcion: 'Cotización Banco Nación (Oficial)', valor: data.oficial },
+            { descripcion: 'Cotización Banco Nación', valor: data.oficial },
             { descripcion: 'Dólar Bolsa (MEP)', valor: data.mep },
-            { descripcion: 'Dólar Contado con Liquidación (CCL)', valor: data.ccl },
-            { descripcion: 'Dólar Contado con Bitcoin o Dólar Cripto (CCB)', valor: data.ccb },
+            { descripcion: 'Contado Liquidación (CCL)', valor: data.ccl },
+            { descripcion: 'Dólar Cripto (CCB)', valor: data.ccb },
             { descripcion: 'Dólar Informal (Blue)', valor: data.blue },
             { descripcion: 'Hora de la consulta', valor: new Date(data.time * 1000).toLocaleString() }
             ];
@@ -124,10 +140,6 @@
   </section>
   
 </main>
-<style>
-  .card-body a {
-    margin: 0 4px;
-  }
-</style>
+
 
 {% endblock %}
