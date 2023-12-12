@@ -39,7 +39,7 @@
   <section class="card card-body">
     {% csrf_token %}
     <div class="d-flex justify-content-between">
-      <a class="btn btn-success w-50 icono" href="/tools/ejecutar_swd_script/" ;><i class="bi bi-bezier"></i><br>Script <strong>SWD</strong></a>
+      <a class="btn btn-success w-50 icono" href="/tools/ejecutar_swd_script/"><i class="bi bi-bezier"></i><br>Script <strong>SWD</strong></a>
       <a class="btn btn-outline-success w-50 icono" href="/tools/ejecutar_swa_script/"><i class="bi bi-bezier2"></i><br>Script <strong>SWA</strong></a>
     </div>
   <!-- <section class="card card-body">
@@ -66,7 +66,7 @@
 
   <!-- ***************************************************************************************************************************************************** -->
 
-  <section class="card card-body mt-2">
+  <section class="card card-body mt-2" style="font-size: 13px;">
     <!-- <h1 class="display-6 text-center">Enlaces</h1> -->
     <a class="btn btn-outline-primary" href="https://bitfarms.com/" ; target="_blank"
       rel="noopener noreferrer"><strong>Bitfarms</strong>.com</a>
@@ -86,11 +86,10 @@
       href="https://app.powerbi.com/view?r=eyJrIjoiMjAwZmEwZmItNjdkNi00YjgzLTg4NTktMjAwMTcxMGU5YWVkIiwidCI6ImFlNWI1YThmLTVmYzAtNDU3Yi05OGJhLTk3ZDYyZWZhMmFhMiIsImMiOjR9"
       style=margin-top:5px; target="_blank" rel="noopener noreferrer"><strong>Dashboard PowerBi |</strong> Central
       Termica</a>
-
   </section>
   <!-- ***************************************************************************************************************************************************** -->
 
-  <section class="card card-body mt-2">
+  <section class="card card-body mt-2" style="font-size: 13px;">
 
     <body>
       <table class="table table-sm">
@@ -104,6 +103,7 @@
           const dolarData = [
             { descripcion: 'Cotización Banco Nación', valor: data.oficial },
             { descripcion: 'Dólar Bolsa (MEP)', valor: data.mep },
+            { descripcion: 'Dólar Solidario', valor: data.solidario },
             { descripcion: 'Contado Liquidación (CCL)', valor: data.ccl },
             { descripcion: 'Dólar Cripto (CCB)', valor: data.ccb },
             { descripcion: 'Dólar Informal (Blue)', valor: data.blue },

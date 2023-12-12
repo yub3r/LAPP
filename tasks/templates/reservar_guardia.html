@@ -62,10 +62,6 @@
 
 <form action="/reservar_guardia/" method="POST"
     style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto ">
-    <div class="d-flex justify-content-end">
-        <button type="reset" class="btn btn-outline-secondary">Reset</button>
-    </div>
-
 
     {% csrf_token %}
     <div class="form-check-inline">
@@ -80,7 +76,17 @@
     </div>
     <p><br></p>
     <h5 class="display-7 text-center">{{error}}</h5>
-    <input class="btn btn-primary" type="submit" value="Asignar">
-    <a href="{% url 'guardias' %}" style=margin-top:8px; class="btn btn-secondary">Cancelar</a>
+
+         <input class="btn btn-primary w-100" type="submit" value="Asignar" />
+   
+         <div class="d-flex" style="margin-top: 8px">
+           <button type="reset"
+               style="margin-top: 8px"
+               class="btn btn-outline-secondary flex-fill me-3">Reset</button>
+           <a href="{% url 'guardias' %}"
+               style="margin-top: 8px"
+               class="btn btn-secondary flex-fill">Cancelar</a>
+           </div>
+
 </form>
 {% endblock %}

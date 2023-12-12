@@ -90,7 +90,7 @@ def ejecutar_comandos(tn, comandos):
 
         # Agregar tiempo adicional después del comando "interface range po1-24"
         if command == "interface range po1-24":
-            time.sleep(1)  # Agregar el tiempo adicional que necesites
+            time.sleep(0.5)  # Agregar el tiempo adicional que necesites
 
             # Verificar si hay un comando siguiente y esperar hasta que se ejecute el comando anterior
             if index + 1 < len(comandos):

@@ -1,40 +1,143 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} {% block js%}
+<script>
+  // Función para actualizar el contador
+  function actualizarContador() {
+    const checkboxesParticipantes = document.querySelectorAll(
+      "input[name='participantes']"
+    );
+    let contador = 0;
+    checkboxesParticipantes.forEach(function (checkbox) {
+      if (checkbox.checked) {
+        contador++;
+      }
+    });
+    document.getElementById("contador").textContent = contador;
+  }
 
-{% block content %}
-{% load crispy_forms_tags %}
+  // Función para resetear el contador
+  function resetContador() {
+    document.getElementById("contador").textContent = 0;
+  }
+
+  // Agregar evento click al botón Reset
+  const botonReset = document.querySelector("button[type='reset']");
+  botonReset.addEventListener("click", resetContador);
+
+  // Agregar evento change a cada checkbox
+  const checkboxesParticipantes = document.querySelectorAll(
+    "input[name='participantes']"
+  );
+  checkboxesParticipantes.forEach(function (checkbox) {
+    checkbox.addEventListener("change", actualizarContador);
+  });
+
+  const botonSeleccionarNOC = document.querySelector("#seleccionar-noc");
+  botonSeleccionarNOC.addEventListener("click", function () {
+    const checkboxesParticipantes = document.querySelectorAll(
+      "input[name='participantes'][data-group='NOC']"
+    );
+    checkboxesParticipantes.forEach(function (checkbox) {
+      checkbox.checked = !checkbox.checked;
+    });
+    actualizarContador();
+  });
+
+  const botonSeleccionarTecnico1 = document.querySelector(
+    "#seleccionar-tecnico1"
+  );
+  botonSeleccionarTecnico1.addEventListener("click", function () {
+    const checkboxesParticipantes = document.querySelectorAll(
+      "input[name='participantes'][data-group='Tecnico 1']"
+    );
+    checkboxesParticipantes.forEach(function (checkbox) {
+      checkbox.checked = !checkbox.checked;
+    });
+    actualizarContador();
+  });
+
+  const botonSeleccionarTecnico2 = document.querySelector(
+    "#seleccionar-tecnico2"
+  );
+  botonSeleccionarTecnico2.addEventListener("click", function () {
+    const checkboxesParticipantes = document.querySelectorAll(
+      "input[name='participantes'][data-group='Tecnico 2']"
+    );
+    checkboxesParticipantes.forEach(function (checkbox) {
+      checkbox.checked = !checkbox.checked;
+    });
+    actualizarContador();
+  });
+
+  const botonSeleccionarTodos = document.querySelector("#seleccionar-todos");
+  botonSeleccionarTodos.addEventListener("click", function () {
+    const checkboxesParticipantes = document.querySelectorAll(
+      "input[name='participantes']"
+    );
+    checkboxesParticipantes.forEach(function (checkbox) {
+      checkbox.checked = !checkbox.checked;
+    });
+    actualizarContador();
+  });
+</script>
+{% endblock %} {% block content %} {% load crispy_forms_tags %}
 
 <h1 class="display-6 text-center">Nuevo Sorteo</h1>
-<form method="POST" style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto ">
-    <div class="d-flex justify-content-end">
-        <button type="reset" class="btn btn-outline-secondary">Reset</button>
-    </div>
-    <div class="row justify-content-center mt-3">
-        {% csrf_token %}
-        {{form | crispy }}
+<form
+  method="POST"
+  style="
+    display: flex;
+    flex-direction: column;
+    max-width: 580px;
+    margin-inline: auto;
+  "
+>
+  <div class="row justify-content-center mt-3">
+    {% csrf_token %} {{form | crispy }}
 
-        <h5 class="display-7 text-center">{{error}}</h5>
-        <div class="d-flex justify-content-end">
-        <button type="button" class="btn btn-outline-secondary" id="seleccionar-todos">Selec Todos</button>
-        &nbsp;
-    </div> 
-</div>
-<div class="container mx-auto">
-    <div class="row justify-content-center">
-            <p><br></p>
-            <input class="btn btn-info" type="submit" value="Sortear">
-            <a href="{% url 'historial_sorteos' %}" style=margin-top:8px; class="btn btn-secondary">Cancelar</a>
+    <h5 class="display-7 text-center">{{error}}</h5>
+    <!-- Contador -->
+    <h2
+      id="contador"
+      style="font-size: 50px; color: rgb(147, 147, 147); text-align: center">
+      0
+    </h2>
+    <div class="d-flex justify-content-center">
+      <button
+        type="button"
+        class="btn btn-outline-info flex-fill me-3"
+        id="seleccionar-tecnico1">
+        T1
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline-info flex-fill me-3"
+        id="seleccionar-tecnico2">
+        T2
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline-info flex-fill me-3"
+        id="seleccionar-noc">
+        NOC
+      </button>
+      <button type="button" class="btn btn-outline-info flex-fill" id="seleccionar-todos">
+        Todos
+      </button>
+      &nbsp;
     </div>
-</div>
+  </div>
+
+     <p><br /></p>
+      <input class="btn btn-info w-100" type="submit" value="Sortear" />
+
+      <div class="d-flex" style="margin-top: 8px">
+        <button type="reset"
+            style="margin-top: 8px"
+            class="btn btn-outline-secondary flex-fill me-3">Reset</button>
+        <a href="{% url 'historial_sorteos' %}"
+            style="margin-top: 8px"
+            class="btn btn-secondary flex-fill">Cancelar</a>
+        </div>
 </form>
-
-<script>
-    const botonSeleccionarTodos = document.querySelector("#seleccionar-todos");
-    botonSeleccionarTodos.addEventListener("click", function () {
-        const checkboxesParticipantes = document.querySelectorAll("input[name='participantes']");
-        checkboxesParticipantes.forEach(function (checkbox) {
-            checkbox.checked = true;
-        });
-    });
-</script>
 
 {% endblock %}

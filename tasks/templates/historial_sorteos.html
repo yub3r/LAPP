@@ -5,8 +5,8 @@
 <div class="text-center py-4"><a class="btn btn-info" href="{% url 'sorteo' %}">
     <i class="bi bi-tornado"></i> Nuevo Sorteo </a></div>
 
-<div class="container my-3">
-    <table class="table mt-2">
+    <div class="table-container-sorteo">
+        <table class="table table-borderless table-sm table table-striped">
         <thead>
             <tr>
                 <th>Título del sorteo</th>
@@ -23,11 +23,11 @@
             {% for sorteo in historial %}
             <tr>
                 <td style="vertical-align: middle;">{{ sorteo.sorteo.titulo }}</td>
-                <td style="vertical-align: middle;">{{ sorteo.sorteo.fecha }}</td>
+                <td style="vertical-align: middle;">{{ sorteo.sorteo.fecha|date:'j M H:i' }}</td>
                 <td style="vertical-align: middle;">
                     {% for ganador in sorteo.ganadores %}
                         {{ ganador }}
-                        {% if not forloop.last %}, {% endif %}
+                        {% if not forloop.last %}{% endif %}
                     {% endfor %}
                     <td style="vertical-align: middle;">
                         <div style="float: right;">

@@ -62,6 +62,15 @@ class GuardiaForm(forms.ModelForm):
                     "Ya existe una guardia reservada en esa fecha.")
             
 
+class GroupCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        user = User.objects.get(id=value.value)  
+        group = user.groups.first()
+        if group:
+            option['attrs']['data-group'] = group.name
+        return option
+
 class SorteoForm(forms.ModelForm):
     class Meta:
         model = Sorteo
@@ -69,7 +78,7 @@ class SorteoForm(forms.ModelForm):
     
     participantes = forms.ModelMultipleChoiceField(
         queryset=User.objects.all().exclude(id=1).order_by('username'),
-        widget=forms.CheckboxSelectMultiple,
+        widget=GroupCheckboxSelectMultiple,
     )
     
     def clean(self):
