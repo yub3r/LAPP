@@ -100,39 +100,46 @@
         fetch('https://criptoya.com/api/dolar')
         .then(response => response.json())
         .then(data => {
-          const dolarData = [
-            { descripcion: 'Cotización Banco Nación', valor: data.oficial },
-            { descripcion: 'Dólar Bolsa (MEP)', valor: data.mep },
-            { descripcion: 'Dólar Solidario', valor: data.solidario },
-            { descripcion: 'Contado Liquidación (CCL)', valor: data.ccl },
-            { descripcion: 'Dólar Cripto (CCB)', valor: data.ccb },
-            { descripcion: 'Dólar Informal (Blue)', valor: data.blue },
-            { descripcion: 'Hora de la consulta', valor: new Date(data.time * 1000).toLocaleString() }
+            const dolarData = [
+                { descripcion: 'HOY EN ARG', valor: new Date(data.oficial.timestamp * 1000).toLocaleTimeString() },
+                { descripcion: 'Cotización Banco Nación', valor: data.oficial.price },
+                { descripcion: 'Dólar Informal (Blue)', valor: data.blue.ask },
+                { descripcion: 'Dólar Tarjeta', valor: data.tarjeta.price },
+                { descripcion: 'Dólar Bolsa (MEP)', valor: data.mep.al30["48hs"].price },
+                { descripcion: 'Contado Liquidación (CCL)', valor: data.ccl.al30["48hs"].price },
+                { descripcion: 'Dólar Cripto (CCB)', valor: data.cripto.ccb.ask }
             ];
-
-            
+    
             const dolarDataElement = document.getElementById('dolarData');
             dolarData.forEach(item => {
-              const row = document.createElement('tr');
-              const descripcionCell = document.createElement('td');
-              const valorCell = document.createElement('td');
-              
-              descripcionCell.textContent = item.descripcion;
-              valorCell.textContent = item.valor;
-              
-              
-              valorCell.style.textAlign = 'right';
-              
-              row.appendChild(descripcionCell);
-              row.appendChild(valorCell);
-              
-              dolarDataElement.appendChild(row);
+                const row = document.createElement('tr');
+                const descripcionCell = document.createElement('td');
+                const valorCell = document.createElement('td');
+                
+                if (item.descripcion === 'HOY EN ARG') {
+                descripcionCell.innerHTML = `<strong>${item.descripcion}</strong>`;
+                } else {
+                    descripcionCell.textContent = item.descripcion;
+                }
+
+                if (typeof item.valor === 'number') {
+                    valorCell.textContent = item.valor.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                } else {
+                    valorCell.innerHTML = `<strong>${item.valor}</strong>`;
+                }
+                
+                valorCell.style.textAlign = 'right';
+                
+                row.appendChild(descripcionCell);
+                row.appendChild(valorCell);
+                
+                dolarDataElement.appendChild(row);
             });
-          })
-          .catch(error => {
+        })
+        .catch(error => {
             console.error('Error al obtener los datos del Dólar:', error);
-          });
-          </script>
+        });
+    </script>
     </body>
     <script src="https://public.bnbstatic.com/unpkg/growth-widget/cryptoCurrencyWidget@0.0.9.min.js"></script>
     <div class="binance-widget-marquee" data-cmc-ids="1,1027,5426,3890" data-theme="light" data-transparent="true"
