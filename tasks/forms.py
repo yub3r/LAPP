@@ -26,9 +26,9 @@ class TaskForm(forms.ModelForm):
 
 class GuardiaForm(forms.ModelForm):
     usuario1 = forms.ModelChoiceField(queryset=User.objects.filter(
-        groups__name='Tecnico 1'), label='Técnico 1')
+        groups__name='Tecnico 1'), label='Técnico 2')
     usuario2 = forms.ModelChoiceField(queryset=User.objects.filter(
-        groups__name='Tecnico 2'), label='Técnico 2')
+        groups__name='Tecnico 2'), label='Técnico 1')
     usuario3 = forms.ModelChoiceField(
         queryset=User.objects.filter(groups__name='IT'), label='IT')
 
@@ -41,6 +41,11 @@ class GuardiaForm(forms.ModelForm):
             'fecha_inicio': forms.DateInput(attrs={'class': 'form-control'}),
             'fecha_fin': forms.DateInput(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super(GuardiaForm, self).__init__(*args, **kwargs)
+        self.fields['usuario3'].initial = User.objects.get(username='ymillan')
+
 
     def clean(self):
         cleaned_data = super().clean()
