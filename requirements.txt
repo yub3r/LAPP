@@ -18,3 +18,7 @@ matplotlib
 mpl_finance
 ccxt
 mpld3
+slack_sdk
+slackclient
+requests
+python-dotenv

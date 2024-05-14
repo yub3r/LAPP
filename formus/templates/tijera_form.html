@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+    // Selectores de elementos del DOM
+    const form = document.querySelector('form');
+    const tareaInput = document.querySelector('#tarea');
+    const observationsInput = document.querySelector('input[name="observations"]');
+    const modCFSelect = document.querySelector('#mod_cf');
+    const ladoSelect = document.querySelector('#lado');
+    const pasilloSelect = document.querySelector('#pasillo');
+
+    // Función para crear alertas Swal
+    function createSwalAlert(icon, title, text) {
+        Swal.fire({
+            icon: icon,
+            title: title,
+            text: text,
+        });
+    }
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        // Validaciones
+        const questions = Array.from(document.querySelectorAll('.btn-group'));
+        const allAnswered = questions.every(question => {
+            return Array.from(question.querySelectorAll('.btn-check')).some(input => input.checked);
+        });
+
+        if (!allAnswered) {
+            createSwalAlert('error', 'Error', 'Debe responder a todas las preguntas antes de continuar.');
+            return;
+        }
+
+        const tarea = tareaInput.value;
+        if (!tarea) {
+            createSwalAlert('error', 'Error', 'Debe describir la tarea antes de continuar.');
+            return;
+        }
+
+        var tiempo_uso_actual = $('#vehiculo').find(':selected').data('tiempo_uso'); // Obtener el valor actual de tiempo_uso desde el modelo
+        var tiempo_uso_input = $('#tiempo_uso').val(); // Obtener el valor ingresado por el usuario
+
+        // Verificar si el campo está vacío
+        if (!tiempo_uso_input) {
+            // Mostrar mensaje de error utilizando Swal.fire
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El campo de tiempo de uso no puede estar vacío.',
+            });
+            return;
+        }
+
+        // Convertir los tiempos a minutos para poder compararlos
+        var tiempo_uso_actual_minutos = parseInt(tiempo_uso_actual);
+        var tiempo_uso_input_minutos = parseInt(tiempo_uso_input.split(':')[0]) * 60 + parseInt(tiempo_uso_input.split(':')[1]);
+
+        if (tiempo_uso_input_minutos < tiempo_uso_actual_minutos) {
+            // Mostrar mensaje de error utilizando Swal.fire
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El tiempo ingresado no puede ser inferior al tiempo de uso actual de la tijera.',
+            });
+            return;
+        }
+
+        // Convertir el tiempo ingresado a minutos antes de enviarlo
+        $('#tiempo_uso').val(tiempo_uso_input_minutos);
+
+        // Acciones
+        const observations = [
+            'MOD/CF: ' + modCFSelect.value + ' ' + ladoSelect.value + ' - ' + 'Pasillo ' + pasilloSelect.value + '.',
+            'Tarea a realizar: ' + tarea + '.',
+        ].join('\n');
+
+        observationsInput.value = observations;
+
+        const priorityQuestions = questions.filter(question => question.dataset.priority === 'true');
+        const negativePriorityAnswer = priorityQuestions.some(question => {
+            return question.querySelector('.btn-check[value="NO"]').checked;
+        });
+
+        if (negativePriorityAnswer) {
+            Swal.fire({
+                "showConfirmButton": true,
+                "icon": 'warning',
+                "title": 'Advertencia',
+                "text": 'NO puede usar el Equipo debido a la falla detectada.',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    event.target.submit();
+                }
+            });
+            return;
+        }
+
+        Swal.fire({
+            "title": "Excelente...!!!",
+            "timer": 2500,
+            "showConfirmButton": false,
+            "text": "Formulario completado con éxito",
+            "backdrop": `rgba(36, 125, 250, 0.43)`,
+            "imageAlt": 'Custom image',
+            "icon": 'success',
+        }).then(() => {
+            event.target.submit();
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<main class="container-fluid">
+    <header class="mb-3">
+        <h1 class="display-6 text-center">Control de Plataforma Elevadora (tipo tijera).</h1>
+    </header>
+
+    <div class="d-flex justify-content-center">
+        <p class="justificar"><br>
+            Antes de iniciar el checklist, debes recorrer el área donde llevarás a cabo la tareas.
+            Asegúrate que esté completamente libre de obstáculos, como cables aéreos, personas trabajando
+            en proximidades o desniveles que puedan representar un riesgo para nuestra seguridad.
+        </p>
+
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        <section class="card-body mb-8">
+            <table class="table">
+                {% csrf_token %}
+                {% for question in questions %}
+                <tr>
+                    <td class="text-left" style="vertical-align: middle;">
+                        <label class="form-label" for="response-{{ question.id }}">{{ question.text }}</label>
+                    </td>
+                    <td class="text-right">
+                        <div class="btn-group" role="group" aria-label="Basic radio toggle button group"
+                            style="float: right;" data-priority="{{ question.is_priority|lower }}">
+                            <input type="radio" class="btn-check" name="response-{{ question.id }}"
+                                id="btnradio1-{{ question.id }}" autocomplete="off" value="SI">
+                            <label class="btn btn-outline-success" for="btnradio1-{{ question.id }}"><i
+                                    class="bi bi-check2-square"></i></label>
+
+                            <input type="radio" class="btn-check" name="response-{{ question.id }}"
+                                id="btnradio2-{{ question.id }}" autocomplete="off" value="NO">
+                            <label class="btn btn-outline-danger" for="btnradio2-{{ question.id }}"><i
+                                    class="bi bi-dash-square"></i></label>
+
+                            <input type="radio" class="btn-check" name="response-{{ question.id }}"
+                                id="btnradio3-{{ question.id }}" autocomplete="off" value="NA">
+                            <label class="btn btn-outline-secondary" for="btnradio3-{{ question.id }}">N/A</label>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <div class="mb-3 mt-3">
+                <h class="display-10 text-center"><strong>Ubicación y Descripción de Tarea:</strong></h2>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="vehiculo">ID Tijera</label>
+                        <select class="form-control" id="vehiculo" name="vehiculo" required>
+                            <option value="" disabled selected> ------------- </option>
+                            {% for vehiculo in vehiculos %}
+                            <option value="{{ vehiculo.patente_id }}" data-tiempo_uso="{{ vehiculo.tiempo_uso }}">{{ vehiculo.patente_id }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="tiempo_uso">Tiempo actual de uso</label>
+                        <input type="tel" class="form-control" id="tiempo_uso" name="tiempo_uso" oninput="validarTiempo(this)" onkeydown="return soloNumeros(event)">
+                        <script>
+                            // Función para convertir minutos a formato HH:MM
+                            function convertirMinutosAHoras(minutos) {
+                                var horas = Math.floor(minutos / 60);
+                                var minutos = minutos % 60;
+                                return (horas < 10 ? '0' : '') + horas + ':' + (minutos < 10 ? '0' : '') + minutos;
+                            }
+                    
+                            // Función para validar el tiempo ingresado
+                            function validarTiempo(input) {
+                                var valor = input.value;
+                                var partes = valor.split(':');
+                                if (partes.length == 2) {
+                                    var minutos = parseInt(partes[1]);
+                                    if (minutos < 0 || minutos > 59) {
+                                        input.setCustomValidity('Los minutos deben estar entre 0 y 59.');
+                                    } else {
+                                        input.setCustomValidity('');
+                                    }
+                                }
+                                // Agregar ":" después de que el usuario haya ingresado dos dígitos
+                                if (valor.length == 2 && partes.length == 1) {
+                                    input.value += ':';
+                                }
+                            }
+                    
+                            // Función para permitir solo números
+                            function soloNumeros(event) {
+                                var charCode = (event.which) ? event.which : event.keyCode;
+                                if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                                    return false;
+                                }
+                                return true;
+                            }
+                        
+                            $(document).ready(function() {
+                                // Bloquear el campo de entrada al cargar la página
+                                $('#tiempo_uso').prop('disabled', true);
+
+                                // Habilitar el campo de entrada cuando se selecciona un vehículo
+                                $('#vehiculo').change(function() {
+                                    $('#tiempo_uso').prop('disabled', false); // Habilitar el campo de entrada
+                                    var tiempo_uso = $(this).find(':selected').data('tiempo_uso');
+                                    var tiempo_uso_formato = convertirMinutosAHoras(tiempo_uso); // Convertir a formato HH:MM
+                                    $('#tiempo_uso').val(''); // Limpiar el campo de entrada
+                                    $('#tiempo_uso').attr('placeholder', tiempo_uso_formato);
+                                });
+                            });
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section>
+            <div class="container">
+                <input type="hidden" name="observations" id="observations">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="mod_cf">MOD/CF:</label>
+                        <select class="form-control" id="mod_cf" name="mod_cf">
+                            <option value="N/A">N/A</option>
+                            <option value="M0">M0</option>
+                            <option value="M1">M1</option>
+                            <option value="M2">M2</option>
+                            <option value="M3">M3</option>
+                            <option value="M4">M4</option>
+                            <option value="M5">M5</option>
+                            <option value="CF1">CF1</option>
+                            <option value="CF2">CF2</option>
+                            <option value="CF3">CF3</option>
+                            <option value="CF4">CF4</option>
+                            <option value="CF5">CF5</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="lado">Lado:</label>
+                        <select class="form-control" id="lado" name="lado">
+                            <option value="N/A">N/A</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="pasillo">Pasillo:</label>
+                        <select class="form-control" id="pasillo" name="pasillo">
+                            <option value="N/A">N/A</option>
+                            <option value="Filtro">Filtro</option>
+                            <option value="Caliente">Caliente</option>
+                            <option value="Frio">Frio</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <hr> <!-- divisor horizontal -->
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <label for="tarea">Tarea a realizar:</label>
+                        <input type="text" class="form-control" id="tarea" name="tarea"
+                            placeholder="Describa brevemente la tarea aquí.">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <hr> <!-- divisor horizontal -->
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <input type="file" class="form-control" name="images" accept="image/*" multiple>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <hr> <!-- divisor horizontal -->
+                    </div>
+                </div>
+            </div>
+        </section>
+        <button class="btn btn-dark w-100" style="margin-top: 12px" type="submit" formmethod="post">Enviar</button>
+        <div class="d-flex">
+            <button type="reset" style="margin-top: 8px" class="btn btn-outline-secondary flex-fill me-3">Reset</button>
+            <a href="{% url 'formularios' %}" style="margin-top: 8px" class="btn btn-secondary flex-fill">Cancelar</a>
+        </div>
+    </form>
+</main>
+{% endblock %}

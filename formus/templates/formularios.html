@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<script>
+</script>
+
+<h1 class="display-6 text-center">Formularios</h1>
+<main class="container" style="display: flex; flex-direction: column; max-width:700px; margin-inline: auto ">
+
+<section class="card card-body mt-2">
+    <!-- <h1 class="display-6 text-center">Enlaces</h1> -->
+    <a class="btn btn-outline-dark" href="{% url 'tijera_form' %}"; rel="noopener noreferrer">Control de <strong>Plataforma Elevadora </strong>(tipo tijera).</a>
+</section>
+{% if 'auth.admin_group' in perms or request.user.username == 'aostanello' or request.user.username == 'hgauna' %}
+<section class="card card-body mt-2">
+    <!-- <h1 class="display-6 text-center">Enlaces</h1> -->
+    <a class="btn btn-outline-primary" href="{% url 'completed_forms' %}"; rel="noopener noreferrer">Formularios <strong>Completados</strong></a>
+</section>
+{% endif %}
+</main>
+
+{% endblock %}

@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import user_passes_test
 urlpatterns = [
     path('', views.home, name='home'),
     path('tools/', include("tools.urls")),
+    path('formus/', include("formus.urls")),
     # path('crypto-prices/', views.crypto_prices, name='crypto_prices'),
     # path('', views.crypto_prices, name='crypto_prices'),
     path("about", views.sobremi, name="About"),

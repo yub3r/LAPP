@@ -36,6 +36,21 @@
     margin: 0;
   }
 
+
+  .img-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+  }
+
+  .img-container img {
+      max-height: 400px;
+      cursor: pointer;
+      transition: max-height 0.3s ease;
+  }
+
+    .img-container img
   .img-minimized {
         max-height: 30px;
         cursor: pointer;
@@ -81,7 +96,11 @@
     body::-webkit-scrollbar {
       width: 1px;
     }
-    
+    .badge {
+    min-width: 40px;  /* Ajusta este valor según tus necesidades */
+    display: inline-block;
+    text-align: center;
+    }
 </style>
 
 
@@ -123,7 +142,7 @@
     </div>
     <div>
       <footer>
-        <p>Yúber Millán © 2023</p>
+        <p>Yúber Millán © 2024</p>
         <p><a href="{% url 'About' %} ">Sobre mi</a></p>
       </footer>
     </div>
