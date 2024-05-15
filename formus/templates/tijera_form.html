@@ -29,13 +29,13 @@
         });
 
         if (!allAnswered) {
-            createSwalAlert('error', 'Error', 'Debe responder a todas las preguntas antes de continuar.');
+            createSwalAlert('error', '', 'Debe responder a todas las preguntas antes de continuar.');
             return;
         }
 
         const tarea = tareaInput.value;
         if (!tarea) {
-            createSwalAlert('error', 'Error', 'Debe describir la tarea antes de continuar.');
+            createSwalAlert('error', '', 'Debe describir la tarea antes de continuar.');
             return;
         }
 
@@ -47,8 +47,8 @@
             // Mostrar mensaje de error utilizando Swal.fire
             Swal.fire({
                 icon: 'error',
-                title: 'Error',
-                text: 'El campo de tiempo de uso no puede estar vacío.',
+                // title: 'Error',
+                text: 'Compelete el campo de Tiempo de uso.',
             });
             return;
         }
@@ -61,7 +61,7 @@
             // Mostrar mensaje de error utilizando Swal.fire
             Swal.fire({
                 icon: 'error',
-                title: 'Error',
+                // title: 'Error',
                 text: 'El tiempo ingresado no puede ser inferior al tiempo de uso actual de la tijera.',
             });
             return;
@@ -88,7 +88,7 @@
                 "showConfirmButton": true,
                 "icon": 'warning',
                 "title": 'Advertencia',
-                "text": 'NO puede usar el Equipo debido a la falla detectada.',
+                "text": 'NO DEBE USAR el equipo debido a la falla detectada.',
             }).then((result) => {
                 if (result.isConfirmed) {
                     event.target.submit();
@@ -115,7 +115,7 @@
 {% block content %}
 <main class="container-fluid">
     <header class="mb-3">
-        <h1 class="display-6 text-center">Control de Plataforma Elevadora (tipo tijera).</h1>
+        <h1 class="display-6 text-center">Control de Plataforma Elevadora/Tijera.</h1>
     </header>
 
     <div class="d-flex justify-content-center">
@@ -232,7 +232,7 @@
                 <input type="hidden" name="observations" id="observations">
                 <div class="row">
                     <div class="col-md-4">
-                        <label for="mod_cf">MOD/CF:</label>
+                        <label for="mod_cf">Mod/CF:</label>
                         <select class="form-control" id="mod_cf" name="mod_cf">
                             <option value="N/A">N/A</option>
                             <option value="M0">M0</option>
@@ -273,7 +273,7 @@
                 </div>
                 <div class="row">
                     <div class="col-md-12">
-                        <label for="tarea">Tarea a realizar:</label>
+                        <label for="tarea">Observación y/o Descripción de Tarea:</label>
                         <input type="text" class="form-control" id="tarea" name="tarea"
                             placeholder="Describa brevemente la tarea aquí.">
                     </div>

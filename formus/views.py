@@ -1,18 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.models import User
-from django.db import IntegrityError
 from django.utils import timezone
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib import messages
-from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.decorators import login_required
 from .models import Form, Question, Answer, CompletedForm, FormImage, Vehiculo
-# from .forms import
 from datetime import date, timedelta
-from django.core.cache import cache
 from django.views.generic.base import RedirectView
-import random, re, slack
+import slack
 from django.http import JsonResponse
 
 
@@ -33,7 +25,7 @@ client = slack.WebClient(TOKEN)
 def tijera_form(request):
     form = Form.objects.get(name=FORMULARIO_NAME)
     questions = Question.objects.filter(form=form)
-    vehiculos = Vehiculo.objects.filter(tipo='EMOVIL')  # Filtrar solo los vehículos de tipo 'EMOVIL'
+    vehiculos = Vehiculo.objects.filter(tipo='EMOVIL', operativo=True).order_by('patente_id')
     if request.method == 'POST':
         observations = request.POST.get('observations')
         vehiculo_id = request.POST.get('vehiculo')
@@ -54,6 +46,9 @@ def tijera_form(request):
                     completed_form=completed_form, question=question, response=response)
                 if response == 'NO':
                     negative_answers.append(question.text)
+                    if question.is_priority:
+                        vehiculo.operativo = False
+                        vehiculo.save()
 
         if negative_answers:
             client.chat_postMessage(

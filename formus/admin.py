@@ -6,8 +6,16 @@ from .models import Form, Question, Answer, CompletedForm, FormImage, Vehiculo
 
 
 class VehiculoAdmin(admin.ModelAdmin):
-    list_display = ['patente_id', 'tipo', 'marca_modelo', 'kilometraje', 'tiempo_uso']
+    list_display = ['patente_id', 'tipo', 'marca_modelo', 'kilometraje_km', 'tiempo_uso_tiempo', 'operativo']
     list_filter = ['tipo']
+
+    def kilometraje_km(self, obj):
+        return obj.kilometraje
+    kilometraje_km.short_description = 'KM'
+    
+    def tiempo_uso_tiempo(self, obj):
+        return obj.tiempo_uso
+    tiempo_uso_tiempo.short_description = 'T Uso' 
 
 class FormAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')   

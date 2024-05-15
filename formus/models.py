@@ -11,7 +11,7 @@ class Form(models.Model):
 class Question(models.Model):
     form = models.ForeignKey(Form, on_delete=models.CASCADE)
     text = models.CharField(max_length=255)
-    is_priority = models.BooleanField(default=False)  # Nuevo campo
+    is_priority = models.BooleanField(default=False)
 
     def __str__(self):
         return self.text
@@ -21,24 +21,25 @@ class Vehiculo(models.Model):
         ('EMOVIL', 'Equipo Movil'),
         ('TRANSPORTE', 'Transporte'),
     ]
-
+ 
     patente_id = models.CharField(unique=True, max_length=10)
     tipo = models.CharField(max_length=50, choices=RESPONSE_CHOICES)
     serial = models.CharField(max_length=50)
     marca_modelo = models.CharField(max_length=50)
     kilometraje = models.IntegerField(default=0)
     tiempo_uso = models.IntegerField(default=0)  # Duración en minutos
+    operativo = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.patente_id} - {self.marca_modelo} - {self.tipo}"
+        return f"{self.patente_id} - {self.marca_modelo} - {self.tipo} - {self.operativo}"
     
     
 class CompletedForm(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     form = models.ForeignKey(Form, on_delete=models.CASCADE)
     vehiculo = models.ForeignKey(Vehiculo, on_delete=models.CASCADE, null=True, blank=True)
-    tiempo_uso_actual = models.IntegerField(blank=True, null=True) # nuevo campo para almacenar el tiempo de uso
-    tiempo_adicionado = models.FloatField(null=True, blank=True) # nuevo campo para almacenar el tiempo adicionado
+    tiempo_uso_actual = models.IntegerField(blank=True, null=True)
+    tiempo_adicionado = models.FloatField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     observations = models.TextField(max_length=1020)
 
