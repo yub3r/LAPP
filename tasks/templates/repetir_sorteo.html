@@ -1,10 +1,18 @@
-{% extends 'base.html' %}
-
+{% extends 'base.html' %} {% block js%}
+<script>
+    document.querySelector('form').addEventListener('submit', function (event) {
+        const username = document.getElementById('username').value;
+        const titulo = document.getElementById('id_titulo');
+        titulo.value = username + ': ' + titulo.value;
+    }); 
+</script>
+{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
 
 <h1 class="display-6 text-center">Repetir Sorteo</h1>
 <form method="POST" style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto ">
+    <input type="hidden" id="username" value="{{ username }}">
     <div class="d-flex justify-content-end">
         <button type="reset" class="btn btn-outline-secondary">Reset</button>
     </div>
@@ -14,17 +22,17 @@
 
         <h5 class="display-7 text-center">{{error}}</h5>
         <div class="d-flex justify-content-end">
-        <button type="button" class="btn btn-outline-secondary" id="seleccionar-todos">Selec Todos</button>
-        &nbsp;
-    </div> 
-</div>
-<div class="container mx-auto">
-    <div class="row justify-content-center">
+            <button type="button" class="btn btn-outline-secondary" id="seleccionar-todos">Selec Todos</button>
+            &nbsp;
+        </div>
+    </div>
+    <div class="container mx-auto">
+        <div class="row justify-content-center">
             <p><br></p>
             <input class="btn btn-info" type="submit" value="Sortear">
             <a href="{% url 'historial_sorteos' %}" style=margin-top:8px; class="btn btn-secondary">Cancelar</a>
+        </div>
     </div>
-</div>
 </form>
 
 <script>
@@ -38,4 +46,3 @@
 </script>
 
 {% endblock %}
-

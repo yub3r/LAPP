@@ -78,6 +78,12 @@
     });
     actualizarContador();
   });
+  
+  document.querySelector('form').addEventListener('submit', function(event) {
+    const username = document.getElementById('username').value;
+    const titulo = document.getElementById('id_titulo');
+    titulo.value = username + ': ' + titulo.value;
+  });
 </script>
 {% endblock %} {% block content %} {% load crispy_forms_tags %}
 
@@ -91,6 +97,8 @@
     margin-inline: auto;
   "
 >
+<!-- Agregar el elemento HTML oculto aquí -->
+<input type="hidden" id="username" value="{{ username }}">
   <div class="row justify-content-center mt-3">
     {% csrf_token %} {{form | crispy }}
 

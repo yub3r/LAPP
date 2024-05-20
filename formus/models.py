@@ -21,7 +21,7 @@ class Vehiculo(models.Model):
         ('EMOVIL', 'Equipo Movil'),
         ('TRANSPORTE', 'Transporte'),
     ]
- 
+    
     patente_id = models.CharField(unique=True, max_length=10)
     tipo = models.CharField(max_length=50, choices=RESPONSE_CHOICES)
     serial = models.CharField(max_length=50)

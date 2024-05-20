@@ -16,6 +16,7 @@ class Sorteo(models.Model):
     cantidad_ganadores = models.IntegerField(default=1)
     participantes = models.ManyToManyField(User)
     fecha = models.DateTimeField(auto_now_add=True)
+    
 
 class Ganador(models.Model):
     sorteo = models.ForeignKey(Sorteo, on_delete=models.CASCADE)

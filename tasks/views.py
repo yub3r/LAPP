@@ -107,7 +107,7 @@ def sorteo(request):
             return render(request, 'sorteo.html', {'ganadores': ganadores})
     else:
         form = SorteoForm()
-    return render(request, 'nuevo_sorteo.html', {'form': form})
+    return render(request, 'nuevo_sorteo.html', {'form': form, 'username': request.user.username})
 
 
 @login_required
@@ -165,7 +165,7 @@ def repetir_sorteo(request, sorteo_id):
             for ganador in ganadores:
                 Ganador.objects.create(sorteo=nuevo_sorteo, ganador=ganador)
             return render(request, 'sorteo.html', {'ganadores': ganadores})
-    context = {'form': form, 'sorteo': sorteo}
+    context = {'form': form, 'sorteo': sorteo, 'username': request.user.username}
     return render(request, 'repetir_sorteo.html', context)
 
 @user_passes_test(es_admin)

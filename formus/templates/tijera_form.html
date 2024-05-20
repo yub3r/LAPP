@@ -118,54 +118,15 @@
         <h1 class="display-6 text-center">Control de Plataforma Elevadora/Tijera.</h1>
     </header>
 
-    <div class="d-flex justify-content-center">
-        <p class="justificar"><br>
-            Antes de iniciar el checklist, debes recorrer el área donde llevarás a cabo la tareas.
-            Asegúrate que esté completamente libre de obstáculos, como cables aéreos, personas trabajando
-            en proximidades o desniveles que puedan representar un riesgo para nuestra seguridad.
-        </p>
-
-    </div>
 
     <form method="post" enctype="multipart/form-data">
         <section class="card-body mb-8">
-            <table class="table">
-                {% csrf_token %}
-                {% for question in questions %}
-                <tr>
-                    <td class="text-left" style="vertical-align: middle;">
-                        <label class="form-label" for="response-{{ question.id }}">{{ question.text }}</label>
-                    </td>
-                    <td class="text-right">
-                        <div class="btn-group" role="group" aria-label="Basic radio toggle button group"
-                            style="float: right;" data-priority="{{ question.is_priority|lower }}">
-                            <input type="radio" class="btn-check" name="response-{{ question.id }}"
-                                id="btnradio1-{{ question.id }}" autocomplete="off" value="SI">
-                            <label class="btn btn-outline-success" for="btnradio1-{{ question.id }}"><i
-                                    class="bi bi-check2-square"></i></label>
-
-                            <input type="radio" class="btn-check" name="response-{{ question.id }}"
-                                id="btnradio2-{{ question.id }}" autocomplete="off" value="NO">
-                            <label class="btn btn-outline-danger" for="btnradio2-{{ question.id }}"><i
-                                    class="bi bi-dash-square"></i></label>
-
-                            <input type="radio" class="btn-check" name="response-{{ question.id }}"
-                                id="btnradio3-{{ question.id }}" autocomplete="off" value="NA">
-                            <label class="btn btn-outline-secondary" for="btnradio3-{{ question.id }}">N/A</label>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-            <div class="mb-3 mt-3">
-                <h class="display-10 text-center"><strong>Ubicación y Descripción de Tarea:</strong></h2>
-            </div>
             <div class="container">
                 <div class="row">
                     <div class="col-md-6">
                         <label for="vehiculo">ID Tijera</label>
                         <select class="form-control" id="vehiculo" name="vehiculo" required>
-                            <option value="" disabled selected> ------------- </option>
+                            <option value="" disabled selected> --- ╘●≡≡●╛ --- </option>
                             {% for vehiculo in vehiculos %}
                             <option value="{{ vehiculo.patente_id }}" data-tiempo_uso="{{ vehiculo.tiempo_uso }}">{{ vehiculo.patente_id }}</option>
                             {% endfor %}
@@ -203,7 +164,7 @@
                             // Función para permitir solo números
                             function soloNumeros(event) {
                                 var charCode = (event.which) ? event.which : event.keyCode;
-                                if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                                if ((charCode > 31 && (charCode < 48 || charCode > 57)) && (charCode < 96 || charCode > 105)) {
                                     return false;
                                 }
                                 return true;
@@ -212,7 +173,7 @@
                             $(document).ready(function() {
                                 // Bloquear el campo de entrada al cargar la página
                                 $('#tiempo_uso').prop('disabled', true);
-
+        
                                 // Habilitar el campo de entrada cuando se selecciona un vehículo
                                 $('#vehiculo').change(function() {
                                     $('#tiempo_uso').prop('disabled', false); // Habilitar el campo de entrada
@@ -225,6 +186,43 @@
                         </script>
                     </div>
                 </div>
+            </div>
+            <div class="d-flex justify-content-center">
+                <p class="justificar"><br>
+                    Antes de iniciar el checklist, debes recorrer el área donde llevarás a cabo la tareas.
+                    Asegúrate que esté completamente libre de obstáculos, como cables aéreos, personas trabajando
+                    en proximidades o desniveles que puedan representar un riesgo para nuestra seguridad.
+                </p>
+        
+            </div>
+            <table class="table">
+                {% csrf_token %}
+                {% for question in questions %}
+                <tr>
+                    <td class="text-left" style="vertical-align: middle;">
+                        <label class="form-label" for="response-{{ question.id }}">{{ question.text }}</label>
+                    </td>
+                    <td class="text-right">
+                        <div class="btn-group" role="group" aria-label="Basic radio toggle button group"
+                            style="float: right;" data-priority="{{ question.is_priority|lower }}">
+                            <input type="radio" class="btn-check" name="response-{{ question.id }}"
+                                id="btnradio1-{{ question.id }}" autocomplete="off" value="SI">
+                            <label class="btn btn-outline-success" for="btnradio1-{{ question.id }}"><i
+                                    class="bi bi-check2-square"></i></label>
+                            <input type="radio" class="btn-check" name="response-{{ question.id }}"
+                                id="btnradio2-{{ question.id }}" autocomplete="off" value="NO">
+                            <label class="btn btn-outline-danger" for="btnradio2-{{ question.id }}"><i
+                                    class="bi bi-dash-square"></i></label>
+                            <input type="radio" class="btn-check" name="response-{{ question.id }}"
+                                id="btnradio3-{{ question.id }}" autocomplete="off" value="NA">
+                            <label class="btn btn-outline-secondary" for="btnradio3-{{ question.id }}">N/A</label>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <div class="mb-3 mt-3">
+                <h class="display-10 text-center"><strong>Ubicación y Descripción de Tarea:</strong></h2>
             </div>
         </section>
         <section>
