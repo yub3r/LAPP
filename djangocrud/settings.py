@@ -57,6 +57,7 @@ SILENCED_SYSTEM_CHECKS = ["security.W019"]
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
+HANDLER403 = 'myapp.views.error_403'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -67,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'djangocrud.restrict_access_middleware.RestrictAccessMiddleware',
 ]
 
 ROOT_URLCONF = 'djangocrud.urls'

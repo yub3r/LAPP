@@ -82,7 +82,7 @@ class SorteoForm(forms.ModelForm):
         fields = ('titulo', 'cantidad_ganadores', 'participantes')
     
     participantes = forms.ModelMultipleChoiceField(
-        queryset=User.objects.all().exclude(id=1).order_by('username'),
+        queryset=User.objects.all().exclude(username__in=['admin', 'Ingesa_01', 'Ingesa_02', 'Ingesa_03']).order_by('username'),
         widget=GroupCheckboxSelectMultiple,
     )
     

@@ -35,9 +35,15 @@ class CompletedFormAdmin(admin.ModelAdmin):
 class FormImageAdmin(admin.ModelAdmin):
     list_display = ['completed_form', 'image']
 
+# class MantenimientoAdmin(admin.ModelAdmin):
+#     list_display = ['vehiculo', 'estado', 'fecha', 'observaciones']
+#     list_filter = ['vehiculo', 'estado', 'fecha']
+
+
 admin.site.register(Form, FormAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Answer, AnswerAdmin)
 admin.site.register(CompletedForm, CompletedFormAdmin)
 admin.site.register(FormImage, FormImageAdmin)
 admin.site.register(Vehiculo, VehiculoAdmin)
+# admin.site.register(Mantenimiento, MantenimientoAdmin)

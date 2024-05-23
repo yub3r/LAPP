@@ -54,6 +54,27 @@ class FormImage(models.Model):
     completed_form = models.ForeignKey(CompletedForm, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='images/formus/', blank=True, null=True)
 
+
+# class Mantenimiento(models.Model):
+#     ESTADO_CHOICES = [
+#         ('OK', 'OK'),
+#         ('NOK', 'No OK'),
+#         ('REG', 'Regular'),
+#     ]
+
+#     vehiculo = models.ForeignKey(Vehiculo, on_delete=models.CASCADE)
+#     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+#     descripcion = models.CharField(max_length=255)
+#     estado = models.CharField(max_length=3, choices=ESTADO_CHOICES)
+#     fecha_revision = models.DateField()
+#     regularidad = models.IntegerField(help_text="Días hasta la próxima revisión")
+#     observaciones = models.TextField(max_length=1020, blank=True, null=True)
+#     imagen = models.ForeignKey(FormImage, on_delete=models.SET_NULL, null=True, blank=True)
+
+#     def __str__(self):
+#         return f"{self.vehiculo.patente_id} - {self.descripcion} - {self.estado}"
+
+
 class Answer(models.Model):
     RESPONSE_CHOICES = [
         ('SI', 'Sí'),
