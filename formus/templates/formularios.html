@@ -12,13 +12,29 @@
 <section class="card card-body mt-2">
     <!-- <h1 class="display-6 text-center">Enlaces</h1> -->
     <a class="btn btn-outline-dark" href="{% url 'tijera_form' %}"; rel="noopener noreferrer">Control de <strong>Plataforma Elevadora</strong>/Tijera.</a>
+    <div class="d-flex justify-content-center">
+        <p class="justificar" style="font-size: 0.8em; font-style: italic;"><br>
+            Aclaratoria: El equipo de <strong> Bitfarms tendrá prioridad en el uso de las plataformas elevadoras</strong>, asegurando que sus necesidades operativas sean atendidas de manera preferente.<br>
+        </p>
+    </div>
 </section>
+
+{% if not es_externo %}
+<section class="card card-body mt-2">
+    <!-- <h1 class="display-6 text-center">Enlaces</h1> -->
+    <a class="btn btn-outline-dark" href="https://forms.office.com/r/TrSsy5pcep" target="_blank" rel="noopener noreferrer"><strong>Estado Situación </strong>(T2)</a>
+    <a class="btn btn-outline-dark" href="https://forms.office.com/r/Yw1Eur5JHb" style=margin-top:5px; target="_blank" rel="noopener noreferrer"><strong>Diagnóstico General </strong>(T2)</a>
+    <a class="btn btn-outline-dark" href="https://forms.office.com/r/TBHb5Svhgb" style=margin-top:5px; target="_blank" rel="noopener noreferrer"><strong>Limpieza de Warehouse</strong></a>
+</section>
+{% endif %}
+
 {% if 'auth.admin_group' in perms or request.user.username == 'aostanello' or request.user.username == 'hgauna' %}
 <section class="card card-body mt-2">
     <!-- <h1 class="display-6 text-center">Enlaces</h1> -->
     <a class="btn btn-outline-primary" href="{% url 'completed_forms' %}"; rel="noopener noreferrer">Formularios <strong>Completados</strong></a>
 </section>
 {% endif %}
+
 </main>
 
 {% endblock %}

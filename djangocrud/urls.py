@@ -25,8 +25,8 @@ urlpatterns = [
     path('all_tasks/', views.all_tasks, name='all_tasks'),
     path('last_task/', views.last_task, name='last_task'),
     path('tasks/<int:task_id>/complete', views.complete_task, name='complete_task'),
-    #path('tasks/<int:task_id>', views.task_detail, name='task_detail'),
-    #path('tasks/<int:task_id>/delete', views.delete_task, name='delete_task'),
+    path('tasks/<int:task_id>', views.task_detail, name='task_detail'),
+    path('tasks/<int:task_id>/delete', views.delete_task, name='delete_task'),
 
     path('reservar_guardia/', user_passes_test(views.es_admin)(views.reservar_guardia), name='reservar_guardia'),
     path('guardias/', views.guardias, name='guardias'),

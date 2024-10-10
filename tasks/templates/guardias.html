@@ -6,7 +6,7 @@
     $('.eliminar-guardia').on('click', function (event) {
         event.preventDefault();
         var url = $(this).attr('href');
-       
+
         Swal.fire({
             title: '¿Estás seguro de eliminar esta guardia?',
             text: 'Esta acción no se puede deshacer',
@@ -34,14 +34,15 @@
 </div>
 {% endif %}
 
-<table class="table">
+<table class="table-container table">
     <thead>
         <tr>
-            <th scope="col">Técnico 2</th>
-            <th scope="col">Técnico 1</th>
-            <th scope="col">IT</th>
-            <th scope="col" style="text-align:right;">Fecha Inicio</th>
-            <th scope="col" style="text-align:right;">Fecha Fin</th>
+            <th scope="col">T2</th>
+            <th scope="col">T1</th>
+            <th scope="col" style="text-align: middle;">IT</th>
+            <th scope="col" style="text-align:right;">Inicio</th>
+            <th scope="col" style="text-align:right;">Fin</th>
+            <th scope="col" style="text-align:right;">Horas</th>
             {% if 'auth.admin_group' in perms %}
             <th scope="col" style="text-align:right;">Editar/Eliminar</th>
             {% endif %}
@@ -49,28 +50,33 @@
     </thead>
     <tbody>
         {% for guardia in form %}
-        <tbody {% if guardia.fecha_inicio >= fecha_actual and guardia.fecha_inicio == fecha_proxima %}style="background-color: lightyellow;"{% endif %}>
+        <tbody {% if guardia.fecha_inicio >= fecha_actual and guardia.fecha_inicio == fecha_proxima %}style="background-color: litghyellow;"{% endif %}>
             <tr>
-                <td style="max-width: 200px; vertical-align: middle;">{{guardia.usuario1}}</a></td>
-                <td style="max-width: 200px; vertical-align: middle;">{{guardia.usuario2}}</a></td>
-                <td style="max-width: 200px; vertical-align: middle;">{{guardia.usuario3}}</a></td>
-                <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{guardia.fecha_inicio|date:'j M'}}</a></td>
-                <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{guardia.fecha_fin|date:'j M'}}</a></td>
-            {% if 'auth.admin_group' in perms %}
-            <td>
-                <div style="float: right;">
-                    {% csrf_token %}
-                    <a class="btn btn-warning" href="{% url 'actualizar_guardia' guardia.id %}">
-                        <i class="bi bi-pencil-square"></i>
-                    </a>
-                    <a class="btn btn-danger" href="{% url 'eliminar_guardia' guardia.id %}"
-                        onclick="return confirm('¿Estás seguro de que deseas eliminar esta guardia?');">
-                        <i class="bi bi-trash3"></i>
-                    </a>
-                </div>
-            </td>
-            {% endif %}
-        </tr>
+                <td style="max-width: 200px; vertical-align: middle;">{{guardia.usuario1}}</td>
+                <td style="max-width: 200px; vertical-align: middle;">{{guardia.usuario2}}</td>
+                <td style="max-width: 200px; vertical-align: middle;">{{guardia.usuario3}}</td>
+                <td style="max-width: 200px; text-align:right; vertical-align: middle;">
+                    {{guardia.fecha_inicio|date:'j/m'}} {{guardia.hora_inicio|time:'H:i'}}
+                </td>
+                <td style="max-width: 200px; text-align:right; vertical-align: middle;">
+                    {{guardia.fecha_fin|date:'j/m'}} {{guardia.hora_fin|time:'H:i'}}
+                </td>
+                <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{guardia.total_horas|floatformat:0}}</td>
+                {% if 'auth.admin_group' in perms %}
+                <td>
+                    <div style="float: right;">
+                        {% csrf_token %}
+                        <a class="btn btn-warning" href="{% url 'actualizar_guardia' guardia.id %}">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <a class="btn btn-danger eliminar-guardia" href="{% url 'eliminar_guardia' guardia.id %}">
+                            <i class="bi bi-trash3"></i>
+                        </a>
+                    </div>
+                </td>
+                {% endif %}
+            </tr>
         {% endfor %}
+    </tbody>
 </table>
 {% endblock %}

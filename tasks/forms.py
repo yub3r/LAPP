@@ -26,46 +26,54 @@ class TaskForm(forms.ModelForm):
 
 class GuardiaForm(forms.ModelForm):
     usuario1 = forms.ModelChoiceField(queryset=User.objects.filter(
-        groups__name='Tecnico 1'), label='Técnico 2')
+        groups__name='Tecnico 1'), label='Técnico 1')
     usuario2 = forms.ModelChoiceField(queryset=User.objects.filter(
-        groups__name='Tecnico 2'), label='Técnico 1')
+        groups__name='Tecnico 2'), label='Técnico 2')
     usuario3 = forms.ModelChoiceField(
         queryset=User.objects.filter(groups__name='IT'), label='IT')
+    
+    # Añadimos los campos de hora de inicio y hora de fin
+    hora_inicio = forms.TimeField(widget=forms.TimeInput(format='%H:%M'), initial="16:00", label='Hora de Inicio')
+    hora_fin = forms.TimeField(widget=forms.TimeInput(format='%H:%M'), initial="07:00", label='Hora de Fin')
 
     class Meta:
         model = Guardia
-        fields = ['usuario1', 'usuario2', 'usuario3', 'fecha_inicio', 'fecha_fin']
+        fields = ['usuario1', 'usuario2', 'usuario3', 'fecha_inicio', 'fecha_fin', 'hora_inicio', 'hora_fin']
         widgets = {
-            # 'fecha_inicio': forms.TextInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'dd/mm/yyyy', 'autocomplete': 'on'}),
-            # 'fecha_fin': forms.TextInput(attrs={'type': 'date', 'class': 'form-control', 'placeholder': 'dd/mm/yyyy', 'autocomplete': 'off'}),
             'fecha_inicio': forms.DateInput(attrs={'class': 'form-control'}),
             'fecha_fin': forms.DateInput(attrs={'class': 'form-control'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super(GuardiaForm, self).__init__(*args, **kwargs)
-        self.fields['usuario3'].initial = User.objects.get(username='ymillan')
-
+    # def __init__(self, *args, **kwargs):
+    #     super(GuardiaForm, self).__init__(*args, **kwargs)
+    #     self.fields['usuario3'].initial = User.objects.get(username='ymillan')
 
     def clean(self):
         cleaned_data = super().clean()
         fecha_inicio = cleaned_data.get("fecha_inicio")
         fecha_fin = cleaned_data.get("fecha_fin")
+        hora_inicio = cleaned_data.get("hora_inicio")
+        hora_fin = cleaned_data.get("hora_fin")
         
+        # Validar que la fecha de inicio no sea mayor a la fecha de fin
         if fecha_inicio and fecha_fin:
-            # Comparar fecha de inicio con fecha de fin
             if fecha_inicio > fecha_fin:
-                raise ValidationError(
-                    "La fecha de inicio debe ser anterior a la fecha de fin.")
+                raise ValidationError("La fecha de inicio debe ser anterior a la fecha de fin.")
             
             # Verificar si ya existe una guardia reservada en las mismas fechas
             guardias_exist = Guardia.objects.filter(
                 fecha_inicio__lte=fecha_fin, fecha_fin__gte=fecha_inicio).exclude(pk=self.instance.pk)
             
             if guardias_exist.exists():
-                raise ValidationError(
-                    "Ya existe una guardia reservada en esa fecha.")
-            
+                raise ValidationError("Ya existe una guardia reservada en esa fecha.")
+
+        # Validar que la hora de fin no sea menor que la hora de inicio si es el mismo día
+        if fecha_inicio == fecha_fin and hora_inicio >= hora_fin:
+            raise ValidationError("La hora de fin debe ser posterior a la hora de inicio si es el mismo día.")
+        
+        return cleaned_data
+
+
 
 class GroupCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):

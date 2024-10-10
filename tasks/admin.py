@@ -31,15 +31,18 @@ class GuardiaResource(resources.ModelResource):
     usuario1 = fields.Field(column_name='Técnico 1', attribute='usuario1__username')
     usuario2 = fields.Field(column_name='Técnico 2', attribute='usuario2__username')
     usuario3 = fields.Field(column_name='IT', attribute='usuario3__username')
+    hora_inicio = fields.Field(column_name='Hora Inicio', attribute='hora_inicio')
+    hora_fin = fields.Field(column_name='Hora Fin', attribute='hora_fin')
+    total_horas = fields.Field(column_name='Total Horas', attribute='total_horas')
 
     class Meta:
         model = Guardia
-        fields = ('usuario1', 'usuario2', 'usuario3', 'fecha_inicio', 'fecha_fin')
-        export_order = ('fecha_inicio', 'fecha_fin','usuario1', 'usuario2', 'usuario3') 
+        fields = ('usuario1', 'usuario2', 'usuario3', 'fecha_inicio', 'fecha_fin', 'hora_inicio', 'hora_fin', 'total_horas')
+        export_order = ('fecha_inicio', 'fecha_fin', 'hora_inicio', 'hora_fin', 'total_horas', 'usuario1', 'usuario2', 'usuario3')
         widgets = {
-                'fecha_inicio': {'format': '%d-%m-%Y'},
-                'fecha_fin': {'format': '%d-%m-%Y'},
-                }
+            'fecha_inicio': {'format': '%d-%m-%Y'},
+            'fecha_fin': {'format': '%d-%m-%Y'},
+        }
 
 
 class GuardiaAdmin(ImportExportModelAdmin, admin.ModelAdmin):

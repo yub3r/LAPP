@@ -10,7 +10,8 @@ from django.http import JsonResponse
 
 @login_required
 def formularios(request):
-    return render(request, 'formularios.html')
+    es_externo = request.user.groups.filter(name='Externos_01').exists()
+    return render(request, 'formularios.html', {'es_externo': es_externo})
 
 
 FORMULARIO_NAME = 'Formulario 1'
@@ -53,10 +54,12 @@ def tijera_form(request):
         if negative_answers:
             client.chat_postMessage(
                 channel='_notifi_lapp', 
-                text="############################\n*Resumen de Formulario Completado*\n"
+                text="### ╘●≡≡●╛ ###  ㅢ:flag-ar: *ARG 01*\n*Resumen de Formulario Completado*\n"
                     + timezone.localtime().strftime('%H:%M hs - %d de %B')
                     + "\n*Usuario:* "
                     + str(request.user)
+                    + " | Tijera: "
+                    + str(vehiculo_id)
                     + "\n\n*Preguntas respondidas NO:*\n"
                     + "\n".join(negative_answers)
                     + "\n" + "\n" + str(observations)

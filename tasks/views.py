@@ -49,25 +49,20 @@ def reservar_guardia(request):
         if form.is_valid():
             guardia = form.save(commit=False)
             guardia.save()
-            # redirigir a la lista de guardias reservadas
             return redirect('guardias')
     else:
         form = GuardiaForm()
     return render(request, 'reservar_guardia.html', {'form': form})
 
-
 @login_required
 def guardias(request):
     fecha_actual = date.today()
     guardias = Guardia.objects.order_by('fecha_inicio').all()
-
-    # Encuentra la fecha más próxima a partir de hoy
     fecha_proxima = None
     for guardia in guardias:
         if guardia.fecha_inicio >= fecha_actual:
             fecha_proxima = guardia.fecha_inicio
             break
-
     return render(request, 'guardias.html', {"form": guardias, "fecha_actual": fecha_actual, "fecha_proxima": fecha_proxima})
 
 @user_passes_test(es_admin)
@@ -83,7 +78,6 @@ def actualizar_guardia(request, pk):
         form = GuardiaForm(request.POST, instance=guardia)
         if form.is_valid():
             form.save()
-            # redirigir a la lista de guardias reservadas
             return redirect('guardias')
     else:
         form = GuardiaForm(instance=guardia)

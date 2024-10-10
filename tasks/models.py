@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User, Group
 from django.conf import settings
-
+from datetime import datetime, timedelta
 
 class Guardia(models.Model):
     usuario1 = models.ForeignKey(User, related_name='usuario1', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Tecnico 1'})
@@ -9,6 +9,29 @@ class Guardia(models.Model):
     usuario3 = models.ForeignKey(User, related_name='usuario3', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'IT'})
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
+    hora_inicio = models.TimeField(default="16:00")
+    hora_fin = models.TimeField(default="07:00")
+    total_horas = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+
+    def calcular_total_horas(self):
+        # Crear datetime con fecha y hora de inicio y fin
+        datetime_inicio = datetime.combine(self.fecha_inicio, self.hora_inicio)
+        datetime_fin = datetime.combine(self.fecha_fin, self.hora_fin)
+
+        # Si la hora de fin es menor que la de inicio, significa que pasa al siguiente día
+        if datetime_fin <= datetime_inicio:
+            datetime_fin += timedelta(days=1)
+
+        # Calcular diferencia y convertir a horas
+        diferencia = datetime_fin - datetime_inicio
+        horas_totales = diferencia.total_seconds() / 3600
+        return horas_totales
+
+    def save(self, *args, **kwargs):
+        # Calcular el total de horas antes de guardar
+        self.total_horas = self.calcular_total_horas()
+        super(Guardia, self).save(*args, **kwargs)
+
 
 
 class Sorteo(models.Model):
