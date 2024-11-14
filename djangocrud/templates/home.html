@@ -52,13 +52,16 @@
   <!-- ***************************************************************************************************************************************************** -->
 
   <!-- <section class="card card-body mt-2"> -->
-    <a class="btn btn-warning icono" href="/guardias/" style=margin-top:8px;><i class="bi bi-calendar-check-fill"></i><br>Fechas de Guardias</a>
+    <a class="btn btn-dark icono" href="{% url 'formularios' %}" style=margin-top:8px;><i class="bi bi-ui-checks"></i><br>Formularios</a>
   <!-- </section> -->
 
   <!-- ***************************************************************************************************************************************************** -->
 
   <!-- <section class="card card-body mt-2"> -->
-    <a class="btn btn-dark icono" href="{% url 'formularios' %}" style=margin-top:8px;><i class="bi bi-ui-checks"></i><br>Formularios</a>
+    <div class="d-flex justify-content-between">
+      <a class="btn btn-outline-dark w-50 icono" href="/registrar-horas-extra/" style=margin-top:8px;><i class="bi bi-clock-fill"></i><br>Horas Extras</a>
+      <a class="btn btn-warning w-50 icono" href="/guardias/" style=margin-top:8px;><i class="bi bi-calendar-check-fill"></i><br>Guardias</a>
+    </div>
   <!-- </section> -->
 
   <!-- ***************************************************************************************************************************************************** -->
@@ -94,62 +97,71 @@
   <!-- ***************************************************************************************************************************************************** -->
 
   <section class="card card-body mt-2" style="font-size: 13px;">
-
-      <body>
-        <table class="table table-sm">
-            <tbody id="dolarData"></tbody>
-        </table>
-        
-        <script>
-            fetch('https://criptoya.com/api/dolar')
-            .then(response => response.json())
-            .then(data => {
-                const dolarData = [
-                    { descripcion: 'HOY EN ARG', valor: new Date(data.oficial.timestamp * 1000).toLocaleTimeString() },
-                    { descripcion: 'Cotización Banco Nación', valor: data.oficial.price },
-                    { descripcion: 'Dólar Informal (Blue)', valor: data.blue.ask },
-                    { descripcion: 'Dólar Tarjeta', valor: data.tarjeta.price },
-                    { descripcion: 'Dólar Bolsa (MEP)', valor: data.mep.al30["24hs"].price },
-                    { descripcion: 'Contado Liquidación (CCL)', valor: data.ccl.al30["24hs"].price },
-                    { descripcion: 'Dólar Cripto (CCB)', valor: data.cripto.ccb.ask }
-                ];
-        
-                const dolarDataElement = document.getElementById('dolarData');
-                dolarData.forEach(item => {
-                    const row = document.createElement('tr');
-                    const descripcionCell = document.createElement('td');
-                    const valorCell = document.createElement('td');
-                    
-                    if (item.descripcion === 'HOY EN ARG') {
-                    descripcionCell.innerHTML = `<strong>${item.descripcion}</strong>`;
-                    } else {
-                        descripcionCell.textContent = item.descripcion;
-                    }
-    
-                    if (typeof item.valor === 'number') {
-                        valorCell.textContent = item.valor.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    } else {
-                        valorCell.innerHTML = `<strong>${item.valor}</strong>`;
-                    }
-                    
-                    valorCell.style.textAlign = 'right';
-                    
-                    row.appendChild(descripcionCell);
-                    row.appendChild(valorCell);
-                    
-                    dolarDataElement.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error('Error al obtener los datos del Dólar:', error);
-            });
-        </script>
+    <body>
+      <table class="table table-sm">
+        <tbody id="dolarData"></tbody>
+      </table>
+      
+      <script>
+        // Define el precio de BITF con dos decimales para integrarlo
+        // const bitfPrice = parseFloat("{{ bitf_price|default:0 }}").toFixed(3);
+        const bitfPrice = parseFloat("{{ bitf_price|default:0 }}").toFixed(2)+ " U$D";
+  
+        fetch('https://criptoya.com/api/dolar')
+        .then(response => response.json())
+        .then(data => {
+          const dolarData = [
+            { descripcion: 'Ahora en Argentina', valor: new Date(data.oficial.timestamp * 1000).toLocaleTimeString() },
+            { descripcion: 'Cotización Banco Nación', valor: data.oficial.price },
+            { descripcion: 'Dólar Informal (Blue)', valor: data.blue.ask },
+            { descripcion: 'Dólar Tarjeta', valor: data.tarjeta.price },
+            { descripcion: 'Dólar Bolsa (MEP)', valor: data.mep.al30["24hs"].price },
+            { descripcion: 'Contado Liquidación (CCL)', valor: data.ccl.al30["24hs"].price },
+            { descripcion: 'Dólar Cripto (CCB)', valor: data.cripto.ccb.ask },
+            { descripcion: 'Precio actual de BITF (TSE)', valor: bitfPrice }
+          ];
+      
+          const dolarDataElement = document.getElementById('dolarData');
+          dolarData.forEach(item => {
+            const row = document.createElement('tr');
+            const descripcionCell = document.createElement('td');
+            const valorCell = document.createElement('td');
+            
+            if (item.descripcion === 'Ahora en Argentina') {
+              descripcionCell.innerHTML = `<strong>${item.descripcion}</strong>`;
+            } else {
+              descripcionCell.textContent = item.descripcion;
+            }
+  
+            if (typeof item.valor === 'number' || !isNaN(item.valor)) {
+              valorCell.textContent = parseFloat(item.valor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } else {
+              valorCell.innerHTML = `<strong>${item.valor}</strong>`;
+            }
+            
+            valorCell.style.textAlign = 'right';
+            
+            row.appendChild(descripcionCell);
+            row.appendChild(valorCell);
+            
+            dolarDataElement.appendChild(row);
+          });
+        })
+        .catch(error => {
+          console.error('Error al obtener los datos del Dólar:', error);
+        });
+      </script>
     </body>
+    <!-- https://www.binance.com/en/crypto-price-widget -->
     <script src="https://public.bnbstatic.com/unpkg/growth-widget/cryptoCurrencyWidget@0.0.9.min.js"></script>
-    <div class="binance-widget-marquee" data-cmc-ids="1,1027,5426,3890" data-theme="light" data-transparent="true"
+    <div class="binance-widget-marquee" data-cmc-ids="1,1027" data-theme="light" data-transparent="true"
       data-locale="en" data-powered-by="Powered by" ></div>
   </section>
   
+  <!-- <h3 class="text-center">Precio actual de BITF (TSE): {{ bitf_price }}</h3> -->
+  
+
+
 </main>
 
 {% endblock %}

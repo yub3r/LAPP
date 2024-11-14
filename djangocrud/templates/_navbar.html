@@ -16,12 +16,31 @@
           </ul>
         </li> -->
         <li class="nav-item dropdown">
-          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="true">Guardias</a>
+          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+            aria-expanded="true">Tools</a>
+          <ul class="dropdown-menu dropdown-menu-start">
+            <li><a class="dropdown-item" href="{% url 'ejecutar_swd_script' %}" class="nav-link">SWD Script</a></li>
+            <li><a class="dropdown-item" href="{% url 'ejecutar_swa_script' %}" class="nav-link">SWA Script</a></li>
+            
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'formularios' %}" role="button">Forms</a>
+      </li>
+
+
+        <li class="nav-item dropdown">
+          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="true">Horas Extras</a>
           <ul class="dropdown-menu dropdown-menu-start">
             {% if 'auth.admin_group' in perms %}
-            <li><a class="dropdown-item" href="{% url 'reservar_guardia' %}" class="nav-link">Asignar</a></li>
+            <li><a class="dropdown-item" href="{% url 'reservar_guardia' %}" class="nav-link">Asignar Guardias</a></li>
             {% endif %}
-            <li><a class="dropdown-item" href="{% url 'guardias' %}" class="nav-link">Reservadas</a></li>
+            <li><a class="dropdown-item" href="{% url 'guardias' %}" class="nav-link">Guardias Reservadas</a></li>
+            <li><a class="dropdown-item" href="{% url 'registrar_horas_extra' %}" class="nav-link">Registrar Horas</a></li>
+            {% if 'auth.admin_group' in perms %}
+            <li><a class="dropdown-item" href="{% url 'lista_horas_extra' %}" class="nav-link">Lista Horas Extras</a></li>
+            {% endif %}
           </ul>
         </li>
   
@@ -32,23 +51,9 @@
             <li><a class="dropdown-item" href="{% url 'historial_sorteos' %}" class="nav-link">Hist. Sorteos</a></li>
           </ul>
         </li>
-
-        <li class="nav-item dropdown">
-          <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-            aria-expanded="true">Tools</a>
-          <ul class="dropdown-menu dropdown-menu-start">
-            <li><a class="dropdown-item" href="{% url 'ejecutar_swd_script' %}" class="nav-link">SWD Script</a></li>
-            <li><a class="dropdown-item" href="{% url 'ejecutar_swa_script' %}" class="nav-link">SWA Script</a></li>
-          </ul>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link active" href="{% url 'formularios' %}" role="button">Forms</a>
-      </li>
-
       </ul>
 
-     <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav ms-auto">
       {% if user.is_authenticated %}
         {% if user.is_staff %}
           <li class="nav-item">

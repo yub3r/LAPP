@@ -16,6 +16,7 @@ crispy-bootstrap5
 django-bootstrap-datepicker-plus
 matplotlib
 mpl_finance
+yfinance    
 ccxt
 mpld3
 slack_sdk

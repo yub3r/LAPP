@@ -33,7 +33,6 @@ class Guardia(models.Model):
         super(Guardia, self).save(*args, **kwargs)
 
 
-
 class Sorteo(models.Model):
     titulo = models.CharField(max_length=50)
     cantidad_ganadores = models.IntegerField(default=1)
@@ -104,3 +103,37 @@ class CryptoPrice(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+
+
+
+
+class HoraExtra(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    total_horas = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    justificar = models.TextField(max_length=500)
+    aprobado = models.BooleanField(null=True, blank=True)  # True para aprobado, False para rechazado, None para pendiente
+    feedback_admin = models.TextField(max_length=500, blank=True, null=True)
+    fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+
+    def calcular_total_horas(self):
+        datetime_inicio = datetime.combine(self.fecha_inicio, self.hora_inicio)
+        datetime_fin = datetime.combine(self.fecha_fin, self.hora_fin)
+        if datetime_fin <= datetime_inicio:
+            datetime_fin += timedelta(days=1)
+        diferencia = datetime_fin - datetime_inicio
+        horas_totales = diferencia.total_seconds() / 3600
+        return horas_totales
+
+    def save(self, *args, **kwargs):
+        # Calcula el total de horas si no está calculado
+        self.total_horas = self.calcular_total_horas()
+
+        # Si el estado de aprobación cambia, se actualiza la fecha_aprobacion
+        if self.aprobado is not None and not self.fecha_aprobacion:
+            self.fecha_aprobacion = datetime.now()
+
+        super(HoraExtra, self).save(*args, **kwargs)

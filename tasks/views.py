@@ -3,18 +3,22 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
 from django.db import IntegrityError
+from django.db.models import Sum, F, Func, IntegerField
+from django.db.models.functions import ExtractMonth
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-from .models import Task, CryptoPrice, Guardia, Sorteo, Ganador
-from .forms import TaskForm, GuardiaForm, SorteoForm, RepetirSorteoForm
+from .models import Task, CryptoPrice, Guardia, Sorteo, Ganador, HoraExtra
+from .forms import TaskForm, GuardiaForm, SorteoForm, RepetirSorteoForm, HoraExtraForm
 from datetime import date
-import ccxt
+from django.utils.timezone import now 
+from django.http import JsonResponse
+import ccxt, calendar, random, re
+import yfinance as yf
 from django.contrib.sessions.backends.db import SessionStore
 from django.core.cache import cache
 from django.views.generic.base import RedirectView
-import random, re
 
 
 
@@ -41,6 +45,101 @@ def sobremi(request):
 
 
 ########################  GUARDIAS  ######################################################  GUARDIAS  ##############################
+@login_required
+def registrar_horas_extra(request):
+    horas_extras = HoraExtra.objects.filter(usuario=request.user).order_by('-fecha_inicio')
+    registro_exitoso = False
+
+    if request.method == 'POST':
+        form = HoraExtraForm(request.POST, usuario=request.user)  # Pasamos el usuario
+        if form.is_valid():
+            hora_extra = form.save(commit=False)
+            hora_extra.usuario = request.user
+            hora_extra.save()
+            registro_exitoso = True  # Indica que el registro fue exitoso
+            form = HoraExtraForm(usuario=request.user)  # Reinicia el formulario después del registro
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = HoraExtraForm(usuario=request.user)  # Pasamos el usuario
+
+    return render(request, 'registrar_horas_extra.html', {
+        'form': form,
+        'horas_extras': horas_extras,
+        'registro_exitoso': registro_exitoso  # Pasamos la bandera al contexto
+    })
+
+
+
+@login_required
+def lista_horas_extra(request):
+    # Obtenemos el año actual
+    current_year = now().year
+
+    # Obtenemos todos los registros de horas extra
+    horas_extras = HoraExtra.objects.all().order_by('-fecha_inicio')
+
+    # Agrupación por mes para la tercera tabla
+    horas_por_mes = (
+        horas_extras
+        .annotate(mes=ExtractMonth('fecha_inicio'))
+        .values('mes')
+        .annotate(total_horas=Sum('total_horas'))
+        .order_by('mes')
+    )
+
+    # Agrupación por mes y usuario para la segunda tabla
+    horas_por_mes_usuario = (
+        horas_extras
+        .annotate(mes=ExtractMonth('fecha_inicio'))
+        .values('mes', 'usuario__username')
+        .annotate(total_horas=Sum('total_horas'))
+        .order_by('mes', 'usuario__username')
+    )
+
+    # Crear fechas ficticias usando el año actual para mostrar el mes en formato abreviado
+    for item in horas_por_mes:
+        item['fecha_ficticia'] = date(current_year, item['mes'], 1)
+    for item in horas_por_mes_usuario:
+        item['fecha_ficticia'] = date(current_year, item['mes'], 1)
+
+    return render(request, 'lista_horas_extra.html', {
+        'horas_extras': horas_extras,
+        'horas_por_mes': horas_por_mes,
+        'horas_por_mes_usuario': horas_por_mes_usuario,
+    })
+
+
+
+@login_required
+def eliminar_horas_extra(request, id):
+    if request.method == 'POST':
+        hora_extra = get_object_or_404(HoraExtra, id=id, usuario=request.user)
+        hora_extra.delete()
+        return JsonResponse({'success': True, 'message': 'Registro de horas extras eliminado exitosamente.'})
+
+    return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
+
+
+
+@login_required
+def aprobar_rechazar_horas_extra(request, id):
+    hora_extra = get_object_or_404(HoraExtra, id=id)
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+        feedback = request.POST.get('feedback')
+        
+        if accion == 'aprobar':
+            hora_extra.aprobado = True
+        elif accion == 'rechazar':
+            hora_extra.aprobado = False
+        hora_extra.feedback_admin = feedback
+        hora_extra.save()
+        return redirect('lista_horas_extra')
+
+
 
 @login_required
 def reservar_guardia(request):
@@ -353,3 +452,29 @@ def crypto_prices(request):
     # return render(request, 'home.html', {'prices': prices, 'count_tasks': count_tasks})
     return render(request, 'home.html', {'prices': prices})
     # return redirect('home', {'prices': prices}, {"count_tasks": count_tasks})
+
+
+
+@login_required
+def home_view(request):
+    try:
+        # Obtiene los datos de BITF.TO (símbolo de Toronto Stock Exchange para BITF)
+        ticker = yf.Ticker("BITF.TO")
+        stock_info = ticker.history(period="1d")  # Historial de un día
+        
+        # Verifica si hay datos antes de extraer el precio de cierre
+        if not stock_info.empty:
+            current_price = stock_info['Close'].iloc[-1]
+            # Formatea el precio con tres decimales
+            current_price = f"{current_price:.3f}"
+        else:
+            current_price = "No hay datos disponibles"
+        
+        print("Precio actual obtenido:", current_price)
+
+    except Exception as e:
+        current_price = "Error al obtener el precio"
+        print("Error al obtener el precio de BITF.TO:", e)
+
+    # Pasamos el precio al contexto para que esté disponible en la plantilla
+    return render(request, 'home.html', {'bitf_price': current_price})

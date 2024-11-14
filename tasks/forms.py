@@ -1,5 +1,6 @@
+from datetime import datetime
 from django import forms
-from .models import Task, Guardia, Sorteo
+from .models import Task, Guardia, Sorteo, HoraExtra
 from django.contrib.auth.models import User, Group
 from django.utils.safestring import mark_safe
 from django.conf import settings
@@ -120,4 +121,53 @@ class RepetirSorteoForm(forms.Form):
         participantes = cleaned_data.get('participantes')
         if cantidad_ganadores and participantes and cantidad_ganadores > participantes.count():
             raise forms.ValidationError('El número de ganadores no puede ser mayor al número de participantes.')
+        return cleaned_data
+    
+
+
+class HoraExtraForm(forms.ModelForm):
+    fecha_inicio = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    fecha_fin = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    hora_inicio = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}))
+    hora_fin = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}))
+    justificar = forms.CharField(
+        widget=forms.Textarea(attrs={'placeholder': 'Justifique brevemente aquí...', 'rows': 3}),
+        max_length=1020,
+        required=True
+    )
+
+    class Meta:
+        model = HoraExtra
+        fields = ['fecha_inicio', 'fecha_fin', 'hora_inicio', 'hora_fin', 'justificar']
+
+    def __init__(self, *args, **kwargs):
+        # Recibimos el usuario y lo asignamos a una variable de instancia
+        self.usuario = kwargs.pop('usuario', None)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        fecha_inicio = cleaned_data.get("fecha_inicio")
+        fecha_fin = cleaned_data.get("fecha_fin")
+        hora_inicio = cleaned_data.get("hora_inicio")
+        hora_fin = cleaned_data.get("hora_fin")
+
+        # Validación de fechas futuras
+        if fecha_inicio and fecha_fin:
+            datetime_fin = datetime.combine(fecha_fin, hora_fin)
+            if datetime_fin > datetime.now():
+                raise ValidationError("No se pueden registrar horas extras en fechas futuras.")
+
+        # Validación de duplicados
+        if fecha_inicio and self.usuario:
+            if HoraExtra.objects.filter(usuario=self.usuario, fecha_inicio=fecha_inicio).exists():
+                raise ValidationError("Ya tienes horas extras registradas en esta fecha.")
+        
+        # Validaciones adicionales
+        if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
+            raise ValidationError("La fecha de inicio debe ser anterior o igual a la fecha de fin.")
+
+        if fecha_inicio == fecha_fin and hora_inicio and hora_fin and hora_inicio >= hora_fin:
+            raise ValidationError("La hora de fin debe ser posterior a la hora de inicio si es el mismo día.")
+
         return cleaned_data
