@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="container" style="max-width:600px;">
+    <section class="card card-body">
+        <header>
+            <h1 class="display-6 text-center">Órdenes en las Últimas 24 Horas</h1>
+        </header>
+        <div class="table-container-menu">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Usuario</th>
+                        <th scope="col">Principal</th>
+                        <th scope="col">Ensalada</th>
+                        <th scope="col">Opcional</th>
+                        <th scope="col">Guarnición</th>
+                    </tr>
+                </thead>
+                {% if orders %}
+                <tbody>
+                    {% for order in orders %}
+                        <tr class="clickable-row" data-href="{% url 'edit_order' order.id %}">
+                            <td style="vertical-align: middle;">{{ order.order_date|date:"D d H:i" }}</td>
+                            <td style="vertical-align: middle;">{{ order.user.username }}</td>
+                            <td style="vertical-align: middle;">
+                                {% if order.main_dish %}
+                                    {{ order.main_dish|slice:":25" }}{% if order.main_dish|length > 25 %}...{% endif %}
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: middle;">
+                                {% if order.salad %}
+                                    {{ order.salad.id }}. {{ order.salad.name|slice:":25" }}{% if order.salad.name|length > 25 %}...{% endif %}
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: middle;">
+                                {% if order.other_dish %}
+                                    {{ order.other_dish.name|slice:":25" }}{% if order.other_dish.name|length > 25 %}...{% endif %}
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: middle;">
+                                {% if order.side_dish %}
+                                    {{ order.side_dish|slice:":30" }}{% if order.side_dish|length > 30 %}...{% endif %}
+                                {% else %}
+                                    <!-- Blank space if no side dish -->
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No se han realizado órdenes en las últimas 24 horas.</td>
+                    </tr>
+                {% endif %}
+            </table>
+        </div>
+        <div class="d-flex">
+            <a href="{% url 'ruralapp' %}" style="margin-top: 8px" class="btn btn-secondary flex-fill">Atras</a>
+        </div>
+    </section>
+</main>
+{% endblock %}

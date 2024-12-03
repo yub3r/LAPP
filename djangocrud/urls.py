@@ -11,6 +11,7 @@ urlpatterns = [
     path('', views.home_view, name='home'),
     path('tools/', include("tools.urls")),
     path('formus/', include("formus.urls")),
+    path('ruralapp/', include("ruralapp.urls")),
     # path('crypto-prices/', views.crypto_prices, name='crypto_prices'),
     # path('', views.crypto_prices, name='crypto_prices'),
     path("about", views.sobremi, name="About"),
@@ -28,15 +29,15 @@ urlpatterns = [
     path('tasks/<int:task_id>', views.task_detail, name='task_detail'),
     path('tasks/<int:task_id>/delete', views.delete_task, name='delete_task'),
 
-    path('reservar_guardia/', user_passes_test(views.es_admin)(views.reservar_guardia), name='reservar_guardia'),
+    path('reservar_guardia/',views.reservar_guardia, name='reservar_guardia'),
     path('guardias/', views.guardias, name='guardias'),
-    path('eliminar_guardia/<int:guardia_id>/',  user_passes_test(views.es_admin)(views.eliminar_guardia), name='eliminar_guardia'),
-    path('actualizar_guardia/<int:pk>/', user_passes_test(views.es_admin)(views.actualizar_guardia), name='actualizar_guardia'),
+    path('eliminar_guardia/<int:guardia_id>/',  views.eliminar_guardia, name='eliminar_guardia'),
+    path('actualizar_guardia/<int:pk>/', views.actualizar_guardia, name='actualizar_guardia'),
     path('registrar-horas-extra/', views.registrar_horas_extra, name='registrar_horas_extra'),
     path('lista-horas-extra/', views.lista_horas_extra, name='lista_horas_extra'),
     path('eliminar-horas-extra/<int:id>/', views.eliminar_horas_extra, name='eliminar-horas_extra'),
     path('aprobar_rechazar_horas_extra/<int:id>/', views.aprobar_rechazar_horas_extra, name='aprobar_rechazar_horas_extra'),
-
+    path('cargar-guardias/', views.cargar_guardias_a_horas_extra, name='cargar_guardias_a_horas_extra'),
 
 
     path('sorteo/', views.sorteo, name='sorteo'),

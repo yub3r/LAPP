@@ -33,10 +33,10 @@
         <li class="nav-item dropdown">
           <a class="nav-link active dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="true">Horas Extras</a>
           <ul class="dropdown-menu dropdown-menu-start">
-            {% if 'auth.admin_group' in perms %}
+            {% if 'auth.admin_group' in perms or request.user.username == 'agomez' %}
             <li><a class="dropdown-item" href="{% url 'reservar_guardia' %}" class="nav-link">Asignar Guardias</a></li>
             {% endif %}
-            <li><a class="dropdown-item" href="{% url 'guardias' %}" class="nav-link">Guardias Reservadas</a></li>
+            <li><a class="dropdown-item" href="{% url 'guardias' %}" class="nav-link">Guardias Asignadas</a></li>
             <li><a class="dropdown-item" href="{% url 'registrar_horas_extra' %}" class="nav-link">Registrar Horas</a></li>
             {% if 'auth.admin_group' in perms %}
             <li><a class="dropdown-item" href="{% url 'lista_horas_extra' %}" class="nav-link">Lista Horas Extras</a></li>
@@ -51,6 +51,11 @@
             <li><a class="dropdown-item" href="{% url 'historial_sorteos' %}" class="nav-link">Hist. Sorteos</a></li>
           </ul>
         </li>
+
+        <li class="nav-item">
+          <a class="nav-link active" href="{% url 'ruralapp' %}" role="button">Morfi</a>
+        </li>
+
       </ul>
 
       <ul class="navbar-nav ms-auto">

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Seleccionar la última fila con la clase 'clickable-row'
+        var lastRow = document.querySelector(".clickable-row[data-href]");
+        if (lastRow) {
+            lastRow.addEventListener("click", function(event) {
+                event.preventDefault(); // Prevenir redirección automática
+
+                // Obtener la hora actual del navegador
+                var now = new Date();
+                var currentHour = now.getHours();
+
+                // Verificar si la hora está entre las 9:00 y 12:59
+                if (currentHour >= 8 && currentHour < 13) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Acceso Restringido',
+                        text: 'No se puede editar la orden entre las 8:00 y las 13:00.',
+                        confirmButtonText: 'Entendido'
+                    });
+                } else {
+                    // Redirigir a "edit_order" si está fuera del horario restringido
+                    window.location.href = this.dataset.href;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+
+{% block content %}
+<main class="container" style="max-width:600px;">
+    <section class="card card-body">
+        <header>
+            <h1 class="display-6 text-center">Órdenes Realizadas</h1>
+        </header>
+        <div class="table-container-menu">
+            <table class="table table-borderless table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Principal</th>
+                        <th scope="col">Ensalada</th>
+                        <th scope="col">Opcional</th>
+                        <th scope="col">Guarnición</th>
+                    </tr>
+                </thead>
+                {% if orders %}
+                <tbody>
+                    {% for order in orders %}
+                        <tr class="clickable-row" {% if forloop.first %}data-href="{% url 'edit_order' order.id %}"{% endif %}>
+                            <td style="vertical-align: middle;">{{ order.order_date|date:"D d H:i" }}</td>
+                            <td style="vertical-align: middle;">
+                                {% if order.main_dish %}
+                                    {{ order.main_dish|slice:":25" }}{% if order.main_dish|length > 25 %}...{% endif %}
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: middle;">
+                                {% if order.salad %}
+                                    {{ order.salad.id }}. {{ order.salad.name|slice:":25" }}{% if order.salad.name|length > 25 %}...{% endif %}
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: middle;">
+                                {% if order.other_dish %}
+                                    {{ order.other_dish.name|slice:":25" }}{% if order.other_dish.name|length > 25 %}...{% endif %}
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align: middle;">
+                                {% if order.side_dish %}
+                                    {{ order.side_dish|slice:":30" }}{% if order.side_dish|length > 30 %}...{% endif %}
+                                {% else %}
+                                    <!-- Espacio en blanco si no hay guarnición -->
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No se han realizado órdenes.</td>
+                    </tr>
+                {% endif %}
+            </table>
+        </div>
+
+        <div class="d-flex">
+            <a href="{% url 'ruralapp' %}" style="margin-top: 8px" class="btn btn-secondary flex-fill">Atrás</a>
+        </div>
+    </section>
+</main>
+{% endblock %}

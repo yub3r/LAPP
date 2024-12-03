@@ -69,6 +69,22 @@
         /* Mostrar barra de scroll vertical en caso de que haya más de 5 registros */
     }
 
+
+    .table-container-menu {
+        font-size: 13px; /* Tamaño de fuente para la tabla */
+        max-height: 450px; /* Altura máxima de la tabla */
+        overflow-y: auto;
+        margin: 0; /* Elimina márgenes externos */
+        padding: 0; /* Elimina espacios internos */
+        width: 100%; /* Asegura que la tabla ocupe el ancho completo */
+    }
+
+    .table-container-menu .table {
+        margin: 0; /* Elimina márgenes internos de la tabla */
+        width: 100%; /* Asegura que la tabla ocupe el ancho disponible */
+    }
+
+
     .table-container-sorteo {
           overflow-y: auto;
           font-size: 13px; /* Tamaño de fuente para la tabla */
@@ -83,8 +99,19 @@
         text-align: justify;
     }
 
+    .icono {
+      line-height: 1 !important; /* Reduce la separación vertical */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px; /* Controla el espacio entre el ícono y el texto */
+      padding: 6px; /* Ajusta el padding para que los botones no se vean desbalanceados */
+    }
+    
     .icono i {
-    font-size: 20px; /* Ajusta el tamaño del icono según tus preferencias */
+        font-size: 18px; /* Ajusta el tamaño de fuente si es necesario */
+        margin-bottom: 1px; /* Espaciado específico entre ícono y texto */
     }
 
 /* Ocultar la barra de desplazamiento */
@@ -108,6 +135,14 @@
     }
     .bg-danger-light {
         background-color: #f7b2b8 !important; /* Rojo claro para rechazados */
+    }
+
+    .clickable-row {
+      cursor: pointer;
+    }
+
+    .clickable-row:hover {
+      background-color: #c4dae4; /* Color de fondo al hacer hover */
     }
 
 </style>
@@ -141,7 +176,7 @@
 
 <body>
   <div style="display: flex; flex-direction: column; min-height:94vh;">
-    <div style="flex-grow: 1; padding-inline: 0rem; margin-top: 58px;"> <!-- Agrega margin-top: 56px; -->
+    <div style="flex-grow: 1; padding-inline: 0rem; margin-top: 40px;"> <!-- Agrega margin-top: 56px; -->
       <div class="container">
 
         {% block content %}

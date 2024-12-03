@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var misOrdenesButton = document.querySelector('a[href="{% url "order" %}"]');
+        
+        misOrdenesButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            var now = new Date();
+            var currentHour = now.getHours();
+            var currentMinutes = now.getMinutes();
+            
+            // Restricción: entre las 8:30 y las 13:00
+            if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && currentHour < 13) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Acceso Restringido',
+                    text: 'No puede hacer pedidos entre las 8:30 y las 13:00.',
+                    confirmButtonText: 'Entendido'
+                });
+            } else {
+                window.location.href = this.href;
+            }
+        });
+    });
+</script>
+
+{% endblock %}
+
+{% block content %}
+<main class="container" style="max-width:600px;">
+    <section class="card card-body">
+        <header>
+            <h1 class="display-6 text-center">Ruralapp</h1>
+        </header>
+        <a href="{% url 'order' %}" class="btn btn-primary w-100 me-3" style="margin-top:7px;">Hacer Pedido</a>
+        <a href="{% url 'mis_ordenes' %}" class="btn btn-secondary w-100" style="margin-top:7px;">Mis Órdenes</a>
+        {% if 'auth.admin_group' in perms %}
+        <a href="{% url 'resumen_pedidos' %}" class="btn btn-secondary w-100" style="margin-top:7px;">Resumen de Pedidos</a>
+        {% endif %}
+    </section>
+
+    <!-- Tabla de órdenes en las últimas 24 horas -->
+    <section class="card card-body mt-2">
+        <header>
+            <h5 style="text-align: center;">Total de pedidos: {{ total_orders }}</h5>
+        </header>
+        <div class="table-container-menu">
+            <table class="table table-striped">
+                <thead>
+                    <!-- <tr>
+                        <th style="text-align: center;">Fecha/Hora</th>
+                        <th style="text-align: center;">Usuario</th>
+                        <th style="text-align: center;">Plato/Comentarios</th>
+                    </tr> -->
+                </thead>
+                {% if orders %}
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">{{ order.order_date|date:"D d H:i" }}</td>
+                        <td style="text-align: center; vertical-align: middle;">{{ order.user.username }}</td>
+                        <td style="text-align: left;">
+                            {{ order.main_dish|default:"" }} 
+                            {% if order.salad %}Ensalada {{ order.salad.id }}{% endif %} 
+                            {{ order.other_dish.name|default:"" }} 
+                            {{ order.side_dish|default:"" }}
+                            <br>
+                            {% if order.comments %}
+                                <small>({{ order.comments|slice:":30" }}{% if order.comments|length > 30 %}...{% endif %})</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">No se han realizado órdenes en las últimas 24 horas.</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+    </section>
+</main>
+{% endblock %}

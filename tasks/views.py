@@ -11,10 +11,10 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Task, CryptoPrice, Guardia, Sorteo, Ganador, HoraExtra
 from .forms import TaskForm, GuardiaForm, SorteoForm, RepetirSorteoForm, HoraExtraForm
-from datetime import date
+from datetime import date, timedelta
 from django.utils.timezone import now 
 from django.http import JsonResponse
-import ccxt, calendar, random, re
+import ccxt, calendar, random, re, locale
 import yfinance as yf
 from django.contrib.sessions.backends.db import SessionStore
 from django.core.cache import cache
@@ -38,7 +38,7 @@ def admin_o_ususario(user):
 
 
 def es_admin(user):
-    return user.is_authenticated and user.is_staff
+    return user.is_authenticated and user.is_superuser
 
 def sobremi(request):
     return render(request, "about.html")
@@ -48,7 +48,6 @@ def sobremi(request):
 @login_required
 def registrar_horas_extra(request):
     horas_extras = HoraExtra.objects.filter(usuario=request.user).order_by('-fecha_inicio')
-    registro_exitoso = False
 
     if request.method == 'POST':
         form = HoraExtraForm(request.POST, usuario=request.user)  # Pasamos el usuario
@@ -56,30 +55,34 @@ def registrar_horas_extra(request):
             hora_extra = form.save(commit=False)
             hora_extra.usuario = request.user
             hora_extra.save()
-            registro_exitoso = True  # Indica que el registro fue exitoso
-            form = HoraExtraForm(usuario=request.user)  # Reinicia el formulario después del registro
+            # messages.success(request, "Horas extras registradas correctamente.")
+            return redirect('registrar_horas_extra')
         else:
+            # Si hay errores en el formulario, agrega mensajes de error
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, error)
+                    messages.error(request, error) 
+                    print(f"Error en el campo '{field}': {error}")
     else:
         form = HoraExtraForm(usuario=request.user)  # Pasamos el usuario
 
     return render(request, 'registrar_horas_extra.html', {
         'form': form,
         'horas_extras': horas_extras,
-        'registro_exitoso': registro_exitoso  # Pasamos la bandera al contexto
     })
 
 
 
-@login_required
+@user_passes_test(es_admin)
 def lista_horas_extra(request):
     # Obtenemos el año actual
     current_year = now().year
 
     # Obtenemos todos los registros de horas extra
     horas_extras = HoraExtra.objects.all().order_by('-fecha_inicio')
+
+    # Filtro para identificar registros que provienen de guardias
+    horas_guardia = horas_extras.filter(es_guardia=True)
 
     # Agrupación por mes para la tercera tabla
     horas_por_mes = (
@@ -107,6 +110,7 @@ def lista_horas_extra(request):
 
     return render(request, 'lista_horas_extra.html', {
         'horas_extras': horas_extras,
+        'horas_guardia': horas_guardia,
         'horas_por_mes': horas_por_mes,
         'horas_por_mes_usuario': horas_por_mes_usuario,
     })
@@ -125,6 +129,7 @@ def eliminar_horas_extra(request, id):
 
 
 @login_required
+@user_passes_test(es_admin)
 def aprobar_rechazar_horas_extra(request, id):
     hora_extra = get_object_or_404(HoraExtra, id=id)
     if request.method == 'POST':
@@ -141,17 +146,82 @@ def aprobar_rechazar_horas_extra(request, id):
 
 
 
+
+@login_required
+@user_passes_test(es_admin)
+def cargar_guardias_a_horas_extra(request):
+    if request.method == "POST":
+        # locale.setlocale(locale.LC_TIME, 'es_AR.UTF-8')
+
+
+        fecha_limite = now().date() - timedelta(days=31)
+        guardias_vencidas = Guardia.objects.filter(
+            fecha_fin__lt=now().date(),
+            fecha_fin__gte=fecha_limite
+        )
+
+        registros_cargados = 0
+        for guardia in guardias_vencidas:
+            usuarios = [guardia.usuario1, guardia.usuario2]
+
+            for usuario in usuarios:
+                if usuario:  # Validar si el usuario no es None
+                    # Filtrar considerando todos los campos relevantes para evitar duplicados
+                    existe_registro = HoraExtra.objects.filter(
+                        usuario=usuario,
+                        fecha_inicio=guardia.fecha_inicio,
+                        fecha_fin=guardia.fecha_fin,
+                        hora_inicio=guardia.hora_inicio,
+                        hora_fin=guardia.hora_fin,
+                        justificar__icontains="Guardia",
+                        es_guardia=True
+                    ).exists()
+
+                    if not existe_registro:
+                        # Crear nuevo registro si no existe
+                        HoraExtra.objects.create(
+                            usuario=usuario,
+                            fecha_inicio=guardia.fecha_inicio,
+                            fecha_fin=guardia.fecha_fin,
+                            hora_inicio=guardia.hora_inicio,
+                            hora_fin=guardia.hora_fin,
+                            total_horas=guardia.total_horas,
+                            justificar=f"Guardia - {guardia.fecha_inicio.strftime('%b')}",
+                            aprobado=None,
+                            es_guardia=True
+                        )
+                        registros_cargados += 1
+
+        mensaje = f"Se han cargado {registros_cargados} nuevas guardias." if registros_cargados > 0 else "No se encontraron guardias nuevas para cargar."
+        return JsonResponse({
+            'success': True,
+            'registros': registros_cargados,
+            'mensaje': mensaje,
+            'fecha_inicio': fecha_limite.strftime("%d/%m/%Y"),
+            'fecha_fin': now().strftime("%d/%m/%Y")
+        })
+
+    return JsonResponse({'success': False}, status=400)
+
+
+
+
 @login_required
 def reservar_guardia(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = GuardiaForm(request.POST)
         if form.is_valid():
+            # Crear la guardia
             guardia = form.save(commit=False)
+            guardia.creador = request.user
             guardia.save()
-            return redirect('guardias')
+            return redirect('guardias') 
     else:
         form = GuardiaForm()
+
     return render(request, 'reservar_guardia.html', {'form': form})
+
+
 
 @login_required
 def guardias(request):
@@ -164,13 +234,13 @@ def guardias(request):
             break
     return render(request, 'guardias.html', {"form": guardias, "fecha_actual": fecha_actual, "fecha_proxima": fecha_proxima})
 
-@user_passes_test(es_admin)
+@login_required
 def eliminar_guardia(request, guardia_id):
     guardia = get_object_or_404(Guardia, id=guardia_id)
     guardia.delete()
     return redirect('guardias')
 
-@user_passes_test(es_admin)
+@login_required
 def actualizar_guardia(request, pk):
     guardia = get_object_or_404(Guardia, pk=pk)
     if request.method == 'POST':
@@ -223,7 +293,7 @@ def repetir_sorteo(request, sorteo_id):
     # Obtener una lista de títulos de sorteos existentes
     titulos_sorteos = [s.titulo for s in Sorteo.objects.all()]
 
-   # Crear un formulario con un título único para el nuevo sorteo
+    # Crear un formulario con un título único para el nuevo sorteo
     form = None
     titulo_original = sorteo.titulo
     i = 1
@@ -455,7 +525,7 @@ def crypto_prices(request):
 
 
 
-@login_required
+
 def home_view(request):
     try:
         # Obtiene los datos de BITF.TO (símbolo de Toronto Stock Exchange para BITF)

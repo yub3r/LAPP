@@ -1,7 +1,68 @@
 {% extends 'base.html' %}
 
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('cargarGuardiasForm');
+    form.addEventListener('submit', function (event) {
+        event.preventDefault(); // Evita el envío inmediato del formulario
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const mensaje = data.registros > 0 
+                    ? `${data.mensaje}<br>(${data.fecha_inicio} a ${data.fecha_fin})`
+                    : data.mensaje;
+
+                Swal.fire({
+                    icon: data.registros > 0 ? 'success' : 'info',
+                    title: data.registros > 0 ? 'Guardias cargadas' : 'Nada nuevo',
+                    html: mensaje,
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Recargar la página tras aceptar el mensaje
+                        location.reload();
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un problema al cargar las guardias.',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un problema con la solicitud.',
+                confirmButtonText: 'Cerrar'
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
+
+
 {% block content %}
-<h2 class="text-center mb-4">Lista de Horas Extra por Usuario</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-center mb-0">Lista de Horas Extra por Usuario</h2>
+    <form method="POST" action="{% url 'cargar_guardias_a_horas_extra' %}" id="cargarGuardiasForm">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning px-4"><i class="bi bi-calendar-check-fill"></i> Cargar Guardias</button>
+    </form>
+</div>
 
 <!-- Primera tabla: Detalles de horas extras para todos los usuarios -->
 <table class="table table-striped table-hover">
@@ -23,7 +84,13 @@
             <td style="text-align: left; vertical-align: middle;">{{ horas.usuario.username }}</td>
             <td style="text-align: center; vertical-align: middle;">{{ horas.fecha_inicio|date:"d/m/y" }} {{ horas.hora_inicio|time:"H:i" }}</td>
             <td style="text-align: center; vertical-align: middle;">{{ horas.fecha_fin|date:"d/m/y" }} {{ horas.hora_fin|time:"H:i" }}</td>
-            <td>{{ horas.justificar|default:"-" }}</td>
+            <td>
+                {% if horas.es_guardia %}
+                    {{ horas.justificar|default:"-" }}
+                {% else %}
+                    {{ horas.justificar|default:"-" }}
+                {% endif %}
+            </td>
             <td style="text-align: left; vertical-align: middle;">{{ horas.total_horas }}</td>
             <td style="text-align: center; vertical-align: middle;">
                 {% if horas.aprobado is None %}
@@ -42,17 +109,39 @@
                     <div class="d-flex gap-2">
                         <button type="submit" name="accion" value="aprobar" class="btn btn-success btn-sm flex-fill" 
                             {% if horas.aprobado == True %}disabled{% endif %}>
-                            <i class="bi bi-hand-thumbs-up-fill"></i> Aprobar
+                            <i class="bi bi-hand-thumbs-up-fill"></i>Aprobar
                         </button>
                         <button type="submit" name="accion" value="rechazar" class="btn btn-danger btn-sm flex-fill" 
                             {% if horas.aprobado == False %}disabled{% endif %}>
-                            <i class="bi bi-hand-thumbs-down-fill"></i> Rechazar
+                            <i class="bi bi-hand-thumbs-down-fill"></i>Rechazar
                         </button>
                     </div>
                 </form>
             </td>
-            
         </tr>
+
+        <style>
+            table.table tbody tr {
+                height: 30px; /* Ajusta la altura */
+                line-height: 1; /* Opcional: ajusta la alineación vertical del texto */
+            }
+        
+            table.table td {
+                padding: 4px 8px; /* Reduce el espacio interno en las celdas */
+            }
+            .table-container {
+                border: 1px solid #ddd; /* Opcional: bordes para separar las tablas */
+                padding: 10px;
+                background: #f9f9f9; /* Fondo opcional */
+                height: 100%; /* Para que ambas tablas tengan la misma altura */
+            }
+
+            .d-flex {
+                display: flex;
+                gap: 10px; /* Espaciado entre las tablas */
+            }
+        </style>
+
         {% empty %}
         <tr>
             <td colspan="8" class="text-center">No hay registros de horas extras.</td>
@@ -61,54 +150,60 @@
     </tbody>
 </table>
 
-<h3 class="text-center my-4">Total de Horas Extra por Mes/Usuario</h3>
 
-<!-- Segunda tabla: Total de horas por mes y usuario -->
-<table class="table table-striped table-hover">
-    <thead>
-        <tr>
-            <th>Mes</th>
-            <th>Usuario</th>
-            <th>Total Horas</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for registro in horas_por_mes_usuario %}
-        <tr>
-            <td>{{ registro.fecha_ficticia|date:"y F" }}</td>
-            <td>{{ registro.usuario__username }}</td>
-            <td>{{ registro.total_horas }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="3" class="text-center">No hay registros mensuales por usuario.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="d-flex justify-content-between align-items-start">
+    <!-- Tabla 1 -->
+    <div class="table-container flex-fill me-3">
+        <h3 class="text-center mb-3">Total de Horas Extra por Mes/Usuario</h3>
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Año/Mes</th>
+                    <th>Usuario</th>
+                    <th>Total Horas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in horas_por_mes_usuario %}
+                <tr>
+                    <td>{{ registro.fecha_ficticia|date:"Y/F" }}</td>
+                    <td>{{ registro.usuario__username }}</td>
+                    <td>{{ registro.total_horas }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">No hay registros mensuales por usuario.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-<h3 class="text-center my-4">Total de Horas Extra por Mes</h3>
+    <!-- Tabla 2 -->
+    <div class="table-container flex-fill ms-3">
+        <h3 class="text-center mb-3">Total de Horas Extra por Mes</h3>
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Año/Mes</th>
+                    <th>Total Horas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mes in horas_por_mes %}
+                <tr>
+                    <td>{{ mes.fecha_ficticia|date:"Y/F" }}</td>
+                    <td>{{ mes.total_horas }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="text-center">No hay registros mensuales.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<!-- Tercera tabla: Total de horas por mes -->
-<table class="table table-striped table-hover">
-    <thead>
-        <tr>
-            <th>Mes</th>
-            <th>Total Horas</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for mes in horas_por_mes %}
-        <tr>
-            <td>{{ mes.fecha_ficticia|date:"y F" }}</td>
-            <td>{{ mes.total_horas }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="2" class="text-center">No hay registros mensuales.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
 
 {% endblock %}

@@ -3,35 +3,6 @@ from django.contrib.auth.models import User, Group
 from django.conf import settings
 from datetime import datetime, timedelta
 
-class Guardia(models.Model):
-    usuario1 = models.ForeignKey(User, related_name='usuario1', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Tecnico 1'})
-    usuario2 = models.ForeignKey(User, related_name='usuario2', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Tecnico 2'})
-    usuario3 = models.ForeignKey(User, related_name='usuario3', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'IT'})
-    fecha_inicio = models.DateField()
-    fecha_fin = models.DateField()
-    hora_inicio = models.TimeField(default="16:00")
-    hora_fin = models.TimeField(default="07:00")
-    total_horas = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
-
-    def calcular_total_horas(self):
-        # Crear datetime con fecha y hora de inicio y fin
-        datetime_inicio = datetime.combine(self.fecha_inicio, self.hora_inicio)
-        datetime_fin = datetime.combine(self.fecha_fin, self.hora_fin)
-
-        # Si la hora de fin es menor que la de inicio, significa que pasa al siguiente día
-        if datetime_fin <= datetime_inicio:
-            datetime_fin += timedelta(days=1)
-
-        # Calcular diferencia y convertir a horas
-        diferencia = datetime_fin - datetime_inicio
-        horas_totales = diferencia.total_seconds() / 3600
-        return horas_totales
-
-    def save(self, *args, **kwargs):
-        # Calcular el total de horas antes de guardar
-        self.total_horas = self.calcular_total_horas()
-        super(Guardia, self).save(*args, **kwargs)
-
 
 class Sorteo(models.Model):
     titulo = models.CharField(max_length=50)
@@ -107,6 +78,51 @@ class CryptoPrice(models.Model):
 
 
 
+class Guardia(models.Model):
+    usuario1 = models.ForeignKey(User, related_name='usuario1', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Tecnico 1'})
+    usuario2 = models.ForeignKey(User, related_name='usuario2', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Tecnico 2'})
+    usuario3 = models.ForeignKey(User, related_name='usuario3', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'IT'})
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    hora_inicio = models.TimeField(default="16:00")
+    hora_fin = models.TimeField(default="07:00")
+    total_horas = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+
+    def calcular_total_horas(self):
+        # Crear datetime con fecha y hora de inicio y fin
+        datetime_inicio = datetime.combine(self.fecha_inicio, self.hora_inicio)
+        datetime_fin = datetime.combine(self.fecha_fin, self.hora_fin)
+
+        # Si la hora de fin es menor que la de inicio, significa que pasa al siguiente día
+        if datetime_fin <= datetime_inicio:
+            datetime_fin += timedelta(days=1)
+
+        # Calcular diferencia y convertir a horas
+        diferencia = datetime_fin - datetime_inicio
+        horas_totales = diferencia.total_seconds() / 3600
+        return horas_totales
+
+    def save(self, *args, **kwargs):
+        # Calcular el total de horas antes de guardar
+        self.total_horas = self.calcular_total_horas()
+        super(Guardia, self).save(*args, **kwargs)
+
+    def generar_horas_extra(self):
+        usuarios_guardia = [self.usuario1, self.usuario2, self.usuario3]
+        for usuario in usuarios_guardia:
+            # Generar registro en HoraExtra para cada usuario de la guardia
+            HoraExtra.objects.create(
+                usuario=usuario,
+                fecha_inicio=self.fecha_inicio,
+                fecha_fin=self.fecha_fin,
+                hora_inicio=self.hora_inicio,
+                hora_fin=self.hora_fin,
+                total_horas=self.total_horas,
+                justificar=f"Guardia del mes {self.fecha_inicio.strftime('%B')}",
+                aprobado=None  # Inicia como pendiente
+            )
+
+
 class HoraExtra(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     fecha_inicio = models.DateField()
@@ -118,6 +134,8 @@ class HoraExtra(models.Model):
     aprobado = models.BooleanField(null=True, blank=True)  # True para aprobado, False para rechazado, None para pendiente
     feedback_admin = models.TextField(max_length=500, blank=True, null=True)
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+    es_guardia = models.BooleanField(default=False)  # Indica si el registro proviene de una guardia
+
 
     def calcular_total_horas(self):
         datetime_inicio = datetime.combine(self.fecha_inicio, self.hora_inicio)
@@ -132,7 +150,7 @@ class HoraExtra(models.Model):
         # Calcula el total de horas si no está calculado
         self.total_horas = self.calcular_total_horas()
 
-        # Si el estado de aprobación cambia, se actualiza la fecha_aprobacion
+        # Actualiza la fecha de aprobación si cambia el estado
         if self.aprobado is not None and not self.fecha_aprobacion:
             self.fecha_aprobacion = datetime.now()
 

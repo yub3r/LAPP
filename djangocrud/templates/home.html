@@ -52,23 +52,25 @@
   <!-- ***************************************************************************************************************************************************** -->
 
   <!-- <section class="card card-body mt-2"> -->
-    <a class="btn btn-dark icono" href="{% url 'formularios' %}" style=margin-top:8px;><i class="bi bi-ui-checks"></i><br>Formularios</a>
+    <a class="btn btn-dark icono" href="{% url 'formularios' %}" style=margin-top:7px;><i class="bi bi-ui-checks"></i><br>Formularios</a>
   <!-- </section> -->
 
   <!-- ***************************************************************************************************************************************************** -->
 
   <!-- <section class="card card-body mt-2"> -->
     <div class="d-flex justify-content-between">
-      <a class="btn btn-outline-dark w-50 icono" href="/registrar-horas-extra/" style=margin-top:8px;><i class="bi bi-clock-fill"></i><br>Horas Extras</a>
-      <a class="btn btn-warning w-50 icono" href="/guardias/" style=margin-top:8px;><i class="bi bi-calendar-check-fill"></i><br>Guardias</a>
+      <a class="btn btn-outline-dark w-50 icono" href="/registrar-horas-extra/" style=margin-top:7px;><i class="bi bi-clock-fill"></i><br>Horas Extras</a>
+      <a class="btn btn-warning w-50 icono" href="/guardias/" style=margin-top:7px;><i class="bi bi-calendar-check-fill"></i><br>Guardias</a>
     </div>
   <!-- </section> -->
 
   <!-- ***************************************************************************************************************************************************** -->
 
   <!-- <section class="card card-body mt-2"> -->
-
-    <a class="btn btn-info icono" href="/historial/" style=margin-top:9px;><i class="bi bi-person-arms-up"></i><br>Sorteos</a>
+    <div class="d-flex justify-content-between">
+      <a class="btn btn-info w-50 icono" href="/historial/" style=margin-top:7px;><i class="bi bi-nintendo-switch"></i><br>Sorteos</a>
+      <a class="btn btn-primary w-50 icono" href="/ruralapp/ruralapp/" style=margin-top:7px;><i class="bi bi-sunrise-fill"></i><br>Ruralapp</a>
+    </div>
   </section>
 
   <!-- ***************************************************************************************************************************************************** -->
@@ -105,7 +107,7 @@
       <script>
         // Define el precio de BITF con dos decimales para integrarlo
         // const bitfPrice = parseFloat("{{ bitf_price|default:0 }}").toFixed(3);
-        const bitfPrice = parseFloat("{{ bitf_price|default:0 }}").toFixed(2)+ " U$D";
+        const bitfPrice = parseFloat("{{ bitf_price|default:0 }}").toFixed(2)+ " CAD";
   
         fetch('https://criptoya.com/api/dolar')
         .then(response => response.json())
@@ -160,8 +162,6 @@
   
   <!-- <h3 class="text-center">Precio actual de BITF (TSE): {{ bitf_price }}</h3> -->
   
-
-
 </main>
 
 {% endblock %}
