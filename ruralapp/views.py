@@ -3,11 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Q
-from collections import defaultdict, OrderedDict
+from collections import defaultdict, OrderedDict, Counter
 from .models import Salad, OtherDish, WeeklyMenu, Order, SideDish
 from datetime import datetime, time, timedelta
 import logging
-
 
 @login_required
 def ruralapp(request):
@@ -35,7 +34,6 @@ def ruralapp(request):
     total_orders = recent_orders.count()
 
     return render(request, 'ruralapp.html', {'orders': recent_orders, 'total_orders': total_orders})
-
 
 
 
@@ -205,87 +203,91 @@ def edit_order(request, order_id):
         'dessert': dessert
     })
 
-
-
-
 @login_required
 def resumen_pedidos(request):
     now = timezone.localtime(timezone.now())
     current_hour = now.hour
-    today_weekday = now.weekday()  # 0 = Lunes, ..., 6 = Domingo
+    today_weekday = now.weekday()
 
-    # Determinar el rango de tiempo según la hora y día
-    if current_hour >= 13:  # Después de las 13:00
-        start_date = now.replace(hour=13, minute=0, second=0, microsecond=0)  # Hoy a las 13:00
-    else:  # Antes de las 13:00
-        if today_weekday == 0:  # Si es lunes
-            last_friday = now - timedelta(days=3)  # Retroceder al viernes
-            start_date = last_friday.replace(hour=13, minute=0, second=0, microsecond=0)  # Viernes a las 13:00
-        else:  # Para cualquier otro día de la semana
+    # Determinar el rango de tiempo
+    if current_hour >= 13:
+        start_date = now.replace(hour=13, minute=0, second=0, microsecond=0)
+    else:
+        if today_weekday == 0:
+            last_friday = now - timedelta(days=3)
+            start_date = last_friday.replace(hour=13, minute=0, second=0, microsecond=0)
+        else:
             yesterday = now - timedelta(days=1)
-            start_date = yesterday.replace(hour=13, minute=0, second=0, microsecond=0)  # Ayer a las 13:00
+            start_date = yesterday.replace(hour=13, minute=0, second=0, microsecond=0)
 
-    # Filtrar las órdenes realizadas en el rango de tiempo determinado
+    # Filtrar pedidos
     orders = Order.objects.filter(order_date__gte=start_date)
 
-    # Resumen agrupado por tipo de pedido
-    order_summary = defaultdict(lambda: {'count': 0, 'comments': []})
+    # Inicializar secciones y contadores
+    section_1 = defaultdict(lambda: {'count': 0, 'comments': []})
+    section_2 = defaultdict(lambda: {'count': 0, 'comments': []})
+    section_3 = defaultdict(lambda: {'count': 0, 'comments': []})
+    unique_orders = set()
+
     for order in orders:
-        key = (
-            order.main_dish or 'N/A',
-            f"Ensalada {order.salad.id}" if order.salad else 'N/A',
-            order.other_dish.name if order.other_dish else 'N/A',
-            order.side_dish.name if order.side_dish else 'N/A',
-        )
-        order_summary[key]['count'] += 1
-        if order.comments:
-            order_summary[key]['comments'].append(order.comments)
+        # Sección 1: main_dish, salad y other_dish sin guarnición
+        if order.main_dish or order.salad or (order.other_dish and not order.other_dish.plus_side):
+            dish_name = " + ".join(
+                filter(None, [
+                    order.main_dish,
+                    f"Ensalada {order.salad.id}" if order.salad else None,
+                    order.other_dish.name if order.other_dish and not order.other_dish.plus_side else None,
+                ])
+            )
+            section_1[dish_name]['count'] += 1
+            if order.comments:
+                section_1[dish_name]['comments'].append(order.comments)
+            unique_orders.add(order.id)
 
-    # Crear lista resumida para mostrar en la plantilla
-    summary_list = []
-    for key, value in order_summary.items():
-        main_dish, salad, other_dish, side_dish = key
-        summary_list.append({
-            'main_dish': main_dish,
-            'salad': salad,
-            'other_dish': other_dish,
-            'side_dish': side_dish,
-            'count': value['count'],
-            'comments': value['comments'],
-        })
+        # Sección 2: other_dish con guarnición
+        if order.other_dish and order.other_dish.plus_side:
+            dish_name = order.other_dish.name
+            section_2[dish_name]['count'] += 1
+            if order.comments:
+                section_2[dish_name]['comments'].append(order.comments)
+            unique_orders.add(order.id)
 
-    # Ordenar la lista según prioridad
-    def get_priority(item):
-        if item['main_dish'] != 'N/A':
-            return 1  # Prioridad alta
-        elif item['salad'] != 'N/A':
-            return 2  # Prioridad media
-        else:
-            return 3  # Prioridad baja
+        # Sección 3: guarniciones
+        if order.side_dish:
+            dish_name = order.side_dish.name
+            section_3[dish_name]['count'] += 1
+            if order.comments:
+                section_3[dish_name]['comments'].append(order.comments)
+            if not order.other_dish or not order.other_dish.plus_side:
+                unique_orders.add(order.id)
 
-    summary_list.sort(key=get_priority)
+    # Ordenar las secciones
+    section_1 = sorted(section_1.items(), key=lambda x: x[1]['count'], reverse=True)
+    section_2 = sorted(section_2.items(), key=lambda x: x[1]['count'], reverse=True)
+    section_3 = sorted(section_3.items(), key=lambda x: x[1]['count'], reverse=True)
 
     # Generar mensaje para WhatsApp
-    whatsapp_message = "```\n|Cant| Orden BITFARMS                          |\n|----|-----------------------------------------|\n"
-    total_orders = 0
+    whatsapp_message = "```\n"
+    for section in [section_1, section_2, section_3]:
+        for dish, data in section:
+            whatsapp_message += f"{data['count']} {dish[:45]:<45}\n"
+        whatsapp_message += "---------------\n"
 
-    for item in summary_list:
-        dishes = [
-            item['main_dish'] if item['main_dish'] != 'N/A' else None,
-            item['salad'] if item['salad'] != 'N/A' else None,
-            item['other_dish'] if item['other_dish'] != 'N/A' else None,
-            item['side_dish'] if item['side_dish'] != 'N/A' else None,
-        ]
-        dishes = [dish for dish in dishes if dish]  # Quitar valores N/A
-        order_text = " ".join(dishes)
+    total_orders = len(unique_orders)
+    
+    whatsapp_message += f"```\n*{total_orders}* Pedidos en total.\n"
 
-        total_orders += item['count']
-        whatsapp_message += f"| {item['count']:<3}| {order_text[:40]:<40}|\n"
+    # Preparar datos para la plantilla
+    summary_list = []
+    for section in [section_1, section_2, section_3]:
+        for dish, data in section:
+            summary_list.append({
+                'main_dish': dish,
+                'count': data['count'],
+                'comments': data['comments'],
+            })
 
-    whatsapp_message += "```\n"
-    whatsapp_message += f"\n| *{total_orders}*  | Pedidos Totales. \n"
-
-    # Renderizar la vista
+    # Renderizar vista
     if "generate_whatsapp" in request.GET:
         return render(request, 'whatsapp_preview.html', {
             'whatsapp_message': whatsapp_message,
@@ -296,6 +298,9 @@ def resumen_pedidos(request):
         'current_day': now.strftime('%A'),
         'total_orders': total_orders,
     })
+
+
+
 
 
 

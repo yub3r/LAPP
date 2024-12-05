@@ -2,15 +2,15 @@
 
 {% block js %}
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
+        // Manejar la restricción de horario para el botón "Hacer Pedido"
         var misOrdenesButton = document.querySelector('a[href="{% url "order" %}"]');
-        
-        misOrdenesButton.addEventListener('click', function(event) {
+        misOrdenesButton.addEventListener('click', function (event) {
             event.preventDefault();
             var now = new Date();
             var currentHour = now.getHours();
             var currentMinutes = now.getMinutes();
-            
+
             // Restricción: entre las 8:30 y las 13:00
             if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && currentHour < 13) {
                 Swal.fire({
@@ -23,10 +23,35 @@
                 window.location.href = this.href;
             }
         });
+
+        // Contador incremental por usuario (trabajando de atrás hacia adelante)
+        const userCells = document.querySelectorAll('[data-username]');
+        const userCount = {};
+
+        // Recorremos las celdas en orden inverso (últimos pedidos primero)
+        for (let i = userCells.length - 1; i >= 0; i--) {
+            const cell = userCells[i];
+            const username = cell.dataset.username;
+            
+            // Incrementamos el contador para el usuario correspondiente
+            userCount[username] = (userCount[username] || 0) + 1;
+
+            // Solo mostrar el contador a partir del segundo pedido
+            if (userCount[username] > 1) {
+                const counter = document.createElement('small');
+                counter.textContent = `(x${userCount[username]})`;
+                counter.style.display = 'block';
+                counter.style.marginTop = '2px';
+                counter.style.color = '#6c757d'; // Gris para estilo informativo
+
+                // Agregar el contador debajo del nombre
+                cell.appendChild(counter);
+            }
+        }
     });
 </script>
-
 {% endblock %}
+
 
 {% block content %}
 <main class="container" style="max-width:600px;">
@@ -60,7 +85,9 @@
                     {% for order in orders %}
                     <tr>
                         <td style="text-align: center; vertical-align: middle;">{{ order.order_date|date:"D d H:i" }}</td>
-                        <td style="text-align: center; vertical-align: middle;">{{ order.user.username }}</td>
+                        <td style="text-align: center; vertical-align: middle;" data-username="{{ order.user.username }}">
+                            {{ order.user.username }}
+                        </td>                        
                         <td style="text-align: left;">
                             {{ order.main_dish|default:"" }} 
                             {% if order.salad %}Ensalada {{ order.salad.id }}{% endif %} 

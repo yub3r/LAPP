@@ -72,7 +72,6 @@ def registrar_horas_extra(request):
     })
 
 
-
 @user_passes_test(es_admin)
 def lista_horas_extra(request):
     # Obtenemos el año actual
@@ -127,7 +126,6 @@ def eliminar_horas_extra(request, id):
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
 
 
-
 @login_required
 @user_passes_test(es_admin)
 def aprobar_rechazar_horas_extra(request, id):
@@ -143,8 +141,6 @@ def aprobar_rechazar_horas_extra(request, id):
         hora_extra.feedback_admin = feedback
         hora_extra.save()
         return redirect('lista_horas_extra')
-
-
 
 
 @login_required
@@ -205,7 +201,6 @@ def cargar_guardias_a_horas_extra(request):
 
 
 
-
 @login_required
 def reservar_guardia(request):
     if request.method == "POST":
@@ -220,7 +215,6 @@ def reservar_guardia(request):
         form = GuardiaForm()
 
     return render(request, 'reservar_guardia.html', {'form': form})
-
 
 
 @login_required
