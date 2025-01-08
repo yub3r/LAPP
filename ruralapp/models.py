@@ -2,6 +2,11 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError  # Importar ValidationError
 
+class AppState(models.Model):
+    id = models.AutoField(primary_key=True)
+    current_week = models.IntegerField(default=1)  # Semana actual en el ciclo de 4 semanas
+    last_week_advance = models.DateTimeField(null=True, blank=True)  # Última vez que se avanzó la semana
+    
 class Salad(models.Model):
     name = models.CharField(max_length=100)
 

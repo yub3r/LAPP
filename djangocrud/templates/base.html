@@ -24,16 +24,23 @@
     background-color: white;
     width: 100%;
     display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    justify-content: space-between; /* Distribuye los elementos horizontalmente */
+    align-items: center; /* Alinea verticalmente los elementos */
+    flex-wrap: nowrap; /* Asegura que todo esté en una sola línea */
     border-top: 1px solid black;
     padding-inline: 1rem;
+    height: 20px; /* Ajusta la altura si es necesario */
   }
-  
-  footer p {
-    display: inline;
-    font-size: 12px;
-    margin: 0;
+
+  footer p, .footer-title {
+    margin: 0; /* Elimina márgenes */
+    font-size: 12px; /* Ajusta el tamaño del texto */
+  }
+
+  .footer-title {
+    font-weight: bold; /* Hace que el texto sea negrita */
+    text-align: center;
+    flex: 1; /* Usa el espacio disponible para centrar el texto */
   }
 
 
@@ -188,8 +195,9 @@
     </div>
     <div>
       <footer>
-        <p>Yúber Millán © 2024</p>
-        <p><a href="{% url 'About' %} ">Sobre mi</a></p>
+        <p>YM © 2025</p>
+        <div class="footer-title">ARG</div>
+        <p><a href="{% url 'About' %}">Sobre mi</a></p>
       </footer>
     </div>
 

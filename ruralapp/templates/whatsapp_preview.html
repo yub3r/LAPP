@@ -3,14 +3,46 @@
 {% block content %}
 <main class="container">
     <h1 class="display-6 text-center">Vista previa de mensaje para WhatsApp</h1>
-    <section class="mt-4">
-        <pre style="background-color: #f8f9fa; padding: 15px; border: 1px solid #ccc; overflow-x: auto;">
+    <section class="mt-4 position-relative">
+        <pre id="whatsappMessage" style="background-color: #f8f9fa; padding: 15px; border: 1px solid #ccc; overflow-x: auto;">
 {{ whatsapp_message }}
         </pre>
+        <button id="copyButton" class="btn btn-secondary position-absolute" style="top: 10px; right: 10px;">
+            <i class="bi bi-clipboard"></i> Copiar
+        </button>
+        
         <p class="mt-3 text-center">
             Copia el contenido manualmente y pégalo en WhatsApp.
         </p>
         <a class="btn btn-primary mt-3 w-100" href="{% url 'resumen_pedidos' %}">Volver al resumen</a>
     </section>
 </main>
+
+<script>
+    document.getElementById('copyButton').addEventListener('click', function() {
+        const messageElement = document.getElementById('whatsappMessage');
+        
+        // Crear un elemento de texto temporal para seleccionar
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = messageElement.textContent.trim();
+        document.body.appendChild(tempTextArea);
+        
+        // Seleccionar el contenido del textarea
+        tempTextArea.select();
+        document.execCommand('copy');
+        
+        // Remover el elemento temporal
+        document.body.removeChild(tempTextArea);
+        
+        // Mostrar notificación con SweetAlert2
+        Swal.fire({
+            icon: 'success',
+            title: '¡Copiado!',
+            text: 'El contenido ha sido copiado al portapapeles.',
+            showConfirmButton: false,
+            timer: 2000  // Tiempo en milisegundos
+        });
+    });
+</script>
+
 {% endblock %}

@@ -23,3 +23,6 @@ slack_sdk
 slackclient
 requests
 python-dotenv
+celery[redis]
+django-celery-beat
+

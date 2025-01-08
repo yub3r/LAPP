@@ -64,7 +64,17 @@
     </section>
     <h5 style="text-align: right;">Total de pedidos: {{ total_orders }}</h5>
     
-    <a href="?generate_whatsapp=true" class="btn btn-success mt-3 w-100">Generar vista previa para WhatsApp</a>
+    <div class="row g-2 mt-2">
+        <div class="col">
+            <a href="{% url 'ruralapp' %}" class="btn btn-secondary w-100">Atrás</a>
+        </div>
+        <div class="col">
+            <a href="?generate_whatsapp=true" class="btn btn-success w-100">Generar vista previa para WhatsApp</a>
+        </div>
+    </div>
+    
+    
+    
 
 
 </main>

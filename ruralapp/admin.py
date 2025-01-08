@@ -2,7 +2,7 @@ from django.contrib import admin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from import_export import fields
-from .models import Salad, OtherDish, SideDish, WeeklyMenu, Order, WhatsAppGroup, EventLog, GroupNotification
+from .models import Salad, OtherDish, SideDish, WeeklyMenu, Order, WhatsAppGroup, EventLog, GroupNotification, AppState
 
 
 class SaladAdmin(admin.ModelAdmin):
@@ -34,6 +34,9 @@ class GroupNotificationAdmin(admin.ModelAdmin):
     list_display = ['group', 'message', 'send_date', 'status', 'notification_type']
     list_filter = ['group', 'send_date', 'status', 'notification_type']
 
+class AppStateAdmin(admin.ModelAdmin):
+    list_display = ['id', 'current_week']
+
 admin.site.register(Salad, SaladAdmin)
 admin.site.register(OtherDish, OtherDishAdmin)
 admin.site.register(SideDish, SideDishAdmin)
@@ -42,3 +45,4 @@ admin.site.register(Order, OrderAdmin)
 admin.site.register(WhatsAppGroup, WhatsAppGroupAdmin)
 admin.site.register(EventLog, EventLogAdmin)
 admin.site.register(GroupNotification, GroupNotificationAdmin)
+admin.site.register(AppState, AppStateAdmin)

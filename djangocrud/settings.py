@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'import_export',
+    'django_celery_beat',
+    'django_celery_results',
     #'pwa',
 ]
 
@@ -211,4 +213,16 @@ INTERNAL_IPS = ["127.0.0.1",]
 #     "sizes": "160x160"
 #     }
 # ]
+
+# Celery configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'America/Argentina/Buenos_Aires'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+# Configuración del backend de resultados
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_RESULT_EXTENDED = True
+# Opcional: Configuración para evitar almacenar resultados de tareas exitosas
+CELERY_TASK_IGNORE_RESULT = False
 

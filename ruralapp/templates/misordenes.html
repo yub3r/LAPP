@@ -12,13 +12,17 @@
                 // Obtener la hora actual del navegador
                 var now = new Date();
                 var currentHour = now.getHours();
+                var currentMinutes = now.getMinutes();
 
-                // Verificar si la hora está entre las 9:00 y 12:59
-                if (currentHour >= 8 && currentHour < 13) {
+                // Verificar si la hora está entre las 8:30 y 13:30
+                if (
+                    (currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && 
+                    (currentHour < 13 || (currentHour === 13 && currentMinutes <= 29))
+                ) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Acceso Restringido',
-                        text: 'No se puede editar la orden entre las 8:00 y las 13:00.',
+                        text: 'No se puede editar la orden entre las 8:30 y las 13:30.',
                         confirmButtonText: 'Entendido'
                     });
                 } else {
@@ -30,6 +34,7 @@
     });
 </script>
 {% endblock %}
+
 
 
 {% block content %}

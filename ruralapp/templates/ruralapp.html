@@ -11,12 +11,12 @@
             var currentHour = now.getHours();
             var currentMinutes = now.getMinutes();
 
-            // Restricción: entre las 8:30 y las 13:00
-            if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && currentHour < 13) {
+            // Restricción: entre las 8:30 y las 13:30
+            if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && (currentHour < 13 || (currentHour === 13 && currentMinutes <= 29))) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Acceso Restringido',
-                    text: 'No puede hacer pedidos entre las 8:30 y las 13:00.',
+                    text: 'No puede hacer pedidos entre las 8:30 y las 13:30.',
                     confirmButtonText: 'Entendido'
                 });
             } else {

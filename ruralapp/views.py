@@ -4,37 +4,14 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Q
 from collections import defaultdict, OrderedDict, Counter
-from .models import Salad, OtherDish, WeeklyMenu, Order, SideDish
+from .models import Salad, OtherDish, WeeklyMenu, Order, SideDish, AppState
 from datetime import datetime, time, timedelta
 import logging
-
-@login_required
-def ruralapp(request):
-    # Obtener la fecha y hora actual
-    # now = timezone.now()
-    now = timezone.localtime(timezone.now()) # Convierte explícitamente timezone.now() a la zona horaria local
-    current_hour = now.hour
-    today_weekday = now.weekday()  # 0 = Lunes, ..., 6 = Domingo
-
-    # Inicializar el rango de tiempo
-    if current_hour >= 13:  # Después de las 13:00
-        start_date = now.replace(hour=13, minute=0, second=0, microsecond=0)  # Hoy a las 13:00
-    else:  # Antes de las 13:00
-        if today_weekday == 0:  # Si es lunes
-            last_friday = now - timedelta(days=3)  # Retroceder al viernes
-            start_date = last_friday.replace(hour=13, minute=0, second=0, microsecond=0)  # Viernes a las 13:00
-        else:  # Para cualquier otro día de la semana
-            yesterday = now - timedelta(days=1)
-            start_date = yesterday.replace(hour=13, minute=0, second=0, microsecond=0)  # Ayer a las 13:00
-
-    # Filtrar las órdenes realizadas en el rango de tiempo determinado
-    recent_orders = Order.objects.filter(order_date__gte=start_date).order_by('-order_date')
-    
-    # Calcular el total de órdenes
-    total_orders = recent_orders.count()
-
-    return render(request, 'ruralapp.html', {'orders': recent_orders, 'total_orders': total_orders})
-
+from django.utils.timezone import localtime, now as timezone_now
+from datetime import timedelta
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 
 
 @login_required
@@ -45,55 +22,130 @@ def mis_ordenes(request):
 logger = logging.getLogger(__name__)
 
 
+def get_current_week():
+    """Obtiene la semana actual desde AppState sin modificarla."""
+    app_state, _ = AppState.objects.get_or_create(id=1)
+    return app_state.current_week
+
+
+def advance_week():
+    """Avanza la semana actual en el ciclo de 4 semanas si es lunes."""
+    app_state, _ = AppState.objects.get_or_create(id=1)
+    current_time = timezone.localtime(timezone.now())
+
+    # Verificar si hoy es lunes
+    if current_time.weekday() == 0:  # Lunes = 0
+        # Verificar si ya se avanzó esta semana
+        if app_state.last_week_advance:
+            last_advance = timezone.localtime(app_state.last_week_advance)
+            if last_advance.date() == current_time.date():  # Ya se avanzó hoy
+                return app_state.current_week
+
+        # Avanzar a la siguiente semana
+        app_state.current_week = (app_state.current_week % 4) + 1
+        app_state.last_week_advance = current_time
+        app_state.save()
+
+    return app_state.current_week
+
+# Función auxiliar para calcular el rango de tiempo válido
+def calculate_time_range():
+    now = timezone.localtime(timezone.now())
+    current_hour = now.hour
+    current_minute = now.minute
+    today_weekday = now.weekday()
+
+    if current_hour > 13 or (current_hour == 13 and current_minute >= 30):
+        start_date = now.replace(hour=13, minute=30, second=0, microsecond=0)
+    else:
+        if today_weekday == 0:  # Lunes antes de las 13:30
+            last_friday = now - timedelta(days=3)
+            start_date = last_friday.replace(hour=13, minute=30, second=0, microsecond=0)
+        elif today_weekday in [5, 6]:  # Sábado o domingo
+            last_friday = now - timedelta(days=(today_weekday - 4))
+            start_date = last_friday.replace(hour=13, minute=30, second=0, microsecond=0)
+        else:
+            yesterday = now - timedelta(days=1)
+            start_date = yesterday.replace(hour=13, minute=30, second=0, microsecond=0)
+
+    end_date = start_date + timedelta(days=1)
+    return start_date, end_date
+
+# Función auxiliar para determinar el menú diario
+def get_menu_day_and_week():
+    now = timezone.localtime(timezone.now())
+    current_hour = now.hour
+    current_minute = now.minute
+    today_weekday = now.weekday()
+
+    menu_days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
+    current_week = advance_week()
+    displayed_week = current_week
+
+    if today_weekday in (0, 1, 2, 3, 4):  # Lunes a Viernes
+        if current_hour > 13 or (current_hour == 13 and current_minute >= 30):
+            if today_weekday == 4:  # Viernes después de las 13:30
+                menu_day_name = "Lunes"
+                displayed_week = (current_week % 4) + 1
+            else:
+                menu_day_name = menu_days[today_weekday + 1]
+        else:
+            menu_day_name = menu_days[today_weekday]
+    else:  # Fin de semana
+        menu_day_name = "Lunes"
+        displayed_week = (current_week % 4) + 1
+
+    return menu_day_name, displayed_week
+
+@login_required
+def ruralapp(request):
+    start_date, _ = calculate_time_range()
+
+    recent_orders = Order.objects.filter(order_date__gte=start_date).order_by('-order_date')
+    total_orders = recent_orders.count()
+
+    # Validar si el usuario ya realizó un pedido en este rango
+    error_message = None
+    if not (request.user.is_staff and request.user.is_superuser):  # Excluir admins/superusuarios de esta validación
+        user_orders = recent_orders.filter(user=request.user)
+        if user_orders.exists():
+            error_message = "Ya has realizado un pedido en este periodo. No puedes realizar otro."
+
+
+    return render(request, 'ruralapp.html', {
+        'orders': recent_orders,
+        'total_orders': total_orders,
+        'error_message': error_message,
+    })
+
 @login_required
 def order_view(request):
-    now = timezone.localtime(timezone.now())  # Fecha y hora actuales con zona horaria
-    current_hour = now.time().hour
-    today = now.date()
-    tomorrow = today + timedelta(days=1)
-    today_weekday = now.weekday()  # 0 = Lunes, ..., 6 = Domingo
-    
-    # Semana inicial definida manualmente (entre 1 y 4)
-    initial_week = 2  # Cambia este valor según el punto de inicio del ciclo
-    total_weeks = 4  # Total de semanas en el ciclo
+    start_date, end_date = calculate_time_range()
 
-    # Estado actual del ciclo (determinar semana actual)
-    current_week = initial_week
+    # Verificar si el usuario ya hizo un pedido en este rango, excluyendo admins/superusuarios
+    if not (request.user.is_staff and request.user.is_superuser):
+        user_orders = Order.objects.filter(
+            user=request.user,
+            order_date__range=(start_date, end_date)
+        )
+        if user_orders.exists():
+            return JsonResponse({'success': False, 'error': "Ya has realizado un pedido en este periodo. No puedes realizar otro."})
 
-    # Avanzar de semana según condiciones
-    if today_weekday == 4 and current_hour >= 13:  # Viernes después de las 13:00
-        current_week = (current_week % total_weeks) + 1  # Avanzar a la siguiente semana
-    elif today_weekday in (5, 6):  # Sábado o domingo
-        current_week = (current_week % total_weeks) + 1  # Usar la siguiente semana
+    menu_day_name, displayed_week = get_menu_day_and_week()
 
-    # Nombres de los días del menú en el ciclo
-    menu_days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
-
-    # Determinar el día del menú
-    if today_weekday in range(5):  # Si es entre lunes y viernes
-        menu_day_name = menu_days[today_weekday]
-        if current_hour >= 13 and today_weekday < 4:  # Después de las 13:00 y no es viernes
-            menu_day_name = menu_days[(today_weekday + 1) % 5]
-    else:  # Fines de semana siempre reinician en lunes
-        menu_day_name = 'Lunes'
-
-
-    # Obtener el menú diario
     try:
-        daily_menu = WeeklyMenu.objects.get(week=current_week, day=menu_day_name)
+        daily_menu = WeeklyMenu.objects.get(week=displayed_week, day=menu_day_name)
         main_dishes = [daily_menu.main_dish_1, daily_menu.main_dish_2]
         dessert = daily_menu.dessert
     except WeeklyMenu.DoesNotExist:
         main_dishes = []
         dessert = "No disponible"
 
-    # Obtener datos adicionales para el formulario
     salads = Salad.objects.all()
     other_dishes = OtherDish.objects.values('id', 'name', 'plus_side')
     side_dishes = SideDish.objects.all()
 
     if request.method == 'POST':
-        # Procesar el formulario
         main_dish = request.POST.get('main_dish')
         salad_id = request.POST.get('salad')
         other_dish_id = request.POST.get('other_dish')
@@ -123,68 +175,34 @@ def order_view(request):
         'menu_day_name': menu_day_name
     })
 
-
-
 @login_required
 def edit_order(request, order_id):
-    now = timezone.localtime(timezone.now())
-    current_hour = now.time().hour
-    today_weekday = now.weekday()  # 0 = Lunes, ..., 6 = Domingo
+    menu_day_name, displayed_week = get_menu_day_and_week()
 
-    # Semana inicial definida manualmente (entre 1 y 4)
-    initial_week = 2  # Cambia este valor según el punto de inicio del ciclo
-    total_weeks = 4  # Total de semanas en el ciclo
-
-    # Estado actual del ciclo (determinar semana actual)
-    current_week = initial_week
-
-    # Avanzar de semana según condiciones
-    if today_weekday == 4 and current_hour >= 13:  # Viernes después de las 13:00
-        current_week = (current_week % total_weeks) + 1  # Avanzar a la siguiente semana
-    elif today_weekday in (5, 6):  # Sábado o domingo
-        current_week = (current_week % total_weeks) + 1  # Usar la siguiente semana
-
-    # Nombres de los días del menú en el ciclo
-    menu_days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
-
-    # Determinar el día del menú
-    if today_weekday in range(5):  # Si es entre lunes y viernes
-        menu_day_name = menu_days[today_weekday]
-        if current_hour >= 13 and today_weekday < 4:  # Después de las 13:00 y no es viernes
-            menu_day_name = menu_days[(today_weekday + 1) % 5]
-    else:  # Fines de semana siempre reinician en lunes
-        menu_day_name = 'Lunes'
-
-    # Obtener el menú correspondiente al día y semana calculados
     try:
-        daily_menu = WeeklyMenu.objects.get(week=current_week, day=menu_day_name)
+        daily_menu = WeeklyMenu.objects.get(week=displayed_week, day=menu_day_name)
         main_dishes = [daily_menu.main_dish_1, daily_menu.main_dish_2]
         dessert = daily_menu.dessert
     except WeeklyMenu.DoesNotExist:
         main_dishes = []
         dessert = "No disponible"
 
-    # Obtener listas de ensaladas, platos adicionales y guarniciones
     salads = Salad.objects.all()
     other_dishes = OtherDish.objects.values('id', 'name', 'plus_side')
     side_dishes = SideDish.objects.all()
 
-    # Obtener el pedido (si existe)
     order = get_object_or_404(Order, id=order_id, user=request.user)
 
     if request.method == 'POST':
-        # Obtener y validar los datos del formulario
         main_dish = request.POST.get('main_dish')
         salad_id = request.POST.get('salad')
         other_dish_id = request.POST.get('other_dish')
         side_dish_id = request.POST.get('side_dish')
-        comments = request.POST.get('comments')
+        comments = request.POST.get('comments', '')
 
-        # Validación: al menos un plato seleccionado
         if not main_dish and not salad_id and not other_dish_id and not side_dish_id:
             return JsonResponse({'success': False, 'error': "Debe seleccionar al menos un plato principal, una ensalada, un plato adicional o una guarnición."})
 
-        # Actualizar el pedido
         order.main_dish = main_dish
         order.salad = Salad.objects.get(id=salad_id) if salad_id else None
         order.other_dish = OtherDish.objects.get(id=other_dish_id) if other_dish_id else None
@@ -193,15 +211,17 @@ def edit_order(request, order_id):
         order.save()
         return JsonResponse({'success': True})
 
-    # Renderizar la plantilla con los datos del menú
     return render(request, 'edit_order.html', {
         'order': order,
         'main_dishes': main_dishes,
         'salads': salads,
         'other_dishes': other_dishes,
         'side_dishes': side_dishes,
-        'dessert': dessert
+        'dessert': dessert,
+        'menu_day_name': menu_day_name
     })
+
+
 
 @login_required
 def resumen_pedidos(request):
@@ -260,6 +280,9 @@ def resumen_pedidos(request):
                 section_3[dish_name]['comments'].append(order.comments)
             if not order.other_dish or not order.other_dish.plus_side:
                 unique_orders.add(order.id)
+        else:
+            # Caso donde no hay guarnición
+            print(f"El pedido {order.id} no tiene guarnición asignada.")
 
     # Ordenar las secciones
     section_1 = sorted(section_1.items(), key=lambda x: x[1]['count'], reverse=True)
@@ -267,7 +290,7 @@ def resumen_pedidos(request):
     section_3 = sorted(section_3.items(), key=lambda x: x[1]['count'], reverse=True)
 
     # Generar mensaje para WhatsApp
-    whatsapp_message = "```\n"
+    whatsapp_message = "*BITFARMS*```\n"
     for section in [section_1, section_2, section_3]:
         for dish, data in section:
             whatsapp_message += f"{data['count']} {dish[:45]:<45}\n"
@@ -275,8 +298,8 @@ def resumen_pedidos(request):
 
     total_orders = len(unique_orders)
     
-    whatsapp_message += f"```\n*{total_orders}* Pedidos en total.\n"
-
+    whatsapp_message += f"```{total_orders} Pedidos en total.\n\nPor favor agregar __ menus adicionales.\nSerían ** pedidos para hoy.\n\nMuchas gracias."
+    
     # Preparar datos para la plantilla
     summary_list = []
     for section in [section_1, section_2, section_3]:
@@ -298,9 +321,3 @@ def resumen_pedidos(request):
         'current_day': now.strftime('%A'),
         'total_orders': total_orders,
     })
-
-
-
-
-
-
