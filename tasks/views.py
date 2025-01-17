@@ -83,35 +83,9 @@ def lista_horas_extra(request):
     # Filtro para identificar registros que provienen de guardias
     horas_guardia = horas_extras.filter(es_guardia=True)
 
-    # Agrupación por mes para la tercera tabla
-    horas_por_mes = (
-        horas_extras
-        .annotate(mes=ExtractMonth('fecha_inicio'))
-        .values('mes')
-        .annotate(total_horas=Sum('total_horas'))
-        .order_by('mes')
-    )
-
-    # Agrupación por mes y usuario para la segunda tabla
-    horas_por_mes_usuario = (
-        horas_extras
-        .annotate(mes=ExtractMonth('fecha_inicio'))
-        .values('mes', 'usuario__username')
-        .annotate(total_horas=Sum('total_horas'))
-        .order_by('mes', 'usuario__username')
-    )
-
-    # Crear fechas ficticias usando el año actual para mostrar el mes en formato abreviado
-    for item in horas_por_mes:
-        item['fecha_ficticia'] = date(current_year, item['mes'], 1)
-    for item in horas_por_mes_usuario:
-        item['fecha_ficticia'] = date(current_year, item['mes'], 1)
-
     return render(request, 'lista_horas_extra.html', {
         'horas_extras': horas_extras,
         'horas_guardia': horas_guardia,
-        'horas_por_mes': horas_por_mes,
-        'horas_por_mes_usuario': horas_por_mes_usuario,
     })
 
 
@@ -141,6 +115,16 @@ def aprobar_rechazar_horas_extra(request, id):
         hora_extra.feedback_admin = feedback
         hora_extra.save()
         return redirect('lista_horas_extra')
+
+
+@login_required
+@user_passes_test(es_admin)
+def horas_extras_aprobadas(request):
+    horas_extras_aprobadas_rechazadas = HoraExtra.objects.filter(aprobado__isnull=False).order_by('-fecha_inicio')
+    return render(request, 'horas_aprobadas.html', {
+        'horas_extras': horas_extras_aprobadas_rechazadas,
+    })
+
 
 
 @login_required

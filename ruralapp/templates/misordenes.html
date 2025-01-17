@@ -17,12 +17,12 @@
                 // Verificar si la hora está entre las 8:30 y 13:30
                 if (
                     (currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && 
-                    (currentHour < 13 || (currentHour === 13 && currentMinutes <= 29))
+                    (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))
                 ) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Acceso Restringido',
-                        text: 'No se puede editar la orden entre las 8:30 y las 13:30.',
+                        text: 'No se puede editar la orden entre las 8:30 y las 13:10.',
                         confirmButtonText: 'Entendido'
                     });
                 } else {

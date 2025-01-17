@@ -8,10 +8,7 @@ from .models import Salad, OtherDish, WeeklyMenu, Order, SideDish, AppState
 from datetime import datetime, time, timedelta
 import logging
 from django.utils.timezone import localtime, now as timezone_now
-from datetime import timedelta
-from django.utils import timezone
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+
 
 
 @login_required
@@ -55,18 +52,18 @@ def calculate_time_range():
     current_minute = now.minute
     today_weekday = now.weekday()
 
-    if current_hour > 13 or (current_hour == 13 and current_minute >= 30):
-        start_date = now.replace(hour=13, minute=30, second=0, microsecond=0)
+    if current_hour > 13 or (current_hour == 13 and current_minute >= 10):
+        start_date = now.replace(hour=13, minute=10, second=0, microsecond=0)
     else:
-        if today_weekday == 0:  # Lunes antes de las 13:30
+        if today_weekday == 0:  # Lunes antes de las 13:10
             last_friday = now - timedelta(days=3)
-            start_date = last_friday.replace(hour=13, minute=30, second=0, microsecond=0)
+            start_date = last_friday.replace(hour=13, minute=10, second=0, microsecond=0)
         elif today_weekday in [5, 6]:  # Sábado o domingo
             last_friday = now - timedelta(days=(today_weekday - 4))
-            start_date = last_friday.replace(hour=13, minute=30, second=0, microsecond=0)
+            start_date = last_friday.replace(hour=13, minute=10, second=0, microsecond=0)
         else:
             yesterday = now - timedelta(days=1)
-            start_date = yesterday.replace(hour=13, minute=30, second=0, microsecond=0)
+            start_date = yesterday.replace(hour=13, minute=10, second=0, microsecond=0)
 
     end_date = start_date + timedelta(days=1)
     return start_date, end_date
@@ -83,8 +80,8 @@ def get_menu_day_and_week():
     displayed_week = current_week
 
     if today_weekday in (0, 1, 2, 3, 4):  # Lunes a Viernes
-        if current_hour > 13 or (current_hour == 13 and current_minute >= 30):
-            if today_weekday == 4:  # Viernes después de las 13:30
+        if current_hour > 13 or (current_hour == 13 and current_minute >= 10):
+            if today_weekday == 4:  # Viernes después de las 13:10
                 menu_day_name = "Lunes"
                 displayed_week = (current_week % 4) + 1
             else:
@@ -290,10 +287,12 @@ def resumen_pedidos(request):
     section_3 = sorted(section_3.items(), key=lambda x: x[1]['count'], reverse=True)
 
     # Generar mensaje para WhatsApp
-    whatsapp_message = "*BITFARMS*```\n"
+    menu_day, displayed_week = get_menu_day_and_week()  # Obtener el día del menú y la semana
+    whatsapp_message = f"*BITFARMS*             Semana {displayed_week} / {menu_day}```\n\n"
+
     for section in [section_1, section_2, section_3]:
         for dish, data in section:
-            whatsapp_message += f"{data['count']} {dish[:45]:<45}\n"
+            whatsapp_message += f"{data['count']} {dish[:40]:<40}\n"
         whatsapp_message += "---------------\n"
 
     total_orders = len(unique_orders)
@@ -321,3 +320,6 @@ def resumen_pedidos(request):
         'current_day': now.strftime('%A'),
         'total_orders': total_orders,
     })
+
+
+

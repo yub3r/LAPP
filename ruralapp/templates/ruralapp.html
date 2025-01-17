@@ -11,12 +11,12 @@
             var currentHour = now.getHours();
             var currentMinutes = now.getMinutes();
 
-            // Restricción: entre las 8:30 y las 13:30
-            if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && (currentHour < 13 || (currentHour === 13 && currentMinutes <= 29))) {
+            // Restricción: entre las 8:30 y las 13:9
+            if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Acceso Restringido',
-                    text: 'No puede hacer pedidos entre las 8:30 y las 13:30.',
+                    text: 'No puede hacer pedidos entre las 8:30 y las 13:10.',
                     confirmButtonText: 'Entendido'
                 });
             } else {
@@ -62,7 +62,7 @@
         <a href="{% url 'order' %}" class="btn btn-primary w-100 me-3" style="margin-top:7px;">Hacer Pedido</a>
         <a href="{% url 'mis_ordenes' %}" class="btn btn-secondary w-100" style="margin-top:7px;">Mis Órdenes</a>
         {% if 'auth.admin_group' in perms %}
-        <a href="{% url 'resumen_pedidos' %}" class="btn btn-secondary w-100" style="margin-top:7px;">Resumen de Pedidos</a>
+        <a href="{% url 'resumen_pedidos' %}" class="btn btn-success w-100" style="margin-top:7px;">Resumen de Pedidos</a>
         {% endif %}
     </section>
 

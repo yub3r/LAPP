@@ -40,6 +40,7 @@
             <li><a class="dropdown-item" href="{% url 'registrar_horas_extra' %}" class="nav-link">Registrar Horas</a></li>
             {% if 'auth.admin_group' in perms %}
             <li><a class="dropdown-item" href="{% url 'lista_horas_extra' %}" class="nav-link">Lista Horas Extras</a></li>
+            <li><a class="dropdown-item" href="{% url 'horas_extras_aprobadas' %}" class="nav-link">Horas Extras Verificadas</a></li>
             {% endif %}
           </ul>
         </li>
