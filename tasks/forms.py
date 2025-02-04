@@ -4,10 +4,9 @@ from .models import Task, Guardia, Sorteo, HoraExtra
 from django.contrib.auth.models import User, Group
 from django.utils.safestring import mark_safe
 from django.conf import settings
-from django.forms import DateTimeField
+from django.forms import DateTimeField, RadioSelect
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-
 
 TASK = [
     ('Sop', 'Soplado'),
@@ -135,10 +134,14 @@ class HoraExtraForm(forms.ModelForm):
         max_length=1020,
         required=True
     )
+    porcent = forms.ChoiceField(
+        choices=[('50%', '50%'), ('100%', '100%')],
+        widget=forms.RadioSelect(attrs={'class': 'form-check-inline'})
+    )
 
     class Meta:
         model = HoraExtra
-        fields = ['fecha_inicio', 'fecha_fin', 'hora_inicio', 'hora_fin', 'justificar']
+        fields = ['fecha_inicio', 'fecha_fin', 'hora_inicio', 'hora_fin', 'justificar', 'porcent']
 
     def __init__(self, *args, **kwargs):
         # Recibimos el usuario y lo asignamos a una variable de instancia

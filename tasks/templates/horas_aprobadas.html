@@ -5,6 +5,7 @@
 $(document).ready(function() {
     var table = $('.table').DataTable({
         "order": [[1, "desc"]],
+        "scrollY": "640px",  
         "columnDefs": [
             { "orderable": false, "targets": [3, 6, 7] }
         ],
@@ -78,6 +79,7 @@ $(document).ready(function() {
             <th>Desde/Ini</th>
             <th>Hasta/Fin</th>
             <th>Justificación</th>
+            <th>%/H</th>
             <th>Horas</th>
             <th>Estado</th>
             <th style="text-align: center; vertical-align: middle;">Fecha de Revisión</th>
@@ -95,6 +97,7 @@ $(document).ready(function() {
                 {{ horas.fecha_fin|date:"d/m/y" }} {{ horas.hora_fin|time:"H:i" }}
             </td>
             <td>{{ horas.justificar|default:"-" }}</td>
+            <td style="text-align: left; vertical-align: middle;">{{ horas.porcent }}</td>
             <td style="text-align: left; vertical-align: middle;">{{ horas.total_horas }}</td>
             <td style="text-align: center; vertical-align: middle;">
                 {% if horas.aprobado %}

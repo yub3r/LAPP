@@ -1,6 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError  # Importar ValidationError
+from django.core.exceptions import ValidationError
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    menu = models.BooleanField(default=False, verbose_name='Usuario habilitado para ordenar')
+
+    def __str__(self):
+        return self.user.get_full_name()
+
+
+@receiver(post_save, sender=User)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+    instance.userprofile.save()
+
 
 class AppState(models.Model):
     id = models.AutoField(primary_key=True)

@@ -7,5 +7,6 @@ urlpatterns = [
     path('ejecutar_swa_script/', views.ejecutar_swa_script, name='ejecutar_swa_script'),
     path('cargar_racks/', views.cargar_racks, name='cargar_racks'),
     path('cargar_switches_acceso/', views.cargar_switches_acceso, name='cargar_switches_acceso'),
+    path('cdp_nbr.html', views.cdp_neighbors_view, name='cdp_nbr'),
     # path("__debug__/", include("debug_toolbar.urls")),
 ]

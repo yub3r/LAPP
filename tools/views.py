@@ -1,3 +1,14 @@
+import re
+import subprocess
+import time
+import ipaddress
+import concurrent.futures
+import asyncio
+import telnetlib
+from telnetlib3 import open_connection
+from netmiko import ConnectHandler
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
@@ -10,7 +21,7 @@ from .swd_script import conectar_telnet, obtener_nombre_host, ejecutar_comandos
 from datetime import date
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
-from config import usuario_sw, contraseña_sw, habilitar_contraseña_sw  
+from config import usuario_sw, contraseña_sw, habilitar_contraseña_sw
 
 
 # Create your views here.
@@ -215,3 +226,150 @@ def ejecutar_swa_script(request):
     historial = HistorialEjecucionSWA.objects.order_by('-fecha_hora_ejecucion')[:30]
 
     return render(request, 'formulario_swa_script.html', {'form': form, 'historial': historial})
+
+
+####################################################################################################
+
+
+async def check_reachable_hosts(hosts):
+    """Verifica múltiples hosts simultáneamente con fping y devuelve los que están alcanzables."""
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "fping", "-c1", "-t200", *hosts,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+        results = stdout.decode() + stderr.decode()
+
+        # 🛠 Extraer los hosts que tienen "0% loss"
+        reachable_hosts = []
+        for line in results.splitlines():
+            match = re.match(r"(\d+\.\d+\.\d+\.\d+)\s+:\s+.*0% loss", line)
+            if match:
+                reachable_hosts.append(match.group(1))
+
+        return reachable_hosts
+
+    except Exception as e:
+        print(f"⚠️ Error ejecutando fping: {e}")
+        return []
+
+
+def generar_rango_ips(ip_inicio, ip_final):
+    try:
+        inicio = ipaddress.IPv4Address(ip_inicio)
+        fin = ipaddress.IPv4Address(ip_final)
+        if inicio > fin:
+            return []
+        return [str(ipaddress.IPv4Address(ip)) for ip in range(int(inicio), int(fin) + 1)]
+    except ValueError:
+        return []
+
+def ejecutar_cdp(host, contraseña_sw):
+    """Conecta por Telnet a un host y ejecuta el comando 'show cdp neighbors'."""
+    try:
+        tn = telnetlib.Telnet(host, timeout=5)
+        tn.expect([b"Password: "])
+        tn.write(contraseña_sw.encode('utf-8') + b"\n")
+        
+        tn.write(b"show cdp neighbors\n")
+        tn.write(b"exit\n")
+        # time.sleep(1)
+        tn.sock.settimeout(2)
+
+        output = tn.read_all().decode('utf-8', errors='ignore')
+
+
+        return output, None  # Retorna la salida y ningún mensaje de error
+    except Exception as e:
+        return None, str(e)
+    
+@login_required
+def cdp_neighbors_view(request):
+    data = []
+    if request.method == "POST":
+        ip_inicio = request.POST.get("ip_inicio")
+        ip_final = request.POST.get("ip_final")
+        hosts = generar_rango_ips(ip_inicio, ip_final)
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        reachable_hosts = loop.run_until_complete(check_reachable_hosts(hosts))
+        
+        for host in hosts:
+            host_data = {
+                "host": host, "status": "Disable", "device_name": "Desconocido",
+                "platform": "WS-C3750X", "fas_47": "Down", "fas_48": "Down", "act": "REV"
+            }
+            if host not in reachable_hosts:
+                data.append(host_data)
+                continue
+            
+            try:
+                output, error_message = ejecutar_cdp(host, contraseña_sw)
+                if output is None:
+                    data.append(host_data)
+                    continue
+                
+                # Captura el 'device_name' antes de la salida de 'show cdp neighbors'
+                device_name_match = re.search(r'(\S+)\s*>\s*', output)
+                if device_name_match:
+                    host_data["device_name"] = device_name_match.group(1)
+
+                neighbors_pattern = re.compile(
+                    r'(?P<device_id>\S+)\s*\n\s*'
+                    r'(?P<local_interface>Fas \d+/\d+/\d+|Fas \d+/\d+)\s+\d+\s+\S+\s+\S+\s+(?P<platform>\S+)\s+(?P<port_id>Gig \d+/\d+/\d+)',
+                    re.MULTILINE
+                )
+
+                # Captura el 'Device ID' y actualiza el host_data
+                matches = list(neighbors_pattern.finditer(output))
+                fas_47, fas_48 = "Down", "Down"  # Inicializa los valores
+
+                if matches:
+                    first_match = matches[0]
+                    host_data["device_id"] = first_match.group("device_id")
+                    
+                    for match in matches:
+                        local_interface, port_id = match.group("local_interface"), match.group("port_id")
+                        
+                        if local_interface in ["Fas 0/47", "Fas 1/0/47"]:
+                            fas_47 = port_id
+                        elif local_interface in ["Fas 0/48", "Fas 1/0/48"]:
+                            fas_48 = port_id
+
+                host_data.update({
+                    "fas_47": fas_47,
+                    "fas_48": fas_48,
+                    "status": "Enable"
+                })
+
+                # Lógica para determinar el estado de las interfaces
+                if fas_47 != "Down" and fas_48 != "Down":
+                    num_47 = fas_47.split("/")[-1]
+                    num_48 = fas_48.split("/")[-1]
+
+                    if fas_47.startswith("Gig 1/0") and fas_48.startswith("Gig 2/0") and num_47 == num_48:
+                        host_data["act"] = "OK"
+                    elif fas_47.startswith("Gig 2/0") and fas_48.startswith("Gig 1/0") and num_47 == num_48:
+                        host_data["act"] = "INV"
+                    else:
+                        host_data["act"] = "REV"
+                elif fas_47 != "Down" and fas_48 == "Down":
+                    host_data["act"] = "REV"
+                elif fas_48 != "Down" and fas_47 == "Down":
+                    host_data["act"] = "REV"
+                else:
+                    host_data["act"] = "REV"
+
+                host_data["status"] = "Enable"
+                
+            except Exception as e:
+                print(f"⚠️ Error inesperado con {host}: {e}")
+            finally:
+                data.append(host_data)
+    
+        return JsonResponse(data, safe=False)  # Devuelve JSON en lugar de renderizar una plantilla
+    
+    return render(request, 'cdp_nbr.html', {'data': data})

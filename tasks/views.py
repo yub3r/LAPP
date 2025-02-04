@@ -131,10 +131,7 @@ def horas_extras_aprobadas(request):
 @user_passes_test(es_admin)
 def cargar_guardias_a_horas_extra(request):
     if request.method == "POST":
-        # locale.setlocale(locale.LC_TIME, 'es_AR.UTF-8')
-
-
-        fecha_limite = now().date() - timedelta(days=31)
+        fecha_limite = now().date() - timedelta(days=40)
         guardias_vencidas = Guardia.objects.filter(
             fecha_fin__lt=now().date(),
             fecha_fin__gte=fecha_limite
@@ -146,7 +143,6 @@ def cargar_guardias_a_horas_extra(request):
 
             for usuario in usuarios:
                 if usuario:  # Validar si el usuario no es None
-                    # Filtrar considerando todos los campos relevantes para evitar duplicados
                     existe_registro = HoraExtra.objects.filter(
                         usuario=usuario,
                         fecha_inicio=guardia.fecha_inicio,
@@ -168,7 +164,8 @@ def cargar_guardias_a_horas_extra(request):
                             total_horas=guardia.total_horas,
                             justificar=f"Guardia - {guardia.fecha_inicio.strftime('%b')}",
                             aprobado=None,
-                            es_guardia=True
+                            es_guardia=True,
+                            porcent='25%'  # Asignar el valor por defecto de '25%'
                         )
                         registros_cargados += 1
 
@@ -182,6 +179,57 @@ def cargar_guardias_a_horas_extra(request):
         })
 
     return JsonResponse({'success': False}, status=400)
+
+
+
+@login_required
+@user_passes_test(es_admin)
+def stats_horas(request):
+    # Total de horas por mes/usuario y porcentaje
+    horas_por_mes_usuario = []
+    horas_extras = HoraExtra.objects.filter(aprobado=True)  # Solo registros aprobados
+
+    for hora in horas_extras:
+        anio_mes = f"{hora.fecha_inicio.year}/{hora.fecha_inicio.month:02d}"
+        encontrado = next(
+            (item for item in horas_por_mes_usuario
+             if item['anio_mes'] == anio_mes and item['usuario'] == hora.usuario.username),
+            None
+        )
+        if encontrado:
+            encontrado['25%'] += hora.total_horas if hora.porcent == '25%' else 0
+            encontrado['50%'] += hora.total_horas if hora.porcent == '50%' else 0
+            encontrado['100%'] += hora.total_horas if hora.porcent == '100%' else 0
+            encontrado['total_horas'] += hora.total_horas
+        else:
+            horas_por_mes_usuario.append({
+                'anio_mes': anio_mes,
+                'usuario': hora.usuario.username,
+                '25%': hora.total_horas if hora.porcent == '25%' else 0,
+                '50%': hora.total_horas if hora.porcent == '50%' else 0,
+                '100%': hora.total_horas if hora.porcent == '100%' else 0,
+                'total_horas': hora.total_horas,
+            })
+
+    # Total de horas por mes (sin agrupar por usuario ni porcentaje)
+    horas_por_mes = []
+    for hora in horas_extras:
+        anio_mes = f"{hora.fecha_inicio.year}/{hora.fecha_inicio.month:02d}"
+        encontrado = next((item for item in horas_por_mes if item['anio_mes'] == anio_mes), None)
+        if encontrado:
+            encontrado['total_horas'] += hora.total_horas
+        else:
+            horas_por_mes.append({
+                'anio_mes': anio_mes,
+                'total_horas': hora.total_horas,
+            })
+
+    return render(request, 'stats_horas.html', {
+        'horas_por_mes_usuario': horas_por_mes_usuario,
+        'horas_por_mes': horas_por_mes,
+    })
+
+
 
 
 

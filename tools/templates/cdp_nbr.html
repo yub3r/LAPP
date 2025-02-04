@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const ipInicio = document.getElementById("ip_inicio");
+    const ipFinal = document.getElementById("ip_final");
+    const submitButton = form.querySelector("button");
+    const tableBody = document.querySelector("tbody");
+
+    // Inicializar DataTables
+    const table = $('.table').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        responsive: true,
+        language: {
+            search: "Buscar:",
+            lengthMenu: "Mostrar _MENU_ registros",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            paginate: {
+                first: "Primero",
+                last: "Último",
+                next: "Siguiente",
+                previous: "Anterior"
+            }
+        }
+    });
+
+    // Validar formato de IP
+    function validarIP(ip) {
+        const ipRegex = /^(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|1?[0-9][0-9]?)$/;
+        return ipRegex.test(ip);
+    }
+
+    // Convertir IP a número entero
+    function ipToInt(ip) {
+        return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0);
+    }
+
+    // Convertir número entero a IP
+    function intToIp(int) {
+        return [(int >>> 24) & 255, (int >>> 16) & 255, (int >>> 8) & 255, int & 255].join('.');
+    }
+
+    // Incrementar IP sin salir del rango
+    function incrementarIP(ip, incremento) {
+        if (!validarIP(ip)) return ip;
+        let ipInt = ipToInt(ip) + incremento;
+        if (ipInt > 4294967295) return "255.255.255.255"; // Máximo valor en IPv4
+        return intToIp(ipInt);
+    }
+
+    let ipFinalEditado = false; // Bandera para detectar cambios manuales
+
+    ipFinal.addEventListener("input", function () {
+        ipFinalEditado = true; // Usuario modificó la IP final manualmente
+    });
+
+    ipInicio.addEventListener("input", function () {
+        if (validarIP(ipInicio.value) && !ipFinalEditado) {
+            ipFinal.value = incrementarIP(ipInicio.value, 24);
+        }
+    });
+
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();  // Evita el envío tradicional
+
+        const ipInicioVal = ipInicio.value.trim();
+        const ipFinalVal = ipFinal.value.trim();
+
+        // Validaciones
+        if (!validarIP(ipInicioVal) || !validarIP(ipFinalVal)) {
+            Swal.fire({
+                icon: "error",
+                title: "Error en IPs",
+                text: "Ingrese direcciones IP válidas (ejemplo: 192.168.123.1)",
+            });
+            return;
+        }
+
+        if (ipToInt(ipFinalVal) <= ipToInt(ipInicioVal)) {
+            Swal.fire({
+                icon: "warning",
+                title: "Rango Inválido",
+                text: "La IP final debe ser mayor que la IP inicial.",
+            });
+            return;
+        }
+
+        // Mostrar mensaje de carga
+        Swal.fire({
+            title: "Escaneando dispositivos...",
+            text: "Esto puede tardar unos segundos.",
+            imageUrl: "/media/launch_code.gif",
+            imageWidth: 450,
+            imageHeight: 300,
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();  // Mostrar animación de carga
+            }
+        });
+
+        // Deshabilitar el botón mientras se procesa
+        submitButton.disabled = true;
+
+        // Enviar datos con AJAX
+        fetch("", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                ip_inicio: ipInicioVal,
+                ip_final: ipFinalVal
+            })
+        })
+        .then(response => response.json())  // Espera respuesta JSON del backend
+        .then(data => {
+            table.clear(); // Limpia la tabla antes de agregar nuevos datos
+
+            let rows = data.map(row => {
+                // let className = row.act === "OK" ? "table-success" :
+                //                 row.act === "INV" ? "table-warning" : "table-danger";
+                let className = row.act === "OK" || row.act === "INV" ? "table-success" : "table-danger";
+                
+                let newRow = table.row.add([
+                    row.host || "N/A",
+                    row.status || "N/A",
+                    row.device_name || "N/A",
+                    row.platform || "N/A",
+                    row.device_id || "N/A",
+                    row.fas_47 || "N/A",
+                    row.fas_48 || "N/A",
+                    row.act || "N/A"
+                ]).node();
+
+                
+                newRow.className = className;
+                return newRow;
+            });
+
+            table.draw(); // Redibuja solo una vez
+
+            Swal.close();  // Cierra la alerta de carga
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error en la solicitud",
+                text: "Hubo un problema al procesar la información.",
+            });
+        })
+        .finally(() => {
+            submitButton.disabled = false;  // Rehabilita el botón
+        });
+    });
+
+});
+</script>
+{% endblock %}
+
+
+
+
+{% block content %}
+<h1 class="display-6 text-center">Script: Neighbors | <strong>CDP</strong></h1>
+<form method="POST" class="ip-form">
+    {% csrf_token %}
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label for="ip_inicio" class="form-label">IP Inicial:</label>
+            <input type="text" id="ip_inicio" name="ip_inicio" class="form-control" placeholder="192.168.231.1" required>
+        </div>
+        <div class="col-md-4">
+            <label for="ip_final" class="form-label">IP Final:</label>
+            <input type="text" id="ip_final" name="ip_final" class="form-control" placeholder="192.168.231.5" required>
+        </div>
+        <div class="col-md-2">
+            <button type="reset" class="btn btn-secondary w-100">Reset</button>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit">Escanear</button>
+        </div>
+    </div>
+</form>
+
+
+
+<div class="row justify-content-center mt-3">
+    <h4>Tabla de Resultados:</h4>
+    <div class="table-container-cdp">
+        <table id="cdpTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>IP</th>
+                    <th>Status</th>
+                    <th>SWA name</th>
+                    <th>SWD model</th>
+                    <th>SWD name</th>
+                    <th>Fas 0/47</th>
+                    <th>Fas 0/48</th>
+                    <th>Act</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr class="{% if row.act == 'OK' or row.act == 'INV' %}table-success{% else %}table-danger{% endif %}">
+                <!-- <tr class="{% if row.act == 'OK' %}table-success{% elif row.act == 'INV' %}table-warning{% else %}table-danger{% endif %}"> -->
+                    <td>{{ row.host }}</td>
+                    <td>{{ row.status }}</td>
+                    <td>{{ row.device_name }}</td>
+                    <td>{{ row.platform }}</td>
+                    <td>{{ row.device_id }}</td>
+                    <td>{{ row.fas_47 }}</td>
+                    <td>{{ row.fas_48 }}</td>
+                    <td>{{ row.act }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+</div>
+{% endblock %}
+
+<style>
+    .table-container-cdp {
+        overflow: hidden;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+</style>

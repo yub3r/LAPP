@@ -39,6 +39,7 @@ urlpatterns = [
     path('aprobar_rechazar_horas_extra/<int:id>/', views.aprobar_rechazar_horas_extra, name='aprobar_rechazar_horas_extra'),
     path('cargar-guardias/', views.cargar_guardias_a_horas_extra, name='cargar_guardias_a_horas_extra'),
     path('horas-extra-aprobadas/', views.horas_extras_aprobadas, name='horas_extras_aprobadas'),
+    path('stats-horas/', views.stats_horas, name='stats_horas'),
 
 
     path('sorteo/', views.sorteo, name='sorteo'),

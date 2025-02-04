@@ -70,8 +70,8 @@ document.addEventListener('DOMContentLoaded', function () {
             <th>Desde/Inicio</th>
             <th>Hasta/Fin</th>
             <th>Justificación</th>
+            <th>%/H</th>
             <th>Horas</th>
-            <!-- <th style="text-align: center">Estado</th> -->
             <th>Acción</th>
         </tr>
     </thead>
@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <td style="text-align: center; vertical-align: middle;">{{ horas.fecha_inicio|date:"d/m/y" }} {{ horas.hora_inicio|time:"H:i" }}</td>
             <td style="text-align: center; vertical-align: middle;">{{ horas.fecha_fin|date:"d/m/y" }} {{ horas.hora_fin|time:"H:i" }}</td>
             <td>{{ horas.justificar|default:"-" }}</td>
+            <td style="text-align: left; vertical-align: middle;">{{ horas.porcent }}</td>
             <td style="text-align: left; vertical-align: middle;">{{ horas.total_horas }}</td>
             <!-- <td style="text-align: center; vertical-align: middle;">Pendiente</td> -->
             <td>

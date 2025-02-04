@@ -124,6 +124,11 @@ class Guardia(models.Model):
 
 
 class HoraExtra(models.Model):
+    PORCENT_OPTIONS = [
+        ('25%', '25%'),
+        ('50%', '50%'),
+        ('100%', '100%'),
+    ]
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
@@ -131,10 +136,11 @@ class HoraExtra(models.Model):
     hora_fin = models.TimeField()
     total_horas = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     justificar = models.TextField(max_length=500)
-    aprobado = models.BooleanField(null=True, blank=True)  # True para aprobado, False para rechazado, None para pendiente
+    aprobado = models.BooleanField(null=True, blank=True)
     feedback_admin = models.TextField(max_length=500, blank=True, null=True)
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
-    es_guardia = models.BooleanField(default=False)  # Indica si el registro proviene de una guardia
+    es_guardia = models.BooleanField(default=False)
+    porcent = models.CharField(max_length=4, choices=PORCENT_OPTIONS, default='50%')
 
 
     def calcular_total_horas(self):

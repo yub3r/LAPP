@@ -14,21 +14,26 @@
         const today = new Date();
         const resetButton = document.querySelector('button[type="reset"]');
 
-        // Pasamos la variable `registro_exitoso` del contexto de Django al JS
-        const registroExitoso = "{{ registro_exitoso }}";  // Esto lo pasamos como string
-
-        // Convertimos el valor en un booleano
-        const registroExitosoBoolean = registroExitoso === "True"; // Si es "True", se convierte en true, sino false
-
-        // Mostrar mensaje de éxito si 'registro_exitoso' es verdadero
-        if (registroExitosoBoolean) {
-            Swal.fire({
-                title: 'Registro exitoso',
-                text: '¡Las horas extras han sido registradas correctamente!',
-                icon: 'success',
-                confirmButtonText: 'Aceptar'
-            });
+        // Detectar y mostrar los mensajes de éxito y error usando Swal.fire directamente
+        const alertMessage = document.querySelector('.alert');
+        if (alertMessage) {
+            const messageText = alertMessage.textContent.trim();
+            if (alertMessage.classList.contains('alert-success')) {
+                Swal.fire({
+                    title: 'Registro exitoso',
+                    text: messageText,
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                });
+            } else if (alertMessage.classList.contains('alert-danger')) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: messageText,
+                });
+            }
         }
+
 
         // Resto del código que ya tienes
         resetButton.addEventListener('click', function(event) {
@@ -53,37 +58,58 @@
         // Validación de formulario
         function validarFormulario() {
             let mensajeError = "";
-
             const fechaInicioValue = new Date(fechaInicio.value);
             const fechaFinValue = new Date(fechaFin.value);
 
-            // Validación: La fecha de inicio no puede estar en el futuro
+            // Validaciones de fecha y hora
             if (fechaInicio.value && fechaInicioValue > today) {
                 mensajeError = "La fecha de inicio no puede estar en el futuro.";
-            }
-
-            // Validación de fechas
-            if (fechaInicio.value && fechaFin.value && fechaInicioValue > fechaFinValue) {
+            } else if (fechaInicio.value && fechaFin.value && fechaInicioValue > fechaFinValue) {
                 mensajeError = "La fecha de inicio debe ser anterior o igual a la fecha de fin.";
-            }
-
-            // Validación de horas en el mismo día
-            if (fechaInicio.value === fechaFin.value && horaInicio.value && horaFin.value && horaInicio.value >= horaFin.value) {
+            } else if (fechaInicio.value === fechaFin.value && horaInicio.value && horaFin.value && horaInicio.value >= horaFin.value) {
                 mensajeError = "La hora de fin debe ser posterior a la hora de inicio si es el mismo día.";
             }
 
             if (mensajeError) {
-                alert(mensajeError);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de validación',
+                    text: mensajeError,
+                });
                 submitButton.disabled = true;
+                return false;  // Indicar que las validaciones fallaron
             } else {
                 submitButton.disabled = false;
+                return true;  // Indicar que las validaciones pasaron
             }
         }
 
         form.addEventListener('submit', function (event) {
-            validarFormulario();
-            if (submitButton.disabled) {
+            let formIsValid = validarFormulario();
+            
+            // Si las validaciones fallan, evitar la acción por defecto
+            if (!formIsValid) {
                 event.preventDefault();
+                return;  // No continuar si hay errores
+            }
+
+            // Validar si se ha seleccionado un porcentaje
+            const radioPorcentInputs = document.querySelectorAll('[name="porcent"]');
+            let porcentajeSeleccionado = false;
+            radioPorcentInputs.forEach(input => {
+                if (input.checked) {
+                    porcentajeSeleccionado = true;
+                }
+            });
+
+            if (!porcentajeSeleccionado) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Debe seleccionar un porcentaje (50% o 100%) antes de continuar.',
+                });
+                event.preventDefault();  // Evitar el envío si no se ha seleccionado porcentaje
+                return;
             }
         });
 
@@ -133,7 +159,6 @@
         initializeTimeField('#id_hora_inicio');
         initializeTimeField('#id_hora_fin');
 
-        
         // Selecciona todos los botones de eliminación y aplica el evento
         document.querySelectorAll('.eliminar-horas_extra').forEach(button => {
             button.addEventListener('click', function (event) {
@@ -211,10 +236,51 @@
             </div>
         </div>
 
+
+        <!-- Campo de Porcentaje -->
+        <div class="form-group d-flex flex-column gap-2">
+            <div class="d-flex align-items-center w-100">
+                <label for="id_porcent" class="form-label mb-0 text-start" style="flex: 1;">Cálculo_%/H:</label>
+                <div class="d-flex justify-content-between w-100">
+                    {% for radio in form.porcent %}
+                        <div class="form-check form-check-inline" style="flex: 1; text-align: center;">
+                            {{ radio.tag }}
+                            <label class="form-check-label">{{ radio.choice_label }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Estilos -->
+        <style>
+            .form-check-inline {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 5px;
+                padding: 5px;
+                background-color: #c0d1e9;
+                border-radius: 8px;
+                /* margin-right: 1rem; */
+                margin-left: 1rem;
+            }
+            .form-check-inline label {
+                margin-bottom: 0;
+            }
+            .form-check-inline input[type="radio"] {
+                margin: 0;
+            }
+        </style>
+
+
+
+
         <!-- Campo de Justificación -->
         <div class="d-flex flex-column gap-2">
             {{ form.justificar|as_crispy_field }}
         </div>
+
     </div>
     <!-- Mostrar mensajes de error si existen -->
     {% if messages %}
@@ -238,6 +304,7 @@
                     <th>Inicio</th>
                     <th>Hasta</th>
                     <th>Justificación</th>
+                    <th style="text-align: right; vertical-align: middle;">%/H</th>
                     <th style="text-align: right; vertical-align: middle;">Horas</th>
                     <th style="text-align: center; vertical-align: middle;">Feedback</th>
                     <!-- <th style="text-align: right; vertical-align: middle;">Acción</th> -->
@@ -253,6 +320,7 @@
                             {{ registro.justificar|slice:":40" }}{% if registro.justificar|length > 40 %}...{% endif %}
                         {% endif %}
                     </td>
+                    <td style="text-align: right; vertical-align: middle;">{{ registro.porcent }}</td>
                     <td style="text-align: right; vertical-align: middle;">{{ registro.total_horas }}</td>
                     <td style="text-align: left; vertical-align: middle;">
                         {{ registro.feedback_admin|default:"-" }}

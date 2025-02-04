@@ -21,6 +21,7 @@
           <ul class="dropdown-menu dropdown-menu-start">
             <li><a class="dropdown-item" href="{% url 'ejecutar_swd_script' %}" class="nav-link">SWD Script</a></li>
             <li><a class="dropdown-item" href="{% url 'ejecutar_swa_script' %}" class="nav-link">SWA Script</a></li>
+            <li><a class="dropdown-item" href="{% url 'cdp_nbr' %}" class="nav-link">CDP Script</a></li>
             
           </ul>
         </li>
@@ -39,8 +40,9 @@
             <li><a class="dropdown-item" href="{% url 'guardias' %}" class="nav-link">Guardias Asignadas</a></li>
             <li><a class="dropdown-item" href="{% url 'registrar_horas_extra' %}" class="nav-link">Registrar Horas</a></li>
             {% if 'auth.admin_group' in perms %}
-            <li><a class="dropdown-item" href="{% url 'lista_horas_extra' %}" class="nav-link">Lista Horas Extras</a></li>
-            <li><a class="dropdown-item" href="{% url 'horas_extras_aprobadas' %}" class="nav-link">Horas Extras Verificadas</a></li>
+            <li><a class="dropdown-item" href="{% url 'lista_horas_extra' %}" class="nav-link">Revisar Horas</a></li>
+            <li><a class="dropdown-item" href="{% url 'horas_extras_aprobadas' %}" class="nav-link">Horas Verificadas</a></li>
+            <li><a class="dropdown-item" href="{% url 'stats_horas' %}" class="nav-link">Estadisticas Horas</a></li>
             {% endif %}
           </ul>
         </li>
