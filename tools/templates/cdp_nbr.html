@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     ipInicio.addEventListener("input", function () {
         if (validarIP(ipInicio.value) && !ipFinalEditado) {
-            ipFinal.value = incrementarIP(ipInicio.value, 24);
+            ipFinal.value = incrementarIP(ipInicio.value, 23);
         }
     });
 
@@ -160,6 +160,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
+    
+    document.getElementById("resetButton").addEventListener("click", function () {
+    location.reload();
+});
+
 });
 </script>
 {% endblock %}
@@ -181,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <input type="text" id="ip_final" name="ip_final" class="form-control" placeholder="192.168.231.5" required>
         </div>
         <div class="col-md-2">
-            <button type="reset" class="btn btn-secondary w-100">Reset</button>
+            <button type="button" class="btn btn-secondary w-100" id="resetButton">Reset</button>
         </div>
         <div class="col-md-2">
             <button class="btn btn-primary w-100" type="submit">Escanear</button>
@@ -192,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 <div class="row justify-content-center mt-3">
-    <h4>Tabla de Resultados:</h4>
+    <!-- <h4>Tabla de Resultados:</h4> -->
     <div class="table-container-cdp">
         <table id="cdpTable" class="table table-bordered table-striped">
             <thead>

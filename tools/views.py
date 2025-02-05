@@ -5,9 +5,6 @@ import ipaddress
 import concurrent.futures
 import asyncio
 import telnetlib
-from telnetlib3 import open_connection
-from netmiko import ConnectHandler
-from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -121,8 +118,6 @@ def ejecutar_swd_script(request):
 
     return render(request, 'formulario_swd_script.html', {'form': form, 'historial': historial})
 
-
-
 def cargar_racks(request):
     switch_id = request.GET.get('switch_id')
     racks = Rack.objects.filter(nro_swd=switch_id).order_by('nro_rack')
@@ -134,7 +129,6 @@ def cargar_switches_acceso(request):
     switches_acceso = SwitchDeAcceso.objects.filter(nro_rack=rack_id).order_by('-portchannel')
     switch_list = [{'nro': switch.portchannel, 'nombre': str(switch)} for switch in switches_acceso]
     return JsonResponse({'switches_acceso': switch_list})
-
 
 @login_required
 def ejecutar_swa_script(request):
@@ -228,7 +222,7 @@ def ejecutar_swa_script(request):
     return render(request, 'formulario_swa_script.html', {'form': form, 'historial': historial})
 
 
-####################################################################################################
+##################################################CDP NEIGHBORS##########################################################
 
 
 async def check_reachable_hosts(hosts):
@@ -296,6 +290,7 @@ def cdp_neighbors_view(request):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         reachable_hosts = loop.run_until_complete(check_reachable_hosts(hosts))
+        # reachable_hosts = check_reachable_hosts([i['host'] for i in data])
         
         for host in hosts:
             host_data = {
