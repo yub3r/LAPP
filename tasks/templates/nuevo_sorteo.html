@@ -1,91 +1,144 @@
-{% extends 'base.html' %} {% block js%}
+{% extends 'base.html' %} 
+
+{% block js %}
 <script>
+  // Almacenar elementos en variables
+  const checkboxesParticipantes = document.querySelectorAll("input[name='participantes']");
+  const contador = document.getElementById("contador");
+  const botonReset = document.querySelector("button[type='reset']");
+  const botonSeleccionarNOC = document.querySelector("#seleccionar-noc");
+  const botonSeleccionarTecnico1 = document.querySelector("#seleccionar-tecnico1");
+  const botonSeleccionarTecnico2 = document.querySelector("#seleccionar-tecnico2");
+  const botonSeleccionarTodos = document.querySelector("#seleccionar-todos");
+
+  // Arreglo de GIFs
+  const gifs2 = [
+    '/media/clap1.gif',
+    '/media/clap2.gif',
+    '/media/clap3.gif',
+    '/media/clap4.gif',
+    '/media/clap5.gif',
+    '/media/clap6.gif',
+    '/media/clap7.gif'
+  ];
+
+  // Función para obtener un GIF aleatorio
+  function obtenerGifAleatorio2() {
+    const indiceAleatorio = Math.floor(Math.random() * gifs2.length);
+    return gifs2[indiceAleatorio];
+  }
+
   // Función para actualizar el contador
   function actualizarContador() {
-    const checkboxesParticipantes = document.querySelectorAll(
-      "input[name='participantes']"
-    );
-    let contador = 0;
-    checkboxesParticipantes.forEach(function (checkbox) {
-      if (checkbox.checked) {
-        contador++;
-      }
+    let contadorSeleccionados = 0;
+    checkboxesParticipantes.forEach(checkbox => {
+      if (checkbox.checked) contadorSeleccionados++;
     });
-    document.getElementById("contador").textContent = contador;
+    contador.textContent = contadorSeleccionados;
   }
 
   // Función para resetear el contador
   function resetContador() {
-    document.getElementById("contador").textContent = 0;
+    contador.textContent = 0;
   }
 
-  // Agregar evento click al botón Reset
-  const botonReset = document.querySelector("button[type='reset']");
+  // Agregar eventos
   botonReset.addEventListener("click", resetContador);
-
-  // Agregar evento change a cada checkbox
-  const checkboxesParticipantes = document.querySelectorAll(
-    "input[name='participantes']"
-  );
-  checkboxesParticipantes.forEach(function (checkbox) {
+  checkboxesParticipantes.forEach(checkbox => {
     checkbox.addEventListener("change", actualizarContador);
   });
 
-  const botonSeleccionarNOC = document.querySelector("#seleccionar-noc");
-  botonSeleccionarNOC.addEventListener("click", function () {
-    const checkboxesParticipantes = document.querySelectorAll(
-      "input[name='participantes'][data-group='NOC']"
-    );
-    checkboxesParticipantes.forEach(function (checkbox) {
+  botonSeleccionarNOC.addEventListener("click", () => {
+    document.querySelectorAll("input[name='participantes'][data-group='NOC']").forEach(checkbox => {
       checkbox.checked = !checkbox.checked;
     });
     actualizarContador();
   });
 
-  const botonSeleccionarTecnico1 = document.querySelector(
-    "#seleccionar-tecnico1"
-  );
-  botonSeleccionarTecnico1.addEventListener("click", function () {
-    const checkboxesParticipantes = document.querySelectorAll(
-      "input[name='participantes'][data-group='Tecnico 2']"
-    );
-    checkboxesParticipantes.forEach(function (checkbox) {
+  botonSeleccionarTecnico1.addEventListener("click", () => {
+    document.querySelectorAll("input[name='participantes'][data-group='Tecnico 2']").forEach(checkbox => {
       checkbox.checked = !checkbox.checked;
     });
     actualizarContador();
   });
 
-  const botonSeleccionarTecnico2 = document.querySelector(
-    "#seleccionar-tecnico2"
-  );
-  botonSeleccionarTecnico2.addEventListener("click", function () {
-    const checkboxesParticipantes = document.querySelectorAll(
-      "input[name='participantes'][data-group='Tecnico 1']"
-    );
-    checkboxesParticipantes.forEach(function (checkbox) {
+  botonSeleccionarTecnico2.addEventListener("click", () => {
+    document.querySelectorAll("input[name='participantes'][data-group='Tecnico 1']").forEach(checkbox => {
       checkbox.checked = !checkbox.checked;
     });
     actualizarContador();
   });
 
-  const botonSeleccionarTodos = document.querySelector("#seleccionar-todos");
-  botonSeleccionarTodos.addEventListener("click", function () {
-    const checkboxesParticipantes = document.querySelectorAll(
-      "input[name='participantes']"
-    );
-    checkboxesParticipantes.forEach(function (checkbox) {
+  botonSeleccionarTodos.addEventListener("click", () => {
+    checkboxesParticipantes.forEach(checkbox => {
       checkbox.checked = !checkbox.checked;
     });
     actualizarContador();
   });
-  
+
+  // Manejar el envío del formulario con AJAX
   document.querySelector('form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Evitar el envío tradicional del formulario
+
     const username = document.getElementById('username').value;
     const titulo = document.getElementById('id_titulo');
     titulo.value = username + ': ' + titulo.value;
+
+    // Mostrar la animación del sorteo
+    Swal.fire({
+      title: 'SOOORRRTEANDO...',
+      html: 'Presiona <strong>Listo</strong> para ver los ganadores.',
+      showCancelButton: false,
+      confirmButtonText: 'Listo',
+      confirmButtonAriaLabel: 'Listo',
+      imageUrl: "/media/lottery2.gif",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: true, // Mostrar el botón "Listo"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Enviar la solicitud AJAX solo después de que el usuario haga clic en "Listo"
+        const formData = new FormData(this);
+
+        fetch("{% url 'sorteo' %}", {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.ganadores) {
+            const gifAleatorio = obtenerGifAleatorio2();
+            // Mostrar los ganadores después de que el usuario haga clic en "Listo"
+            Swal.fire({
+              title: '¡Felicidades!',
+              html: 'Los ganadores son:<br><br>' + 
+                    data.ganadores.map(ganador => `<strong>${ganador.full_name}</strong>`).join('<br>'), // Usar full_name
+              confirmButtonText: '<i class="bi bi-hand-thumbs-up-fill"></i> Genial!',
+              backdrop: 'rgba(0,0,123,0.4)',
+              imageUrl: gifAleatorio,
+              imageWidth: 350,
+              imageHeight: 200,
+              imageAlt: 'Custom image',
+            }).then(() => {
+              window.location.href = "{% url 'historial_sorteos' %}";
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          Swal.fire('Error', 'Ocurrió un error al procesar el sorteo', 'error');
+        });
+      }
+    });
   });
 </script>
-{% endblock %} {% block content %} {% load crispy_forms_tags %}
+{% endblock %}
+
+{% block content %} 
+{% load crispy_forms_tags %}
 
 <h1 class="display-6 text-center">Nuevo Sorteo</h1>
 <form

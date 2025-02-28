@@ -27,7 +27,7 @@
                 <td style="vertical-align: middle;">
                     {% for ganador in sorteo.ganadores %}
                         {{ ganador }}
-                        {% if not forloop.last %}{% endif %}
+                        {% if not forloop.last %} - {% endif %}
                     {% endfor %}
                     <td style="vertical-align: middle;">
                         <div style="float: right;">

@@ -73,6 +73,7 @@ class Order(models.Model):
     side_dish = models.ForeignKey(SideDish, on_delete=models.SET_NULL, null=True, blank=True)
     comments = models.TextField(blank=True)
     extra_requests = models.TextField(blank=True)
+    repeat_for_week = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Pedido de {self.user.username} el {self.order_date.strftime('%Y-%m-%d %H:%M:%S')}"

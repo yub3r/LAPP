@@ -2,130 +2,129 @@
 
 {% block js %}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    let mainDishSelect = document.querySelector('select[name="main_dish"]');
-    let saladSelect = document.querySelector('select[name="salad"]');
-    let otherDishSelect = document.querySelector('select[name="other_dish"]');
-    let sideDishSelect = document.querySelector('select[name="side_dish"]');
-    let commentsTextarea = document.querySelector('textarea[name="comments"]');
-    let resetButton = document.querySelector('button[type="reset"]');
-
-    function toggleDisabled(selectElement, disable) {
-        selectElement.disabled = disable;
-        if (disable) {
-            selectElement.value = '';
-        }
-    }
-
-    mainDishSelect.addEventListener('change', function() {
-        let mainDishSelected = mainDishSelect.value !== '';
-        toggleDisabled(saladSelect, mainDishSelected);
-        toggleDisabled(otherDishSelect, mainDishSelected);
-
-        if (mainDishSelected) {
-            toggleDisabled(sideDishSelect, true); // Deshabilitar guarnición
-        }
-    });
-
-    saladSelect.addEventListener('change', function() {
-        let saladSelected = saladSelect.value !== '';
-        toggleDisabled(mainDishSelect, saladSelected);
-        toggleDisabled(otherDishSelect, saladSelected);
-        
-        if (saladSelected) {
-           toggleDisabled(sideDishSelect, true); // Deshabilitar guarnición
-        }
-    });
-
-    otherDishSelect.addEventListener('change', function() {
-        let selectedOption = otherDishSelect.options[otherDishSelect.selectedIndex];
-        let plusSide = selectedOption.getAttribute('data-plus-side') === "true";
-
-        // Habilitar o deshabilitar el campo de guarnición según `plus_side`
-        toggleDisabled(sideDishSelect, !plusSide);
-
-        // Deshabilitar otros selects
-        let otherDishSelected = otherDishSelect.value !== '';
-        toggleDisabled(mainDishSelect, otherDishSelected);
-        toggleDisabled(saladSelect, otherDishSelected);
+    document.addEventListener("DOMContentLoaded", function() {
+        let mainDishSelect = document.querySelector('select[name="main_dish"]');
+        let saladSelect = document.querySelector('select[name="salad"]');
+        let otherDishSelect = document.querySelector('select[name="other_dish"]');
+        let sideDishSelect = document.querySelector('select[name="side_dish"]');
+        let commentsTextarea = document.querySelector('textarea[name="comments"]');
+        let repeatForWeekCheckbox = document.querySelector('input[name="repeat_for_week"]');
     
-        // Limpiar guarnición si no es requerida
-        if (!plusSide) {
-            sideDishSelect.value = '';
-        }
-    });
-
-    document.querySelector("form").addEventListener("submit", function(event) {
-        event.preventDefault();
-
-        let mainDish = mainDishSelect.value;
-        let salad = saladSelect.value;
-        let otherDish = otherDishSelect.value;
-        let selectedOption = otherDishSelect.options[otherDishSelect.selectedIndex];
-        let plusSide = selectedOption && selectedOption.getAttribute('data-plus-side') === "true";
-
-        // Validar si se ha seleccionado un plato principal, ensalada o plato de dieta
-        if (!mainDish && !salad && !otherDish) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Debe seleccionar al menos un menú principal, una ensalada o un menú de dieta.'
-            });
-            return;
-        }
-
-        // Validar si 'other_dish' requiere una guarnición pero no se seleccionó
-        if (plusSide && !sideDishSelect.value) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Debe seleccionar una guarnición para el plato seleccionado.'
-            });
-            return;
-        }
-
-        let form = event.target;
-        let formData = new FormData(form);
-
-        fetch("{% url 'edit_order' order.id %}", {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+        function toggleDisabled(selectElement, disable) {
+            selectElement.disabled = disable;
+            if (disable) {
+                selectElement.value = '';
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Modificación Exitosa!',
-                    html: 'Hemos modificado tu pedido',
-                    confirmButtonText: 'Entendido'
-                }).then(function () {
-                    window.location.href = "{% url 'mis_ordenes' %}";
-                });
-            } else if (data.error) {
+        }
+    
+        function updateRepeatForWeekState() {
+            // Si hay un main_dish seleccionado, deshabilitar el checkbox
+            if (mainDishSelect.value !== '') {
+                repeatForWeekCheckbox.checked = false;
+                repeatForWeekCheckbox.disabled = true;
+            } else {
+                repeatForWeekCheckbox.disabled = false;
+            }
+        }
+    
+        mainDishSelect.addEventListener('change', function() {
+            let mainDishSelected = mainDishSelect.value !== '';
+            toggleDisabled(saladSelect, mainDishSelected);
+            toggleDisabled(otherDishSelect, mainDishSelected);
+            if (mainDishSelected) {
+                toggleDisabled(sideDishSelect, true);
+            }
+            updateRepeatForWeekState(); // Evaluar si se debe deshabilitar repeat_for_week
+        });
+    
+        saladSelect.addEventListener('change', function() {
+            let saladSelected = saladSelect.value !== '';
+            toggleDisabled(mainDishSelect, saladSelected);
+            toggleDisabled(otherDishSelect, saladSelected);
+            if (saladSelected) {
+                toggleDisabled(sideDishSelect, true);
+            }
+        });
+    
+        otherDishSelect.addEventListener('change', function() {
+            let selectedOption = otherDishSelect.options[otherDishSelect.selectedIndex];
+            let plusSide = selectedOption && selectedOption.getAttribute('data-plus-side') === "true";
+    
+            toggleDisabled(sideDishSelect, !plusSide);
+    
+            let otherDishSelected = otherDishSelect.value !== '';
+            toggleDisabled(mainDishSelect, otherDishSelected);
+            toggleDisabled(saladSelect, otherDishSelected);
+        
+            if (!plusSide) {
+                sideDishSelect.value = '';
+            }
+        });
+    
+        document.querySelector("form").addEventListener("submit", function(event) {
+            event.preventDefault();
+    
+            let mainDish = mainDishSelect.value;
+            let salad = saladSelect.value;
+            let otherDish = otherDishSelect.value;
+            let selectedOption = otherDishSelect.options[otherDishSelect.selectedIndex];
+            let plusSide = selectedOption && selectedOption.getAttribute('data-plus-side') === "true";
+    
+            if (!mainDish && !salad && !otherDish) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: data.error
+                    text: 'Debe seleccionar al menos un menú principal, una ensalada o un menú de dieta.'
                 });
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+    
+            if (plusSide && !sideDishSelect.value) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Debe seleccionar una guarnición para el plato seleccionado.'
+                });
+                return;
+            }
+    
+            let form = event.target;
+            let formData = new FormData(form);
+    
+            fetch("{% url 'edit_order' order.id %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Modificación Exitosa!',
+                        html: 'Hemos modificado tu pedido',
+                        confirmButtonText: 'Entendido'
+                    }).then(function () {
+                        window.location.href = "{% url 'mis_ordenes' %}";
+                    });
+                } else if (data.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         });
+    
+        updateRepeatForWeekState(); // Inicializar estado del checkbox al cargar la página
     });
-
-    resetButton.addEventListener('click', function() {
-        mainDishSelect.disabled = false;
-        saladSelect.disabled = false;
-        otherDishSelect.disabled = false;
-        sideDishSelect.disabled = true;
-    });
-});
-</script>
+    </script>    
 {% endblock %}
 
 
@@ -190,6 +189,13 @@ document.addEventListener("DOMContentLoaded", function() {
                     <label for="comments">Comentarios</label>
                     <textarea name="comments" class="form-control" rows="3">{{ order.comments }}</textarea>
                 </div>
+            </div>
+
+            <div class="form-group mb-2 d-flex justify-content-end">
+                <label>
+                    No seguir elección automática de la orden semanal ┤ 
+                    <input type="checkbox" name="repeat_for_week" {% if order.repeat_for_week %}checked{% endif %}>
+                </label>
             </div>
 
             <button class="btn btn-primary w-100" style="margin-top: 12px" type="submit">Actualizar Pedido</button>

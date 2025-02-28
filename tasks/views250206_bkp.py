@@ -14,7 +14,7 @@ from .forms import TaskForm, GuardiaForm, SorteoForm, RepetirSorteoForm, HoraExt
 from datetime import date, timedelta
 from django.utils.timezone import now 
 from django.http import JsonResponse
-import ccxt, calendar, random, re, locale, requests
+import ccxt, calendar, random, re, locale
 import yfinance as yf
 from django.contrib.sessions.backends.db import SessionStore
 from django.core.cache import cache
@@ -71,6 +71,7 @@ def registrar_horas_extra(request):
         'horas_extras': horas_extras,
     })
 
+
 @user_passes_test(es_admin)
 def lista_horas_extra(request):
     # Obtenemos el año actual
@@ -87,6 +88,8 @@ def lista_horas_extra(request):
         'horas_guardia': horas_guardia,
     })
 
+
+
 @login_required
 def eliminar_horas_extra(request, id):
     if request.method == 'POST':
@@ -95,6 +98,7 @@ def eliminar_horas_extra(request, id):
         return JsonResponse({'success': True, 'message': 'Registro de horas extras eliminado exitosamente.'})
 
     return JsonResponse({'success': False, 'message': 'Método no permitido.'}, status=405)
+
 
 @login_required
 @user_passes_test(es_admin)
@@ -112,6 +116,7 @@ def aprobar_rechazar_horas_extra(request, id):
         hora_extra.save()
         return redirect('lista_horas_extra')
 
+
 @login_required
 @user_passes_test(es_admin)
 def horas_extras_aprobadas(request):
@@ -119,6 +124,8 @@ def horas_extras_aprobadas(request):
     return render(request, 'horas_aprobadas.html', {
         'horas_extras': horas_extras_aprobadas_rechazadas,
     })
+
+
 
 @login_required
 @user_passes_test(es_admin)
@@ -173,6 +180,8 @@ def cargar_guardias_a_horas_extra(request):
 
     return JsonResponse({'success': False}, status=400)
 
+
+
 @login_required
 @user_passes_test(es_admin)
 def stats_horas(request):
@@ -220,6 +229,10 @@ def stats_horas(request):
         'horas_por_mes': horas_por_mes,
     })
 
+
+
+
+
 @login_required
 def reservar_guardia(request):
     if request.method == "POST":
@@ -234,6 +247,7 @@ def reservar_guardia(request):
         form = GuardiaForm()
 
     return render(request, 'reservar_guardia.html', {'form': form})
+
 
 @login_required
 def guardias(request):
@@ -267,27 +281,19 @@ def actualizar_guardia(request, pk):
 
 ########################  SORTEOS  ######################################################  SORTEOS  ##############################
 
+
 @login_required
 def sorteo(request):
     if request.method == 'POST':
         form = SorteoForm(request.POST)
         if form.is_valid():
             sorteo = form.save()
-            ganadores = random.sample(list(sorteo.participantes.all()), min(sorteo.cantidad_ganadores, sorteo.participantes.count()))
+            ganadores = random.sample(list(sorteo.participantes.all()), sorteo.cantidad_ganadores)
             for ganador in ganadores:
                 Ganador.objects.create(sorteo=sorteo, ganador=ganador)
+            # Agregar ID del sorteo a la sesión
             request.session['sorteo_id'] = sorteo.id
-
-            # Si es una solicitud AJAX, devolver JSON
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                ganadores_data = [{
-                    'username': ganador.username,
-                    'full_name': ganador.get_full_name()  # Incluir el nombre completo
-                } for ganador in ganadores]
-                return JsonResponse({'ganadores': ganadores_data})
-            else:
-                # Si no es AJAX, renderizar la plantilla como antes
-                return render(request, 'sorteo.html', {'ganadores': ganadores})
+            return render(request, 'sorteo.html', {'ganadores': ganadores})
     else:
         form = SorteoForm()
     return render(request, 'nuevo_sorteo.html', {'form': form, 'username': request.user.username})
@@ -295,15 +301,14 @@ def sorteo(request):
 
 @login_required
 def historial_sorteos(request):
-    sorteos = Sorteo.objects.prefetch_related('ganador_set').order_by('-fecha')[:20]
-    historial = [
-        {
-            'sorteo': sorteo,
-            'ganadores': [ganador.ganador.username for ganador in sorteo.ganador_set.all()]
-        }
-        for sorteo in sorteos
-    ]
+    sorteos = Sorteo.objects.all().order_by('-fecha')
+    historial = []
+    for sorteo in sorteos:
+        ganadores = Ganador.objects.filter(sorteo=sorteo)
+        ganadores_list = [ganador.ganador.username for ganador in ganadores]
+        historial.append({'sorteo': sorteo, 'ganadores': ganadores_list})
     return render(request, 'historial_sorteos.html', {'historial': historial})
+
 
 
 @login_required
@@ -311,18 +316,32 @@ def repetir_sorteo(request, sorteo_id):
     sorteo = get_object_or_404(Sorteo, id=sorteo_id)
     participantes = sorteo.participantes.all()
 
-    # Generar un título único
+    # Obtener una lista de títulos de sorteos existentes
+    titulos_sorteos = [s.titulo for s in Sorteo.objects.all()]
+
+    # Crear un formulario con un título único para el nuevo sorteo
+    form = None
     titulo_original = sorteo.titulo
     i = 1
-    while True:
+    while not form:
         titulo = f"{titulo_original} ({i})" if i > 1 else titulo_original
-        if not Sorteo.objects.filter(titulo=titulo).exists():
-            break
+        if titulo in titulos_sorteos:
+            # Extraer el número entre paréntesis del título
+            match = re.search(r'\((\d+)\)', titulo)
+            if match:
+                # Incrementar el número entre paréntesis
+                num = int(match.group(1))
+                num += 1
+                titulo = titulo.replace(f"({match.group(1)})",
+                                        f"({num})")
+            else:
+                # Agregar el primer número entre paréntesis
+                titulo = f"{titulo_original} (1)"
+        if titulo not in titulos_sorteos:
+            initial_data = {'titulo': titulo, 'cantidad_ganadores': sorteo.cantidad_ganadores, 'participantes': participantes}
+            form = RepetirSorteoForm(participantes, request.POST or None, initial=initial_data)
         i += 1
 
-    # Crear el formulario con el título único
-    initial_data = {'titulo': titulo, 'cantidad_ganadores': sorteo.cantidad_ganadores, 'participantes': participantes}
-    form = RepetirSorteoForm(participantes, request.POST or None, initial=initial_data)
 
     if request.method == 'POST':
         if form.is_valid():
@@ -334,21 +353,9 @@ def repetir_sorteo(request, sorteo_id):
             ganadores = random.sample(list(nuevo_sorteo.participantes.all()), nuevo_sorteo.cantidad_ganadores)
             for ganador in ganadores:
                 Ganador.objects.create(sorteo=nuevo_sorteo, ganador=ganador)
-
-            # Si es una solicitud AJAX, devolver JSON
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                ganadores_data = [{
-                    'username': ganador.username,
-                    'full_name': ganador.get_full_name()  # Incluir el nombre completo
-                } for ganador in ganadores]
-                return JsonResponse({'ganadores': ganadores_data})
-            else:
-                # Si no es AJAX, renderizar la plantilla como antes
-                return render(request, 'sorteo.html', {'ganadores': ganadores})
-
+            return render(request, 'sorteo.html', {'ganadores': ganadores})
     context = {'form': form, 'sorteo': sorteo, 'username': request.user.username}
     return render(request, 'repetir_sorteo.html', context)
-
 
 @user_passes_test(es_admin)
 def eliminar_sorteo(request, sorteo_id):
@@ -479,16 +486,91 @@ def delete_task(request, task_id):
         task.delete()
         return redirect('tasks')
 
+# def bitcoin_price(request):
+#     plot_html = cache.get('plot_html')
+#     if plot_html is not None:
+#         return render(request, 'home.html', {'plot_html': plot_html})
+
+#     exchange = ccxt.binance()
+#     symbol = 'BTC/USD'
+#     timeframe = '1d'
+#     candles = exchange.fetch_ohlcv(symbol, timeframe)
+#     dates = [candle[0] for candle in candles]
+#     prices = [candle[4] for candle in candles]
+
+
+#     fig, ax = plt.subplots(figsize=(300/80, 200/80), dpi=130)
+#     ax.plot(dates, prices)
+#     # ax.set(xlabel='Date', ylabel='Price (USD)', title='Bitcoin Price in the Last 24 Hours')
+#     plt.xticks([], [])
+
+#     plt.tight_layout()
+
+#     plot_html = mpld3.fig_to_html(fig)
+#     cache.set('plot_html', plot_html, 14400)
+
+#     return render(request, 'home.html', {'plot_html': plot_html})
+
+
 
 ########################  Crypto_Prices  ######################################################  Crypto_Prices  ##############################
 
+
 @login_required
+def crypto_prices(request):
+    prices = cache.get('prices')
+    if prices is not None:
+        return render(request, 'home.html', {'prices': prices})
+
+    #count_tasks = Task.objects.filter(user=request.user, datecompleted__isnull=True).count()
+
+    exchange = ccxt.binance()
+    # symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'ADA/USD', 'DOT/USD']
+    symbols = ['BTC/USD', 'ETH/USD']
+    prices = {}
+    for symbol in symbols:
+        ticker = exchange.fetch_ticker(symbol)
+        price = ticker['last']
+        prices[symbol] = {'price': price}
+
+        # Check if previous price exists in the database
+        previous_price = CryptoPrice.objects.filter(symbol=symbol).first()
+        if previous_price:
+            prices[symbol]['previous_price'] = previous_price.price
+        else:
+            prices[symbol]['previous_price'] = 0
+
+        # Save the current price to the database
+        CryptoPrice.objects.create(symbol=symbol, price=price)
+
+    cache.set('prices', prices, 3600)
+
+    # return render(request, 'home.html', {'prices': prices, 'count_tasks': count_tasks})
+    return render(request, 'home.html', {'prices': prices})
+    # return redirect('home', {'prices': prices}, {"count_tasks": count_tasks})
+
+
+
+
 def home_view(request):
-    """Vista principal que lee los datos ya cacheados."""
-    current_price = cache.get('bitf_price')
-    dolar_data = cache.get('dolar_data')
-    
-    return render(request, 'home.html', {
-        'bitf_price': current_price,
-        'dolar_data': dolar_data
-    })
+    try:
+        # Obtiene los datos de BITF.TO (símbolo de Toronto Stock Exchange para BITF)
+        ticker = yf.Ticker("BITF.TO")
+        stock_info = ticker.history(period="1d")  # Historial de un día
+        
+        # Verifica si hay datos antes de extraer el precio de cierre
+        if not stock_info.empty:
+            current_price = stock_info['Close'].iloc[-1]
+            # Formatea el precio con tres decimales
+            current_price = f"{current_price:.3f}"
+        else:
+            current_price = "No hay datos disponibles"
+        
+        print("Precio actual obtenido:", current_price)
+
+    except Exception as e:
+        current_price = "Error al obtener el precio"
+        print("Error al obtener el precio de BITF.TO:", e)
+
+    # Pasamos el precio al contexto para que esté disponible en la plantilla
+    return render(request, 'home.html', {'bitf_price': current_price})

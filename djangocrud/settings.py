@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(oa(omhdw75#3qzk_p-6zfdfmvj#%tn=oci!ww+ssog(ib%-o='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', '10.45.0.9', 'localhost', '200.123.250.250']
 # ALLOWED_HOSTS = os.environ.get[("DJANGO_ALLOWED_HOSTS")]
@@ -128,6 +128,15 @@ DATABASES = {
     }
 }
 
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+    }
+}
+
 # DATABASES = {
 #     "default": {
 #         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
@@ -181,6 +190,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 #STATIC_ROOT =  '/static/'
 
+
 LOGIN_URL = '/signin'
 LOGIN_REDIRECT_URL = '/'
 
@@ -194,6 +204,22 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 INTERNAL_IPS = ["127.0.0.1",]
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
+# Celery configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'America/Argentina/Buenos_Aires'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+# Configuración del backend de resultados
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_RESULT_EXTENDED = True
+# Opcional: Configuración para evitar almacenar resultados de tareas exitosas
+CELERY_TASK_IGNORE_RESULT = False
+
+
 
 # PWA_APP_NAME = "LAPP"
 # PWA_APP_DESCRIPTION = "Látigo App"
@@ -213,18 +239,3 @@ INTERNAL_IPS = ["127.0.0.1",]
 #     "sizes": "160x160"
 #     }
 # ]
-
-SECURE_CROSS_ORIGIN_OPENER_POLICY = None
-
-# Celery configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'America/Argentina/Buenos_Aires'
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
-# Configuración del backend de resultados
-CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
-CELERY_RESULT_EXTENDED = True
-# Opcional: Configuración para evitar almacenar resultados de tareas exitosas
-CELERY_TASK_IGNORE_RESULT = False
-

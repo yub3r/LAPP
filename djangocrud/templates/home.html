@@ -99,69 +99,46 @@
   <!-- ***************************************************************************************************************************************************** -->
 
   <section class="card card-body mt-2" style="font-size: 13px;">
-    <body>
-      <table class="table table-sm">
-        <tbody id="dolarData"></tbody>
-      </table>
-      
-      <script>
-        // Define el precio de BITF con dos decimales para integrarlo
-        // const bitfPrice = parseFloat("{{ bitf_price|default:0 }}").toFixed(3);
-        const bitfPrice = parseFloat("{{ bitf_price|default:0 }}").toFixed(2)+ " CAD";
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <td><strong>Ahora en Argentina</strong></td>
+          <td style="text-align: right;">{{ dolar_data.timestamp|date:"H:i:s" }}</td>
+        </tr>
+        <tr>
+          <td>Cotización Banco Nación</td>
+          <td style="text-align: right;">{{ dolar_data.oficial|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Dólar Informal (Blue)</td>
+          <td style="text-align: right;">{{ dolar_data.blue|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Dólar Tarjeta</td>
+          <td style="text-align: right;">{{ dolar_data.tarjeta|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Dólar Bolsa (MEP)</td>
+          <td style="text-align: right;">{{ dolar_data.mep|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Contado Liquidación (CCL)</td>
+          <td style="text-align: right;">{{ dolar_data.ccl|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Dólar Cripto (CCB)</td>
+          <td style="text-align: right;">{{ dolar_data.cripto|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td><strong>Precio actual de BITF (TSE)</strong></td>
+          <td style="text-align: right;">{{ bitf_price }}</td>
+      </tr>
+      </tbody>
+    </table>
   
-        fetch('https://criptoya.com/api/dolar')
-        .then(response => response.json())
-        .then(data => {
-          const dolarData = [
-            { descripcion: 'Ahora en Argentina', valor: new Date(data.oficial.timestamp * 1000).toLocaleTimeString() },
-            { descripcion: 'Cotización Banco Nación', valor: data.oficial.price },
-            { descripcion: 'Dólar Informal (Blue)', valor: data.blue.ask },
-            { descripcion: 'Dólar Tarjeta', valor: data.tarjeta.price },
-            { descripcion: 'Dólar Bolsa (MEP)', valor: data.mep.al30["24hs"].price },
-            { descripcion: 'Contado Liquidación (CCL)', valor: data.ccl.al30["24hs"].price },
-            { descripcion: 'Dólar Cripto (CCB)', valor: data.cripto.ccb.ask },
-            { descripcion: 'Precio actual de BITF (TSE)', valor: bitfPrice }
-          ];
-      
-          const dolarDataElement = document.getElementById('dolarData');
-          dolarData.forEach(item => {
-            const row = document.createElement('tr');
-            const descripcionCell = document.createElement('td');
-            const valorCell = document.createElement('td');
-            
-            if (item.descripcion === 'Ahora en Argentina') {
-              descripcionCell.innerHTML = `<strong>${item.descripcion}</strong>`;
-            } else {
-              descripcionCell.textContent = item.descripcion;
-            }
-  
-            if (typeof item.valor === 'number' || !isNaN(item.valor)) {
-              valorCell.textContent = parseFloat(item.valor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            } else {
-              valorCell.innerHTML = `<strong>${item.valor}</strong>`;
-            }
-            
-            valorCell.style.textAlign = 'right';
-            
-            row.appendChild(descripcionCell);
-            row.appendChild(valorCell);
-            
-            dolarDataElement.appendChild(row);
-          });
-        })
-        .catch(error => {
-          console.error('Error al obtener los datos del Dólar:', error);
-        });
-      </script>
-    </body>
-    <!-- https://www.binance.com/en/crypto-price-widget -->
+    <!-- Widget de Binance (puedes optar por dejarlo así o servirlo localmente) -->
     <script src="https://public.bnbstatic.com/unpkg/growth-widget/cryptoCurrencyWidget@0.0.9.min.js"></script>
-    <div class="binance-widget-marquee" data-cmc-ids="1,1027" data-theme="light" data-transparent="true"
-      data-locale="en" data-powered-by="Powered by" ></div>
+    <div class="binance-widget-marquee" data-cmc-ids="1,1027" data-theme="light" data-transparent="true" data-locale="en" data-powered-by="Powered by"></div>
   </section>
   
-  <!-- <h3 class="text-center">Precio actual de BITF (TSE): {{ bitf_price }}</h3> -->
-  
-</main>
-
-{% endblock %}
+  {% endblock %}

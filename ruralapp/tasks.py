@@ -8,11 +8,61 @@ from datetime import timedelta
 from django.contrib.auth import get_user_model
 from ruralapp.views import get_menu_day_and_week  # Reemplaza advance_week por simulación local
 import logging
+import requests
+import yfinance as yf
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
 TOKEN = 'xoxb-2569679174866-6651760390341-nXgxbFm3vJVs2eSq30Se0pZF'
 client = slack.WebClient(TOKEN)
+
+
+@shared_task
+def update_dolar_data():
+    try:
+        response = requests.get('https://criptoya.com/api/dolar', timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            dolar_data = {
+                'timestamp': data.get('oficial', {}).get('timestamp', 0),
+                'oficial': data.get('oficial', {}).get('price', 0),
+                'blue': data.get('blue', {}).get('ask', 0),
+                'tarjeta': data.get('tarjeta', {}).get('price', 0),
+                'mep': data.get('mep', {}).get('al30', {}).get('24hs', {}).get('price', 0),
+                'ccl': data.get('ccl', {}).get('al30', {}).get('24hs', {}).get('price', 0),
+                'cripto': data.get('cripto', {}).get('ccb', {}).get('ask', 0),
+            }
+            print("Dolar data actualizada:", dolar_data)  # <---- Agrega esto para verificar
+
+            # Guardar en caché por 10 minutos (600 segundos)
+            cache.set('dolar_data', dolar_data, 600)
+        else:
+            print("Error: respuesta no exitosa de la API de criptoya")
+    except Exception as e:
+        print("Error al actualizar dolar_data:", e)
+
+
+@shared_task
+def update_bitf_price():
+    try:
+        ticker = yf.Ticker("BITF")
+        stock_info = ticker.history(period="1d")
+        current_price = ticker.info.get("regularMarketPrice")  # Último precio
+
+        if current_price is None and not stock_info.empty:
+            current_price = stock_info['Close'].iloc[-1]
+
+        if current_price is not None:
+            formatted_price = f"{current_price:.3f} CAD"
+        else:
+            formatted_price = "No hay datos disponibles"
+    except Exception as e:
+        formatted_price = "Error al obtener el precio"
+        print("Error al actualizar bitf_price:", e)
+
+    # Guardar en caché por 10 minutos (600 segundos)
+    cache.set('bitf_price', formatted_price, 600)
 
 
 # Función auxiliar para calcular el rango de tiempo válido
@@ -199,3 +249,26 @@ def send_slack_pending_orders():
 #     except SlackApiError as e:
 #         logger.error(f"Error al enviar mensaje a Slack: {e.response['error']}")
 #         return f"Error al enviar mensaje a Slack: {e.response['error']}"
+
+
+@shared_task
+def create_daily_orders():
+    today = timezone.localtime(timezone.now()).date()
+    
+    repeating_orders = Order.objects.filter(repeat_for_week=True)
+
+    for order in repeating_orders:
+        if not Order.objects.filter(user=order.user, order_date=today).exists():
+            Order.objects.create(
+                user=order.user,
+                main_dish=order.main_dish,
+                salad=order.salad,
+                other_dish=order.other_dish,
+                side_dish=order.side_dish,
+                comments=order.comments,
+                order_date=today,
+                repeat_for_week=True  # 🔹 Se marca la nueva orden como parte del ciclo de auto-repetición
+            )
+
+    return f"Se han generado {repeating_orders.count()} pedidos para hoy."
+

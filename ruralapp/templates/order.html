@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let sideDishSelect = document.querySelector('select[name="side_dish"]');
     let commentsTextarea = document.querySelector('textarea[name="comments"]');
     let resetButton = document.querySelector('button[type="reset"]');
+    let repeatForWeekCheckbox = document.getElementById("repeat_for_week");
 
     function toggleDisabled(selectElement, disable) {
         selectElement.disabled = disable;
@@ -21,6 +22,11 @@ document.addEventListener("DOMContentLoaded", function() {
         let mainDishSelected = mainDishSelect.value !== '';
         toggleDisabled(saladSelect, mainDishSelected);
         toggleDisabled(otherDishSelect, mainDishSelected);
+
+        repeatForWeekCheckbox.disabled = mainDishSelected;
+        if (mainDishSelected) {
+            repeatForWeekCheckbox.checked = false;
+        }
     });
 
     saladSelect.addEventListener('change', function() {
@@ -33,10 +39,8 @@ document.addEventListener("DOMContentLoaded", function() {
         let selectedOption = otherDishSelect.options[otherDishSelect.selectedIndex];
         let plusSide = selectedOption.getAttribute('data-plus-side') === "true";
 
-        // Habilitar o deshabilitar el campo de guarnición según `plus_side`
         toggleDisabled(sideDishSelect, !plusSide);
 
-        // Deshabilitar otros selects
         let otherDishSelected = otherDishSelect.value !== '';
         toggleDisabled(mainDishSelect, otherDishSelected);
         toggleDisabled(saladSelect, otherDishSelected);
@@ -45,7 +49,6 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("orderForm").addEventListener("submit", function(event) {
         event.preventDefault();
 
-        // Verificación de selección en `other_dish` y `side_dish`
         let selectedOtherDish = otherDishSelect.options[otherDishSelect.selectedIndex];
         let requiresSideDish = selectedOtherDish.getAttribute('data-plus-side') === "true";
         if (requiresSideDish && !sideDishSelect.value) {
@@ -57,7 +60,6 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        // Verificación de selección de al menos un elemento
         if (!mainDishSelect.value && !saladSelect.value && !otherDishSelect.value) {
             Swal.fire({
                 icon: 'error',
@@ -85,6 +87,10 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                let audio = new Audio('/media/bell-ding.mp3'); // Ruta del sonido
+                audio.play(); // Reproducir sonido
+
+
                 Swal.fire({
                     icon: 'success',
                     title: '¡Gracias!',
@@ -121,10 +127,14 @@ document.addEventListener("DOMContentLoaded", function() {
         saladSelect.disabled = false;
         otherDishSelect.disabled = false;
         sideDishSelect.disabled = true;
+
+        repeatForWeekCheckbox.disabled = false;
+        repeatForWeekCheckbox.checked = false;
     });
 });
 </script>
 {% endblock %}
+
 
 
 {% block content %}
@@ -182,6 +192,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     <label for="comments">Comentarios</label>
                     <textarea name="comments" class="form-control" rows="3" placeholder="Alguna observación o comentario que crea que debamos saber para su orden."></textarea>
                 </div>
+
+                <div class="form-group mb-2 d-flex justify-content-end">
+                    <label for="repeat_for_week">Repetir pedido para toda la semana ┤ </label>
+                    <input type="checkbox" name="repeat_for_week" id="repeat_for_week">
+                </div>
+
                 <div class="d-flex mb-2">
                     <p class="text-left">
                         Postre: {{ dessert }}

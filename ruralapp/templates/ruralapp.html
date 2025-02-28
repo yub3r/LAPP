@@ -89,6 +89,13 @@
                             {{ order.user.username }}
                         </td>                        
                         <td style="text-align: left;">
+                            {% if order.repeat_for_week %}
+                                (Auto)
+                            {% else %}
+                                {% if order.last_repeat_date and order.order_date > order.last_repeat_date %}
+                                    (Auto)
+                                {% endif %}
+                            {% endif %}
                             {{ order.main_dish|default:"" }} 
                             {% if order.salad %}Ensalada {{ order.salad.id }}{% endif %} 
                             {{ order.other_dish.name|default:"" }} 
@@ -98,6 +105,8 @@
                                 <small>({{ order.comments|slice:":30" }}{% if order.comments|length > 30 %}...{% endif %})</small>
                             {% endif %}
                         </td>
+                        
+                        
                     </tr>
                     {% endfor %}
                 </tbody>
