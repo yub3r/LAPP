@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import IntegrityError, models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
@@ -12,11 +12,20 @@ class UserProfile(models.Model):
         return self.user.get_full_name()
 
 
+# @receiver(post_save, sender=User)
+# def create_or_update_user_profile(sender, instance, created, **kwargs):
+#     if created:
+#         print(f"Creando UserProfile para el usuario {instance.id}")  # Log para depuración
+#         try:
+#             UserProfile.objects.create(user=instance)
+#         except IntegrityError as e:
+#             print(f"Error al crear UserProfile: {e}")  # Log para depuración
+
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
-        UserProfile.objects.create(user=instance)
-    instance.userprofile.save()
+        if User.objects.filter(pk=instance.pk).exists(): # verify that the user exist.
+            UserProfile.objects.get_or_create(user=instance)
 
 
 class AppState(models.Model):
