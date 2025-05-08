@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+$(document).ready(function() {
+    $('.table-user-month').DataTable({
+        "order": [[0, "desc"]],  // Orden inicial por Año/Mes
+        "scrollY": "670px",      // Altura de la tabla
+        "scrollCollapse": true,  // Permite ajuste dinámico
+        "paging": false,         // Sin paginación
+        "language": {
+            "search": "Buscar:",
+            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "zeroRecords": "No se encontraron registros",
+            "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "infoEmpty": "No hay registros disponibles",
+            "infoFiltered": "(filtrado de _MAX_ registros totales)"
+        }
+    });
+
+    $('.table-month').DataTable({
+        "order": [[0, "desc"]],  // Orden inicial por Año/Mes
+        "scrollY": "670px",      // Altura de la tabla
+        "scrollCollapse": true,  // Permite ajuste dinámico
+        "paging": false,         // Sin paginación
+        "language": {
+            "search": "Buscar:",
+            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "zeroRecords": "No se encontraron registros",
+            "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "infoEmpty": "No hay registros disponibles",
+            "infoFiltered": "(filtrado de _MAX_ registros totales)"
+        }
+    });
+});
+
+</script>
+    
+{% endblock %}
+
+{% block content %}
+<!-- <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Estadísticas de Horas Extra</h2>
+    <a href="{% url 'lista_horas_extra' %}" class="btn btn-primary">Volver</a>
+</div> -->
+
+    
+{% load custom_filters %}
+
+<div class="d-flex justify-content-between align-items-start mt-1">
+    <!-- Tabla 1 -->
+    <div class="table-container-stats flex-fill me-3">
+        <h3 class="text-left mb-3">Total de Horas Extra por Mes/Usuario</h3>
+        <table class="tablet table-user-month table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Año/Mes</th>
+                    <th>Usuario</th>
+                    <th>25%</th>
+                    <th>50%</th>
+                    <th>100%</th>
+                    <th>Total Horas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in horas_por_mes_usuario %}
+                <tr>
+                    <td>{{ registro.anio_mes }}</td>
+                    <td>{{ registro.usuario }}</td>
+                    <td>{% if registro|get_item:"25%" > 0 %}{{ registro|get_item:"25%"|floatformat:2 }}{% else %}{% endif %}</td>
+                    <td>{% if registro|get_item:"50%" > 0 %}{{ registro|get_item:"50%"|floatformat:2 }}{% else %}{% endif %}</td>
+                    <td>{% if registro|get_item:"100%" > 0 %}{{ registro|get_item:"100%"|floatformat:2 }}{% else %}{% endif %}</td>
+                    <td>{{ registro.total_horas|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No hay registros mensuales por usuario.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Tabla 2 -->
+    <div class="table-container-stats flex-fill ms-3">
+        <h3 class="text-left mb-3">Total de Horas Extra por Mes</h3>
+        <table class="table table-month table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Año/Mes</th>
+                    <th>Total Horas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mes in horas_por_mes %}
+                <tr>
+                    <td>{{ mes.anio_mes }}</td>
+                    <td>{{ mes.total_horas|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="text-center">No hay registros mensuales.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+{% endblock %}
+
+<style>
+    .table-container-stats {
+        overflow: hidden; /* Previene que el contenido salga del contenedor */
+        max-height: 700px;
+        /* Altura máxima de la tabla para mostrar  registros */
+        overflow-y: auto;
+        /* Mostrar barra de scroll vertical en caso de que haya más de 5 registros */
+        /* border: 1px solid #ddd;  Opcional: borde alrededor de las tablas */
+        /* border-radius: 5px;
+        padding: 10px; */
+        /* background: #f9f9f9; 
+        height: 100%;
+        /* margin-bottom: 10px;
+        margin-top: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        font-size: 13px; /* Tamaño de fuente para la tabla */
+    }
+
+
+
+</style>

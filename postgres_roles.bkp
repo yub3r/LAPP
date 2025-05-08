@@ -1,0 +1,27 @@
+--
+-- PostgreSQL database cluster dump
+--
+
+SET default_transaction_read_only = off;
+
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+
+--
+-- Roles
+--
+
+CREATE ROLE admin;
+ALTER ROLE admin WITH NOSUPERUSER INHERIT NOCREATEROLE NOCREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'SCRAM-SHA-256$4096:isrU90DtV/gxPFDnNS153Q==$PZXPEZm9zg7pV40axUJeASaQ0+xEJpQgpZQrnNaC38k=:1rmFXZEsSPghUEzkx8TjJ2GfO0P859J7PRse0e58w6Y=';
+CREATE ROLE administrator;
+ALTER ROLE administrator WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS;
+CREATE ROLE postgres;
+ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION BYPASSRLS PASSWORD 'SCRAM-SHA-256$4096:SYhHJZOxa0LC0FajTciIlw==$fR3YBeeQHeiBAhvgnkSwmlpcbgqjTwU4kSSS+3Vb23M=:iDFOg0KlddnDbZLRiwNv/FTKd+ez0euNTSL4Odn5Fx0=';
+
+
+
+
+--
+-- PostgreSQL database cluster dump complete
+--
+

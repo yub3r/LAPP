@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<script>
+</script>
+
+<h1 class="display-6 text-center">Formularios Completados</h1>
+<main class="container" style="display: flex; flex-direction: column; max-width:700px; margin-inline: auto ">
+
+    <section class="card card-body mt-2">
+        <table class="table table-borderless table-sm table table-striped">
+            <tbody>
+                {% for completed_form in completed_forms %}
+                <tr>
+                    <td style="text-align: center; vertical-align: middle;">
+                        {{ completed_form.timestamp|date:'H:i' }}
+                    </td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        {{ completed_form.timestamp|date:'j M' }}
+                    </td>
+                    <td style="vertical-align: middle;">
+                        {{ completed_form.user.username }}
+                    </td>
+                    <td style="vertical-align: middle;">╘●≡{{ completed_form.vehiculo.patente_id }}≡●╛
+                    </td>
+                    <!-- <td style="vertical-align: middle;">
+                        {{ formulario_name }}
+                    </td> -->
+                    <td>
+                        <div style="float: right;">
+                            {% csrf_token %}
+                            {% if completed_form.has_negative_answer %}
+                            <a class="btn btn-danger" href="{% url 'detail_form' completed_form.id %}">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+                            {% else %}
+                            <a class="btn btn-success" href="{% url 'detail_form' completed_form.id %}">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">No hay formularios completados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    <div class="d-flex" style="margin-top: 8px">
+        <a href="{% url 'formularios' %}" style="margin-top: 8px" class="btn btn-secondary flex-fill">Volver a Forms</a>
+    </div>
+</main>
+
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fechaInicio = document.querySelector('#id_fecha_inicio');
+        fechaInicio.type = 'text';
+        fechaInicio.addEventListener('focus', function() {
+            this.type = 'date';
+        });
+        fechaInicio.addEventListener('blur', function() {
+            this.type = 'text';
+            this.value = formatDate(this.value);
+        });
+
+        const fechaFin = document.querySelector('#id_fecha_fin');
+        fechaFin.type = 'text';
+        fechaFin.addEventListener('focus', function() {
+            this.type = 'date';
+        });
+        fechaFin.addEventListener('blur', function() {
+            this.type = 'text';
+            this.value = formatDate(this.value);
+        });
+
+        function formatDate(date) {
+            const [year, month, day] = date.split('-');
+            return `${day}/${month}/${year}`;
+        }
+    });
+</script>
+
+
+
+<h1 class="display-5 text-center">Actualizar Guardia</h1>
+
+
+<form action="" method="POST"
+    style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto ">
+    <div class="d-flex justify-content-end">
+        <button type="reset" class="btn btn-outline-secondary">Reset</button>
+    </div>
+
+
+    {% csrf_token %}
+    <div class="form-check-inline">
+        {{form | crispy }}
+        <style type="text/css">
+            #div_id_tarea>* {
+                display: flex;
+                justify-content: center;
+            }
+        </style>
+    
+    </div>
+    <p><br></p>
+    <h5 class="display-7 text-center">{{error}}</h5>
+    <input class="btn btn-primary" type="submit" value="Actualizar">
+    <a href="{% url 'guardias' %}" style=margin-top:8px; class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

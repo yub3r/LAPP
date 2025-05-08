@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fechaInicio = document.querySelector('#id_fecha_inicio');
+        fechaInicio.addEventListener('focus', function () {
+            if (this.value === 'dd/mm/yyyy') {
+                this.value = '';
+            }
+            this.type = 'date';
+            this.setAttribute('inputmode', 'numeric');
+        });
+        fechaInicio.addEventListener('blur', function () {
+            this.type = 'text';
+            this.removeAttribute('inputmode');
+            if (this.value === '') {
+                this.value = 'dd/mm/yyyy';
+            } else {
+                this.value = formatDate(this.value);
+            }
+        });
+
+        fechaInicio.addEventListener('change', function () {
+            const fechaInicioValue = new Date(this.value);
+            fechaInicioValue.setDate(fechaInicioValue.getDate() + 3);
+            const fechaFinValue = fechaInicioValue.toISOString().slice(0, 10);
+            fechaFin.value = fechaFinValue;
+        });
+
+        const fechaFin = document.querySelector('#id_fecha_fin');
+        fechaFin.addEventListener('focus', function () {
+            if (this.value === 'dd/mm/yyyy') {
+                this.value = '';
+            }
+            this.type = 'date';
+            this.setAttribute('inputmode', 'numeric');
+        });
+        fechaFin.addEventListener('blur', function () {
+            this.type = 'text';
+            this.removeAttribute('inputmode');
+            if (this.value === '') {
+                this.value = 'dd/mm/yyyy';
+            } else {
+                this.value = formatDate(this.value);
+            }
+        });
+
+        function formatDate(date) {
+            const [year, month, day] = date.split('-');
+            return `${day}/${month}/${year}`;
+        }
+    });
+</script>
+
+<h1 class="display-6 text-center">Reservar Guardia</h1>
+
+<form action="/reservar_guardia/" method="POST" style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto ">
+    {% csrf_token %}
+    <div class="form-check-inline">
+        {{ form|crispy }}
+        <style type="text/css">
+            #div_id_tarea>* {
+                display: flex;
+                justify-content: center;
+            }
+        </style>
+    </div>
+    <p><br></p>
+    <h5 class="display-7 text-center">{{ error }}</h5>
+    <input class="btn btn-primary w-100" type="submit" value="Asignar" />
+    <div class="d-flex" style="margin-top: 8px">
+        <button type="reset" style="margin-top: 8px" class="btn btn-outline-secondary flex-fill me-3">Reset</button>
+        <a href="{% url 'guardias' %}" style="margin-top: 8px" class="btn btn-secondary flex-fill">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

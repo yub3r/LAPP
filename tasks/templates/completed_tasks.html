@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block js%}
+{% if messages %}
+{% for m in messages %}
+<script>
+    Swal.fire({
+        // "position": 'top',
+        "title": "Excelente...!!!",
+        "timer": 3000,
+        "showConfirmButton": false,
+        "text": "{{m}}",
+        "backdrop": `rgba(36, 125, 250, 0.43)`,
+        // "imageUrl": 'https://media.tenor.com/0M9mDpNl5J4AAAAC/get-to-work-work.gif',
+        // "imageUrl": '/media/get-to-work-work.gif',
+        // "imageWidth": 350,
+        // "imageHeight": 200,
+        "imageAlt": 'Custom image',
+        "icon": 'success',
+    })
+</script>
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<h1 class="display-6 text-center">Tareas Completadas</h1>
+
+{% if tasks|length == 0 %}
+
+<div class="text-center py-4"><a class="btn btn-primary" href="{% url 'create_task' %}">
+    <i class="bi bi-clipboard2-pulse"></i> Nueva Tarea</a></div>
+
+{% endif %}
+
+
+
+{% comment %} <ul style="max-width: 50vw;"> {% endcomment %}
+    <table class="table">
+        <thead>
+            <tr>
+                <!-- <th scope="col">Location</th>
+                <th scope="col">Lado</th>
+                <th scope="col">Area</th>
+                <th scope="col">Tarea</th>
+                <th scope="col" style="text-align:right;">Creado</th>
+                <th scope="col" style="text-align:right;">Completa</th>
+                <th scope="col" style="float: right;">Opciones</th> -->
+            </tr>
+        </thead>
+        {% for task in tasks %}
+        <tbody>
+            <tr>
+                <td style="max-width: 200px; vertical-align: middle;">{{task.location}} </a></td>
+                <td style="max-width: 200px; vertical-align: middle;">{{task.zona}} </a></td>
+                <td style="max-width: 200px; vertical-align: middle;">{{task.area}} </a></td>
+                <td style="max-width: 200px; vertical-align: middle;">{{task.tarea}} </a></td>
+                <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{task.created|date:'j M H:i'}}</a></td>
+                <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{task.datecompleted|date:'j M H:i'}}</a></td>
+            </tr>
+        </tbody>
+        {% endfor %}
+    </table>
+    {% endblock %}

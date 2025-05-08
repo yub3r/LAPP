@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% block js %}
+<script>
+    $('.eliminar-guardia').on('click', function (event) {
+        event.preventDefault();
+        var url = $(this).attr('href');
+
+        Swal.fire({
+            title: '¿Estás seguro de eliminar esta guardia?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+<h1 class="display-6 text-center">Guardias Asignadas</h1>
+{% if 'auth.admin_group' in perms or request.user.username == 'agomez'  %}
+<div class="text-center py-4">
+    <a class="btn btn-warning" href="{% url 'reservar_guardia' %}">
+        <i class="bi bi-calendar-check-fill"></i> Asignar Guardia
+    </a>
+</div>
+{% endif %}
+
+<table class="table-container table">
+    <thead>
+        <tr>
+            <th scope="col">Ops</th>
+            <th scope="col">Mant</th>
+            <th scope="col" style="text-align: middle;">IT</th>
+            <th scope="col" style="text-align:right;">Inicio</th>
+            <th scope="col" style="text-align:right;">Fin</th>
+            <th scope="col" style="text-align:right;">Horas</th>
+            {% if 'auth.admin_group' in perms %}
+            <th scope="col" style="text-align:right;">Editar/Eliminar</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for guardia in form %}
+        <tr {% if guardia.fecha_inicio >= fecha_actual and guardia.fecha_inicio == fecha_proxima %} style="background-color: #FFFF99;" {% endif %}>
+            <td style="max-width: 200px; vertical-align: middle;">{{ guardia.usuario1 }}</td>
+            <td style="max-width: 200px; vertical-align: middle;">{{ guardia.usuario2 }}</td>
+            <td style="max-width: 200px; vertical-align: middle;">{{ guardia.usuario3 }}</td>
+            <td style="max-width: 200px; text-align:right; vertical-align: middle;">
+                {{ guardia.fecha_inicio|date:'j/m' }} {{ guardia.hora_inicio|time:'H:i' }}
+            </td>
+            <td style="max-width: 200px; text-align:right; vertical-align: middle;">
+                {{ guardia.fecha_fin|date:'j/m' }} {{ guardia.hora_fin|time:'H:i' }}
+            </td>
+            <td style="max-width: 200px; text-align:right; vertical-align: middle;">{{ guardia.total_horas|floatformat:0 }}</td>
+            {% if 'auth.admin_group' in perms or request.user.username == 'agomez'  %}
+            <td>
+                <div style="float: right;">
+                    {% csrf_token %}
+                    <a class="btn btn-warning" href="{% url 'actualizar_guardia' guardia.id %}">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a class="btn btn-danger eliminar-guardia" href="{% url 'eliminar_guardia' guardia.id %}">
+                        <i class="bi bi-trash3"></i>
+                    </a>
+                </div>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

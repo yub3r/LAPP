@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<h1 class="display-5 text-center">Resultado de la ejecución del script</h1>
+<form method="POST" style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto ">
+    <div class="d-flex justify-content-end">
+        <p><br></p>
+    </div>
+    <div class="row justify-content-center mt-3">
+        <h5 class="display-7 text-center">{{ resultado }}</h5>
+    </div>
+    <p><br></p>
+
+    <div class="container mx-auto text-center">
+        <div class="row justify-content-center">
+            <a href="{% url 'ejecutar_swd_script' %}">Volver al formulario</a>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        const fechaInicio = document.querySelector('#id_fecha_inicio');
+        const fechaFin = document.querySelector('#id_fecha_fin');
+        const horaInicio = document.querySelector('#id_hora_inicio');
+        const horaFin = document.querySelector('#id_hora_fin');
+        const submitButton = document.querySelector('input[type="submit"]');
+        const today = new Date();
+        const resetButton = document.querySelector('button[type="reset"]');
+
+        // Detectar y mostrar los mensajes de éxito y error usando Swal.fire directamente
+        const alertMessage = document.querySelector('.alert');
+        if (alertMessage) {
+            const messageText = alertMessage.textContent.trim();
+            if (alertMessage.classList.contains('alert-success')) {
+                Swal.fire({
+                    title: 'Registro exitoso',
+                    text: messageText,
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                });
+            } else if (alertMessage.classList.contains('alert-danger')) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: messageText,
+                });
+            }
+        }
+
+
+        // Resto del código que ya tienes
+        resetButton.addEventListener('click', function(event) {
+            event.preventDefault();  // Evita el comportamiento por defecto del botón de reset
+            location.reload();  // Recarga la página sin reenviar el formulario
+        });
+
+        // Asignar valores predeterminados
+        horaInicio.value = '16:00';
+        horaFin.value = '17:00';
+
+        // Copiar fecha_inicio a fecha_fin automáticamente si está vacía
+        fechaInicio.addEventListener('change', function () {
+            fechaFin.value = fechaInicio.value;
+            validarFormulario();
+        });
+
+        fechaFin.addEventListener('change', validarFormulario);
+        horaInicio.addEventListener('change', validarFormulario);
+        horaFin.addEventListener('change', validarFormulario);
+
+        // Validación de formulario
+        function validarFormulario() {
+            let mensajeError = "";
+            const fechaInicioValue = new Date(fechaInicio.value);
+            const fechaFinValue = new Date(fechaFin.value);
+
+            // Validaciones de fecha y hora
+            if (fechaInicio.value && fechaInicioValue > today) {
+                mensajeError = "La fecha de inicio no puede estar en el futuro.";
+            } else if (fechaInicio.value && fechaFin.value && fechaInicioValue > fechaFinValue) {
+                mensajeError = "La fecha de inicio debe ser anterior o igual a la fecha de fin.";
+            } else if (fechaInicio.value === fechaFin.value && horaInicio.value && horaFin.value && horaInicio.value >= horaFin.value) {
+                mensajeError = "La hora de fin debe ser posterior a la hora de inicio si es el mismo día.";
+            }
+
+            if (mensajeError) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de validación',
+                    text: mensajeError,
+                });
+                submitButton.disabled = true;
+                return false;  // Indicar que las validaciones fallaron
+            } else {
+                submitButton.disabled = false;
+                return true;  // Indicar que las validaciones pasaron
+            }
+        }
+
+        form.addEventListener('submit', function (event) {
+            let formIsValid = validarFormulario();
+            
+            // Si las validaciones fallan, evitar la acción por defecto
+            if (!formIsValid) {
+                event.preventDefault();
+                return;  // No continuar si hay errores
+            }
+
+            // Validar si se ha seleccionado un porcentaje
+            const radioPorcentInputs = document.querySelectorAll('[name="porcent"]');
+            let porcentajeSeleccionado = false;
+            radioPorcentInputs.forEach(input => {
+                if (input.checked) {
+                    porcentajeSeleccionado = true;
+                }
+            });
+
+            if (!porcentajeSeleccionado) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Debe seleccionar un porcentaje (50% o 100%) antes de continuar.',
+                });
+                event.preventDefault();  // Evitar el envío si no se ha seleccionado porcentaje
+                return;
+            }
+        });
+
+        // Función para inicializar el campo de hora con botones de incremento/decremento
+        function initializeTimeField(fieldId) {
+            const field = document.querySelector(fieldId);
+
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.alignItems = 'center';
+            container.style.gap = '5px';
+
+            field.parentNode.insertBefore(container, field);
+            container.appendChild(field);
+
+            // Botón de decremento
+            const decrementButton = document.createElement('button');
+            decrementButton.type = 'button';
+            decrementButton.textContent = '-';
+            decrementButton.classList.add('btn', 'btn-outline-secondary', 'btn-sm');
+            decrementButton.onclick = function () {
+                const time = new Date('1970-01-01T' + field.value);
+                time.setMinutes(time.getMinutes() - 30);
+                field.value = time.toTimeString().slice(0, 5);
+                validarFormulario();  // Validar después de ajustar la hora
+            };
+            container.insertBefore(decrementButton, field);
+
+            // Botón de incremento
+            const incrementButton = document.createElement('button');
+            incrementButton.type = 'button';
+            incrementButton.textContent = '+';
+            incrementButton.classList.add('btn', 'btn-outline-secondary', 'btn-sm');
+            incrementButton.onclick = function () {
+                const time = new Date('1970-01-01T' + field.value);
+                time.setMinutes(time.getMinutes() + 30);
+                field.value = time.toTimeString().slice(0, 5);
+                validarFormulario();  // Validar después de ajustar la hora
+            };
+            container.appendChild(incrementButton);
+
+            field.style.flex = '1';
+            field.style.width = 'auto';
+        }
+
+        // Inicializar los campos de hora
+        initializeTimeField('#id_hora_inicio');
+        initializeTimeField('#id_hora_fin');
+
+        // Selecciona todos los botones de eliminación y aplica el evento
+        document.querySelectorAll('.eliminar-horas_extra').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                const url = this.getAttribute('href');
+
+                Swal.fire({
+                    title: '¿Estás seguro de eliminar este registro?',
+                    text: 'Esta acción no se puede deshacer',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Enviar la solicitud POST para eliminar
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}', // Asegura el token CSRF para protección
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Eliminado',
+                                    data.message,
+                                    'success'
+                                ).then(() => {
+                                    // Recargar la página para actualizar la lista
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        })
+                        .catch(error => Swal.fire('Error', 'No se pudo eliminar el registro', 'error'));
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+
+
+<h1 class="display-6 text-center mb-5">Registro de Horas Extras</h1>
+
+
+
+<form method="POST" style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto;">
+    {% csrf_token %}
+    <div class="d-flex flex-column gap-3">
+        <!-- Fecha y Hora de Inicio -->
+        <div class="d-flex align-items-center gap-2">
+            <div style="flex: 2;">
+                {{ form.fecha_inicio|as_crispy_field }}
+            </div>
+            <div style="flex: 1;">
+                {{ form.hora_inicio|as_crispy_field }}
+            </div>
+        </div>
+
+        <!-- Fecha y Hora de Fin -->
+        <div class="d-flex align-items-center gap-2">
+            <div style="flex: 2;">
+                {{ form.fecha_fin|as_crispy_field }}
+            </div>
+            <div style="flex: 1;">
+                {{ form.hora_fin|as_crispy_field }}
+            </div>
+        </div>
+
+
+        <!-- Campo de Porcentaje -->
+        <div class="form-group d-flex flex-column gap-2">
+            <div class="d-flex align-items-center w-100">
+                <label for="id_porcent" class="form-label mb-0 text-start" style="flex: 1;">Cálculo_%/H:</label>
+                <div class="d-flex justify-content-between w-100">
+                    {% for radio in form.porcent %}
+                        <div class="form-check form-check-inline" style="flex: 1; text-align: center;">
+                            {{ radio.tag }}
+                            <label class="form-check-label">{{ radio.choice_label }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Estilos -->
+        <style>
+            .form-check-inline {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 5px;
+                padding: 5px;
+                background-color: #c0d1e9;
+                border-radius: 8px;
+                /* margin-right: 1rem; */
+                margin-left: 1rem;
+            }
+            .form-check-inline label {
+                margin-bottom: 0;
+            }
+            .form-check-inline input[type="radio"] {
+                margin: 0;
+            }
+        </style>
+
+
+
+
+        <!-- Campo de Justificación -->
+        <div class="d-flex flex-column gap-2">
+            {{ form.justificar|as_crispy_field }}
+        </div>
+
+    </div>
+    <!-- Mostrar mensajes de error si existen -->
+    {% if messages %}
+        <div>
+            {% for message in messages %}
+            <div class="alert alert-danger">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <input class="btn btn-primary w-100 mt-1 mb-1" type="submit" value="Guardar" />
+    <div class="d-flex" style="margin-top: 10px; margin-bottom: 10px">
+        <button type="reset" class="btn btn-outline-secondary flex-fill me-3">Reset</button>
+        <a href="{% url 'home' %}" class="btn btn-secondary flex-fill">Cancelar</a>
+    </div>
+
+    <!-- Tabla de logs de horas extras -->
+    <div class="table-container mt-5">
+        <table class="table table-borderless table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Inicio</th>
+                    <th>Hasta</th>
+                    <th>Justificación</th>
+                    <th style="text-align: right; vertical-align: middle;">%/H</th>
+                    <th style="text-align: right; vertical-align: middle;">Horas</th>
+                    <th style="text-align: center; vertical-align: middle;">Feedback</th>
+                    <!-- <th style="text-align: right; vertical-align: middle;">Acción</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in horas_extras %}
+                <tr class="{% if registro.aprobado is not None %}{% if registro.aprobado %}bg-success-light{% else %}bg-danger-light{% endif %}{% endif %}">
+                    <td style="vertical-align: middle;">{{ registro.fecha_inicio|date:'j M' }} {{ registro.hora_inicio|time:'H:i' }}</td>
+                    <td style="vertical-align: middle;">{{ registro.fecha_fin|date:'j M' }} {{ registro.hora_fin|time:'H:i' }}</td>
+                    <td style="vertical-align: middle;">
+                        {% if registro.justificar %}
+                            {{ registro.justificar|slice:":40" }}{% if registro.justificar|length > 40 %}...{% endif %}
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right; vertical-align: middle;">{{ registro.porcent }}</td>
+                    <td style="text-align: right; vertical-align: middle;">{{ registro.total_horas }}</td>
+                    <td style="text-align: left; vertical-align: middle;">
+                        {{ registro.feedback_admin|default:"-" }}
+                    </td>
+                    <td style="text-align: right; vertical-align: middle;">
+                        {% if registro.aprobado is None %}
+                            <a href="{% url 'eliminar-horas_extra' registro.id %}" class="btn btn-dark btn-sm eliminar-horas_extra">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                        {% else %}
+                            <button class="btn btn-dark btn-sm" disabled>
+                                <i class="bi bi-arrow-left-right"></i>
+                            </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No hay registros de horas extras.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    
+
+
+</form>
+{% endblock %}

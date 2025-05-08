@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="container">
+    <h1 class="text-center mt-4">Resumen de Pedidos de las Últimas 24 Horas</h1>
+    <section class="mt-4">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Plato Principal</th>
+                    <th>Ensalada</th>
+                    <th>Plato Extra</th>
+                    <th>Cantidad</th>
+                    <th>Comentarios</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in summary_list %}
+                <tr>
+                    <td>{{ item.main_dish|default:"N/A" }}</td>
+                    <td>{{ item.salad|default:"N/A" }}</td>
+                    <td>{{ item.other_dish|default:"N/A" }}</td>
+                    <td>{{ item.count }}</td>
+                    <td>
+                        {% if item.comments %}
+                            <ul>
+                                {% for comment in item.comments %}
+                                <li>{{ comment }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            Sin comentarios
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</main>
+{% endblock %}

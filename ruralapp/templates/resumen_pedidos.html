@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+
+</script>
+{% endblock %}
+
+{% block content %}
+<main class="container">
+    <h1 class="display-6 text-center">Resumen de Pedidos para hoy {{ current_day }}</h1>
+    
+    <style>
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #aad3fa;
+        }
+        .table-striped tbody tr:nth-of-type(even) {
+            background-color: #e6e6e6;
+        }
+    </style>
+    
+    <section class="mt-4">
+        {% if summary_list %}
+        <table class="table table-border table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Orden</th>
+                    <th>Comentario</th>
+                    <th style="text-align: right;">Cant.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in summary_list %}
+                <tr>
+                    <td>
+                        {% if item.main_dish != 'N/A' %}
+                            {{ item.main_dish }}
+                        {% endif %}
+                        {% if item.salad != 'N/A' %}
+                            {{ item.salad }}
+                        {% endif %}
+                        {% if item.other_dish != 'N/A' %}
+                            {{ item.other_dish }}
+                        {% endif %}
+                        {% if item.side_dish != 'N/A' %}
+                            {{ item.side_dish }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.comments %}
+                            {{ item.comments|join:", " }}
+                        {% else %}
+                            -------
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">{{ item.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-center">No hay pedidos en las últimas 24 horas.</p>
+        {% endif %}
+    </section>
+    <h5 style="text-align: right;">Total de pedidos: {{ total_orders }}</h5>
+    
+    <div class="row g-2">
+        <div class="col">
+            <a href="{% url 'ruralapp' %}" class="btn btn-secondary w-100 h-100 d-flex align-items-center justify-content-center">
+                Atrás
+            </a>
+        </div>
+        <div class="col">
+            <a href="?generate_whatsapp=true" class="btn btn-success w-100 h-100 d-flex align-items-center justify-content-center">
+                Generar vista previa para WhatsApp
+            </a>
+        </div>
+    </div>
+    
+    
+    
+    
+
+
+</main>
+{% endblock %}

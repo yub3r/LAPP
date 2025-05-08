@@ -1,0 +1,31 @@
+{% extends 'base.html' %} {% block content %}
+
+<h1 class="display-5 text-center">Todas las Tareas</h1>
+{% comment %} <ul style="max-width: 50vw;"> {% endcomment %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Usuario</th>
+                <th scope="col">Location</th>
+                <th scope="col">Lado</th>
+                <th scope="col">Area</th>
+                <th scope="col" style="text-align:center;">Tarea</th>
+                <th scope="col" style="text-align:right;">Creada</th>
+                <th scope="col" style="text-align:right;">Completada</th>
+            </tr>
+        </thead>
+        {% for task in tasks %}
+        <tbody>
+            <tr>
+                <td style="max-width: 200px;">{{task.user}} </a></td>
+                <td style="max-width: 200px;">{{task.modulo}} </a></td>
+                <td style="max-width: 200px;">{{task.zona}} </a></td>
+                <td style="max-width: 200px;">{{task.area}} </a></td>
+                <td style="max-width: 200px; text-align:center;">{{task.tarea}} </a></td>
+                <td style="max-width: 200px; text-align:right;">{{task.created|date:'j M H:i'}}</a></td>
+                <td style="max-width: 200px; text-align:right;">{{task.datecompleted|date:'j M H:i'}}</a></td>
+            </tr>
+        </tbody>
+        {% endfor %}
+    </table>
+    {% endblock %}

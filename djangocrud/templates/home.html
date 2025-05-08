@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block js%}
+
+{% if messages %}
+{% for m in messages %}
+<script>
+  Swal.fire({
+    // "position": 'top',
+    "title": "{{m}}",
+    "timer": 3000,
+    "showConfirmButton": false,
+    "text": "Empecemos a trabajar",
+    "backdrop": `rgba(36, 125, 250, 0.43)`,
+    // "imageUrl": 'https://gifdb.com/images/high/whip-angry-mr-burns-hans-moleman-simpsons-yoskjr7b6xpf12w5.gif',
+    // "imageUrl": '/media/whips_yelling.gif', 
+    "icon": 'success',
+    "imageWidth": 350,
+    "imageHeight": 200,
+  })
+</script>
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+  .card-body a {
+    margin: 0 4px;
+  }
+</style>
+
+<h3 class="text-center">{{mensaje}}</h3>
+
+<!-- ***************************************************************************************************************************************************** -->
+
+<main class="container" style="max-width:580px;">
+  <section class="card card-body">
+    {% csrf_token %}
+    <div class="d-flex justify-content-between">
+      <!-- <a class="btn btn-success w-50 icono" href="/tools/ejecutar_swcore_script/"><i class="bi bi-ethernet"></i><br>Script <strong>SWCore</strong></a> -->
+      <a class="btn btn-success w-50 icono" href="/tools/ejecutar_swd_script/"><i class="bi bi-bezier"></i><br>Script <strong>SWD</strong></a>
+      <a class="btn btn-outline-success w-50 icono" href="/tools/ejecutar_swa_script/"><i class="bi bi-bezier2"></i><br>Script <strong>SWA</strong></a>
+    </div>
+  <!-- <section class="card card-body">
+    {% csrf_token %}
+    <div class="d-flex justify-content-between">
+      <a class="btn btn-success w-50" href="/tasks/" ;><i class="bi bi-alarm-fill"></i><br>Tareas en Ejecución</a>
+      <a class="btn btn-secondary w-50" href="/tasks_completed/"><i class="bi bi-check-square-fill"></i><br>Tareas
+        completadas</a>
+    </div> -->
+  <!-- </section> -->
+
+  <!-- ***************************************************************************************************************************************************** -->
+
+  <!-- <section class="card card-body mt-2"> -->
+    <a class="btn btn-dark icono" href="{% url 'formularios' %}" style=margin-top:7px;><i class="bi bi-ui-checks"></i><br>Formularios</a>
+  <!-- </section> -->
+
+  <!-- ***************************************************************************************************************************************************** -->
+
+  <!-- <section class="card card-body mt-2"> -->
+    <div class="d-flex justify-content-between">
+      <a class="btn btn-outline-dark w-50 icono" href="/registrar-horas-extra/" style=margin-top:7px;><i class="bi bi-clock-fill"></i><br>Horas Extras</a>
+      <a class="btn btn-warning w-50 icono" href="/guardias/" style=margin-top:7px;><i class="bi bi-calendar-check-fill"></i><br>Guardias</a>
+    </div>
+  <!-- </section> -->
+
+  <!-- ***************************************************************************************************************************************************** -->
+
+  <!-- <section class="card card-body mt-2"> -->
+    <div class="d-flex justify-content-between">
+      <a class="btn btn-info w-50 icono" href="/historial/" style=margin-top:7px;><i class="bi bi-nintendo-switch"></i><br>Sorteos</a>
+      <a class="btn btn-primary w-50 icono" href="/ruralapp/ruralapp/" style=margin-top:7px;><i class="bi bi-sunrise-fill"></i><br>Ruralapp</a>
+    </div>
+  </section>
+
+  <!-- ***************************************************************************************************************************************************** -->
+
+  <section class="card card-body mt-2" style="font-size: 13px;">
+    <!-- <h1 class="display-6 text-center">Enlaces</h1> -->
+    <a class="btn btn-outline-primary" href="https://bitfarms.com/" ; target="_blank"
+      rel="noopener noreferrer"><strong>Bitfarms</strong>.com</a>
+    <a class="btn btn-outline-primary" href="https://tech.binfra.ca/en/home" style=margin-top:5px; target="_blank"
+      rel="noopener noreferrer"><strong>BF Tech Wiki</strong> Bitfarms</a>
+    <a class="btn btn-outline-primary" href="https://bitfarmsio868.sharepoint.com/sites/BitfarmsArgentina"
+      style=margin-top:5px; target="_blank" rel="noopener noreferrer"><strong>Sharepoint</strong> Bitfarms ARG</a>
+    <a class="btn btn-outline-primary" href="https://bitfarmsworkspace.slack.com" style=margin-top:5px; target="_blank"
+      rel="noopener noreferrer"><strong>Slack</strong> Workspace</a>
+    <a class="btn btn-outline-primary" href="https://app.hibob.com/" style=margin-top:5px; target="_blank"
+      rel="noopener noreferrer"><strong>HiBob</strong> HR platform</a>
+    <a class="btn btn-outline-primary" href="https://mgmt.bitfarms.com/login" style=margin-top:5px; target="_blank"
+      rel="noopener noreferrer"><strong>MGMT</strong> Bitfamrs</a>
+    <a class="btn btn-outline-primary" href="https://expense.certify.com/Login.aspx" style=margin-top:5px; target="_blank"
+      rel="noopener noreferrer"><strong>Certify |</strong> Expense</a>
+    <a class="btn btn-outline-primary"
+      href="https://app.powerbi.com/view?r=eyJrIjoiMjAwZmEwZmItNjdkNi00YjgzLTg4NTktMjAwMTcxMGU5YWVkIiwidCI6ImFlNWI1YThmLTVmYzAtNDU3Yi05OGJhLTk3ZDYyZWZhMmFhMiIsImMiOjR9"
+      style=margin-top:5px; target="_blank" rel="noopener noreferrer"><strong>Dashboard PowerBi |</strong> Central
+      Termica</a>
+  </section>
+  <!-- ***************************************************************************************************************************************************** -->
+
+  <section class="card card-body mt-2" style="font-size: 13px;">
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <td><strong>Ahora en Argentina</strong></td>
+          <td style="text-align: right;">{{ dolar_data.timestamp|date:"H:i:s" }}</td>
+        </tr>
+        <tr>
+          <td>Cotización Banco Nación</td>
+          <td style="text-align: right;">{{ dolar_data.oficial|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Dólar Informal (Blue)</td>
+          <td style="text-align: right;">{{ dolar_data.blue|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Dólar Tarjeta</td>
+          <td style="text-align: right;">{{ dolar_data.tarjeta|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Dólar Bolsa (MEP)</td>
+          <td style="text-align: right;">{{ dolar_data.mep|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Contado Liquidación (CCL)</td>
+          <td style="text-align: right;">{{ dolar_data.ccl|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td>Dólar Cripto (CCB)</td>
+          <td style="text-align: right;">{{ dolar_data.cripto|floatformat:2 }}</td>
+        </tr>
+        <!-- <tr>
+          <td><strong>Precio actual de BITF (TSE)</strong></td>
+          <td style="text-align: right;">{{ bitf_price }}</td>
+      </tr> -->
+      </tbody>
+    </table>
+  
+    <!-- Widget de Binance (puedes optar por dejarlo así o servirlo localmente) -->
+    <script src="https://public.bnbstatic.com/unpkg/growth-widget/cryptoCurrencyWidget@0.0.9.min.js"></script>
+    <div class="binance-widget-marquee" data-cmc-ids="1,1027" data-theme="light" data-transparent="true" data-locale="en" data-powered-by="Powered by"></div>
+  </section>
+  
+  {% endblock %}

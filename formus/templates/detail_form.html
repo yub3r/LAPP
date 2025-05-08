@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block js%}
+<style>
+    .bg-pink {
+        background-color: #ffcccc;
+    }
+
+    .justificar {
+        text-align: justify;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<main class="container-fluid">
+    <header class="mb-3">
+        <h1 class="display-6 text-center">Control de Plataforma Elevadora/Tijera.</h1>
+    </header>
+    <section class="card-body">
+        <table class="table borderless">
+            {% for response in responses %}
+            <tr class="{% if response.response == 'NO' and response.question.is_priority %}bg-pink{% endif %}">
+                <td class="text-left" style="vertical-align: middle;">
+                    <label class="form-label">{{ response.question.text }}</label>
+                </td>
+                <td class="text-right" style="width: 1px; white-space: nowrap;">
+                    {% if response.response == 'SI' %}
+                    <span class="badge bg-success">Si</span>
+                    {% elif response.response == 'NO' %}
+                    <span class="badge bg-danger">No</span>
+                    {% else %}
+                    <span class="badge bg-secondary">N/A</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            <table class="table borderless">
+                <!-- Agregar los datos del vehículo aquí -->
+                <tr>
+                    <td class="text-left" style="vertical-align: middle;">
+                        <label class="form-label">ID Tijera:</label>
+                        <span>{{ vehiculo.patente_id }}</span>
+                    </td>
+                    <td class="text-left" style="vertical-align: middle;">
+                        <label class="form-label">Tiempo añadido: </label>
+                        <span>{{ completed_form.tiempo_adicionado|floatformat:0 }} minutos</span>
+                    </td>
+                    <td class="text-right" style="width: 1px; white-space: nowrap;">
+                        <label class="form-label">Actualizado:</label>
+                        <!-- Asigna el tiempo a un elemento oculto -->
+                        <span id="tiempo_uso_actual" style="display:none;">{{ completed_form.tiempo_uso_actual }}</span>
+                        <!-- Muestra el tiempo convertido aquí -->
+                        <span id="tiempo_uso_actual_convertido"></span>
+                    </td>
+                    
+                    <script>
+                        // Función para convertir minutos a formato HH:MM
+                        function convertirMinutosAHoras(minutos) {
+                            var horas = Math.floor(minutos / 60);
+                            var minutos = minutos % 60;
+                            return (horas < 10 ? '0' : '') + horas + ':' + (minutos < 10 ? '0' : '') + minutos;
+                        }
+                    
+                        // Obtén el tiempo en minutos
+                        var tiempo_uso_actual = document.getElementById('tiempo_uso_actual').textContent;
+                    
+                        // Convierte el tiempo a formato HH:MM
+                        var tiempo_uso_actual_convertido = convertirMinutosAHoras(tiempo_uso_actual);
+                    
+                        // Muestra el tiempo convertido
+                        document.getElementById('tiempo_uso_actual_convertido').textContent = tiempo_uso_actual_convertido;
+                    </script>
+            </table>
+        </table>
+            <tr>
+                <div class="d-flex justify-content">
+                    <p class="justificar">{{ completed_form.observations }}</p>
+                </div>
+            </tr>
+        </table>
+        <table class="table">
+            
+            <tr>
+                <td colspan="2" class="text-center" style="display: flex; justify-content: center;">
+                    {% if completed_form.images.all %}
+                    <div id="carouselExampleIndicators" class="carousel slide d-inline-block" data-bs-ride="carousel"
+                        style="max-width: 500px;">
+                        <div class="carousel-inner">
+                            {% for image in completed_form.images.all %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ image.image.url }}" class="d-block w-100" alt="Imagen"
+                                    style="aspect-ratio: 4/3; object-fit: cover; max-height: 500px;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators"
+                            data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Anterior</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators"
+                            data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Siguiente</span>
+                        </button>
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </section>
+
+    <div class="d-flex">
+        <a href="{% url 'completed_forms' %}" style="margin-top: 8px" class="btn btn-secondary flex-fill">Volver</a>
+    </div>
+</main>
+{% endblock %}

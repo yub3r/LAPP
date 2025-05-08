@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+
+<h1 class="display-6 text-center">Ver Sorteo</h1>
+<h1>{{ sorteo.titulo }}</h1>
+<p>Cantidad de ganadores: {{ sorteo.cantidad_ganadores }}</p>
+<h2>Participantes</h2>
+<form method="post">
+  {% csrf_token %}
+  <label for="seleccionados">Agregar participantes:</label>
+  <select name="seleccionados" multiple>
+    {% for participante in participantes %}
+      <option value="{{ participante.pk }}">{{ participante.username }}</option>
+    {% endfor %}
+  </select><br><br>
+  <input type="submit" value="Agregar">
+</form>
+<ul>
+  {% for participante in sorteo.participantes.all %}
+    <li>{{ participante.username }}</li>
+  {% empty %}
+    <li>No hay participantes</li>
+  {% endfor %}
+</ul>
+<a href="{% url 'realizar_sorteo' pk=sorteo.pk %}">Realizar sorteo</a>
+{% endblock %}
+

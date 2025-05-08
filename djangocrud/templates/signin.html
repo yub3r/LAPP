@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<main class="container">
+  
+  <div class="row">
+    <div class="col-md-4 offset-md-4 mt-3">
+      <form action="/signin/" method="POST" class="card card-body">
+        <div class="text-center"><img class="mb-4" src="/media/Lapp_Logo_sm.png" alt="lapp-logo"></div>
+        <h1 class="display-5 text-center">Signin</h1>
+        <p><br></p>
+        {% csrf_token %}
+        {{form | crispy }}
+        <p><br></p>
+        <h5 class="text-center">{{error}}</h5>
+        <button class="btn btn-primary">Signin</button>
+      </form>
+    </div>
+  </div>
+
+</main>
+{% endblock %}

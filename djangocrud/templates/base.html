@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+
+<style>
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1;
+  }
+
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999;
+  }
+
+  footer {
+    position: fixed;
+    bottom: 0;
+    background-color: white;
+    width: 100%;
+    display: flex;
+    justify-content: space-between; /* Distribuye los elementos horizontalmente */
+    align-items: center; /* Alinea verticalmente los elementos */
+    flex-wrap: nowrap; /* Asegura que todo esté en una sola línea */
+    border-top: 1px solid black;
+    padding-inline: 1rem;
+    height: 20px; /* Ajusta la altura si es necesario */
+  }
+
+  footer p, .footer-title {
+    margin: 0; /* Elimina márgenes */
+    font-size: 12px; /* Ajusta el tamaño del texto */
+  }
+
+  .footer-title {
+    font-weight: bold; /* Hace que el texto sea negrita */
+    text-align: center;
+    flex: 1; /* Usa el espacio disponible para centrar el texto */
+  }
+
+
+  .img-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+  }
+
+  .img-container img {
+      max-height: 400px;
+      cursor: pointer;
+      transition: max-height 0.3s ease;
+  }
+
+    .img-container img
+  .img-minimized {
+        max-height: 30px;
+        cursor: pointer;
+        transition: max-height 0.3s ease;
+    }
+
+    .img-expanded {
+        max-height: 400px;
+        transition: max-height 0.3s ease;
+    }
+
+    .table-container {
+        max-height: 273px;
+        /* Altura máxima de la tabla para mostrar  registros */
+        overflow-y: auto;
+        /* Mostrar barra de scroll vertical en caso de que haya más de 5 registros */
+    }
+
+
+    .table-container-menu {
+        font-size: 13px; /* Tamaño de fuente para la tabla */
+        max-height: 450px; /* Altura máxima de la tabla */
+        overflow-y: auto;
+        margin: 0; /* Elimina márgenes externos */
+        padding: 0; /* Elimina espacios internos */
+        width: 100%; /* Asegura que la tabla ocupe el ancho completo */
+    }
+
+    .table-container-menu .table {
+        margin: 0; /* Elimina márgenes internos de la tabla */
+        width: 100%; /* Asegura que la tabla ocupe el ancho disponible */
+    }
+
+
+    .table-container-sorteo {
+          overflow-y: auto;
+          font-size: 13px; /* Tamaño de fuente para la tabla */
+        /* Mostrar barra de scroll vertical en caso de que haya más de 5 registros */
+    }
+
+    .table-container table {
+        font-size: 13px; /* Tamaño de fuente para la tabla */
+    }
+    
+    .justificar {
+        text-align: justify;
+    }
+
+    .icono {
+      line-height: 1 !important; /* Reduce la separación vertical */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px; /* Controla el espacio entre el ícono y el texto */
+      padding: 6px; /* Ajusta el padding para que los botones no se vean desbalanceados */
+    }
+    
+    .icono i {
+        font-size: 18px; /* Ajusta el tamaño de fuente si es necesario */
+        margin-bottom: 1px; /* Espaciado específico entre ícono y texto */
+    }
+
+/* Ocultar la barra de desplazamiento */
+    body {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+    }
+
+    body::-webkit-scrollbar {
+      width: 1px;
+    }
+    .badge {
+    min-width: 40px;  /* Ajusta este valor según tus necesidades */
+    display: inline-block;
+    text-align: center;
+    }
+
+
+    .bg-success-light {
+    background-color: #b5e4c0 !important; /* Verde claro para aprobados */
+    }
+    .bg-danger-light {
+        background-color: #f7b2b8 !important; /* Rojo claro para rechazados */
+    }
+
+    .clickable-row {
+      cursor: pointer;
+    }
+
+    .clickable-row:hover {
+      background-color: #c4dae4; /* Color de fondo al hacer hover */
+    }
+
+    
+
+</style>
+
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LAPP</title>
+  <link rel="icon" type="image/png" href="/media/favicon.ico">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.2/font/bootstrap-icons.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"
+    integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtW8ANNCe9d5Y3eG5eD"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.14.0/css/all.css"
+    integrity="sha384-HzLeBuhoNPvSl5KYnjx0BT+WB0QEEqLprO+NBkkk5gbc67FTaL7XIGa2w1L0Xbgc" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
+    integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
+  <!-- DataTables JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+
+  {% block css %}{% endblock %}
+
+</head>
+{% include '_navbar.html' %}
+
+<body>
+  <div style="display: flex; flex-direction: column; min-height:94vh;">
+    <div style="flex-grow: 1; padding-inline: 0rem; margin-top: 40px;"> <!-- Agrega margin-top: 56px; -->
+      <div class="container">
+
+        {% block content %}
+
+        {% endblock %}
+        <br><br>
+      </div>
+
+    </div>
+    <div>
+      <footer>
+        <p>YM © 2025</p>
+        <div class="footer-title">ARG</div>
+        <p><a href="{% url 'About' %}">Sobre mi</a></p>
+      </footer>
+    </div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+
+
+    {% block js %}
+    {% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Manejar la restricción de horario para el botón "Hacer Pedido"
+        var misOrdenesButton = document.querySelector('a[href="{% url "order" %}"]');
+        misOrdenesButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            var now = new Date();
+            var currentHour = now.getHours();
+            var currentMinutes = now.getMinutes();
+
+            // Restricción: entre las 8:30 y las 13:9
+            if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Acceso Restringido',
+                    text: 'No puede hacer pedidos entre las 8:30 y las 13:10.',
+                    confirmButtonText: 'Entendido'
+                });
+            } else {
+                window.location.href = this.href;
+            }
+        });
+
+        // Contador incremental por usuario (trabajando de atrás hacia adelante)
+        const userCells = document.querySelectorAll('[data-username]');
+        const userCount = {};
+
+        // Recorremos las celdas en orden inverso (últimos pedidos primero)
+        for (let i = userCells.length - 1; i >= 0; i--) {
+            const cell = userCells[i];
+            const username = cell.dataset.username;
+            
+            // Incrementamos el contador para el usuario correspondiente
+            userCount[username] = (userCount[username] || 0) + 1;
+
+            // Solo mostrar el contador a partir del segundo pedido
+            if (userCount[username] > 1) {
+                const counter = document.createElement('small');
+                counter.textContent = ` (x${userCount[username]})`;
+                counter.style.color = '#6c757d'; // Gris
+
+                // Buscar el span con el apellido
+                const lastNameSpan = cell.querySelector('.last-name');
+                if (lastNameSpan) {
+                    lastNameSpan.appendChild(counter);
+                }
+            }
+
+        }
+    });
+</script>
+{% endblock %}
+
+
+{% block content %}
+<main class="container" style="max-width:600px;">
+    <section class="card card-body">
+        <header>
+            <h1 class="display-6 text-center">Ruralapp</h1>
+        </header>
+        <a href="{% url 'order' %}" class="btn btn-primary w-100 me-3" style="margin-top:7px;">Hacer Pedido</a>
+        <a href="{% url 'mis_ordenes' %}" class="btn btn-secondary w-100" style="margin-top:7px;">Mis Órdenes</a>
+        {% if 'auth.admin_group' in perms %}
+        <a href="{% url 'resumen_pedidos' %}" class="btn btn-success w-100" style="margin-top:7px;">Resumen de Pedidos</a>
+        {% endif %}
+    </section>
+
+    <!-- Tabla de órdenes en las últimas 24 horas -->
+    <section class="card card-body mt-2">
+        <header>
+            <h5 style="text-align: center;">Total de pedidos: {{ total_orders }}</h5>
+        </header>
+        <div class="table-container-menu">
+            <table class="table table-striped">
+                <thead>
+                    <!-- <tr>
+                        <th style="text-align: center;">Fecha/Hora</th>
+                        <th style="text-align: center;">Usuario</th>
+                        <th style="text-align: center;">Plato/Comentarios</th>
+                    </tr> -->
+                </thead>
+                {% if orders %}
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td style="text-align: center; vertical-align: middle;">
+                            {{ order.order_date|date:"Dd" }}<br>{{ order.order_date|date:"H:i" }}
+                        </td>
+                        <td style="text-align: left; vertical-align: middle;" data-username="{{ order.user.username }}">
+                            <span class="first-name">{{ order.user.first_name }}</span><br>
+                            <span class="last-name">{{ order.user.last_name }}</span>
+                        </td>
+                                                                 
+                        <td style="text-align: left;">
+                            {% if order.repeat_for_week %}
+                                (Auto)
+                            {% else %}
+                                {% if order.last_repeat_date and order.order_date > order.last_repeat_date %}
+                                    (Auto)
+                                {% endif %}
+                            {% endif %}
+                            {{ order.main_dish|default:"" }} 
+                            {% if order.salad %}Ensalada {{ order.salad.id }}{% endif %} 
+                            {{ order.other_dish.name|default:"" }} 
+                            {{ order.side_dish|default:"" }}
+                            <br>
+                            {% if order.comments %}
+                                <small>({{ order.comments|slice:":30" }}{% if order.comments|length > 30 %}...{% endif %})</small>
+                            {% endif %}
+                        </td>
+                        
+                        
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">No se han realizado órdenes en las últimas 24 horas.</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+    </section>
+</main>
+{% endblock %}

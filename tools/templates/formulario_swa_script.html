@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        const seleccionarTodosCheckboxDiv = $("#seleccionar-todos-container");
+        const switchesAccesoDiv = $(".switches-de-acceso");
+        const ejecutarBtn = document.getElementById('ejecutar-btn'); // Obtener el botón aquí
+
+        // Ocultar el contenedor de "Seleccionar Todos" al inicio
+        seleccionarTodosCheckboxDiv.hide();
+
+        $("#nro_swd").change(function () {
+            var switch_id = $(this).val();
+            var rackSelect = $("#rack");
+            rackSelect.empty();
+            rackSelect.append($("<option value=''>---------</option>")); // Opción vacía
+            switchesAccesoDiv.empty();
+            seleccionarTodosCheckboxDiv.hide(); // Ocultar al cambiar de SWD
+
+            $.ajax({
+                url: "{% url 'cargar_racks' %}",
+                data: { switch_id: switch_id },
+                dataType: 'json',
+                success: function (data) {
+                    $.each(data.racks, function (key, value) {
+                        rackSelect.append($("<option></option>")
+                            .attr("value", value.id)
+                            .text(value.nombre));
+                    });
+                }
+            });
+        });
+
+        $("#rack").change(function () {
+            var rack_id = $(this).val();
+            switchesAccesoDiv.empty();
+            seleccionarTodosCheckboxDiv.hide(); // Ocultar al cambiar de Rack
+
+            $.ajax({
+                url: "{% url 'cargar_switches_acceso' %}",
+                data: { rack_id: rack_id },
+                dataType: 'json',
+                success: function (data) {
+                    $.each(data.switches_acceso, function (key, value) {
+                        var checkbox = $("<input type='checkbox' class='switch-checkbox'>") // Agregamos una clase para seleccionar individualmente
+                            .attr("name", "switches_de_acceso")
+                            .attr("value", value.nro) // Asignar el valor de portchannel al checkbox
+                            .attr("id", "id_switches_de_acceso_" + key);
+                        switchesAccesoDiv.append(checkbox);
+                        switchesAccesoDiv.append($("<label></label>")
+                            .attr("for", "id_switches_de_acceso_" + key)
+                            .text(value.nombre));
+                    });
+                    if (data.switches_acceso.length > 0) {
+                        seleccionarTodosCheckboxDiv.show(); // Mostrar solo si hay SWA
+                    }
+                }
+            });
+        });
+
+        // Maneja la selección/deselección de checkboxes individuales y actualiza el hidden input
+        switchesAccesoDiv.on("change", ".switch-checkbox", function () {
+            var selectedPortchannels = [];
+            switchesAccesoDiv.find("input[type='checkbox']:checked").each(function () {
+                selectedPortchannels.push($(this).val());
+            });
+            $("#id_portchannels_swa").val(selectedPortchannels.join(","));
+
+            // Actualizar el estado del checkbox "Seleccionar Todos"
+            var todosCheckbox = $("#seleccionar-todos");
+            var individualesCheckboxes = switchesAccesoDiv.find("input[type='checkbox']");
+            todosCheckbox.prop("checked", individualesCheckboxes.length > 0 && individualesCheckboxes.length === switchesAccesoDiv.find("input[type='checkbox']:checked").length);
+        });
+
+        // Maneja la lógica del checkbox "Seleccionar Todos"
+        $("#seleccionar-todos").change(function () {
+            var isChecked = $(this).prop("checked");
+            switchesAccesoDiv.find("input[type='checkbox']").prop("checked", isChecked);
+
+            var selectedPortchannels = [];
+            if (isChecked) {
+                switchesAccesoDiv.find("input[type='checkbox']").each(function () {
+                    selectedPortchannels.push($(this).val());
+                });
+            }
+            $("#id_portchannels_swa").val(selectedPortchannels.join(","));
+        });
+
+        ejecutarBtn.addEventListener('click', function (event) {
+            // Obtener el campo de selección por su identificador
+            const nroSwdSelect = document.getElementById('nro_swd');
+            const rackSelect = document.getElementById('rack');
+            const switchesAccesoCheckboxes = switchesAccesoDiv.find("input[type='checkbox']");
+            const radioSelectInputs = document.querySelectorAll('[name="accion"]');
+
+            // Validaciones
+            if (nroSwdSelect.value === '') {
+                event.preventDefault();
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Debe elegir un SWD antes de continuar.' });
+                return;
+            }
+            if (rackSelect.value === '') {
+                event.preventDefault();
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Debe elegir un rack antes de continuar.' });
+                return;
+            }
+            let alMenosUnoSeleccionado = false;
+            switchesAccesoCheckboxes.each(function () { if (this.checked) alMenosUnoSeleccionado = true; });
+            if (!alMenosUnoSeleccionado && switchesAccesoCheckboxes.length > 0) {
+                event.preventDefault();
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Debe seleccionar al menos un switch de acceso antes de continuar.' });
+                return;
+            }
+            let seleccionadoAccion = false;
+            radioSelectInputs.forEach(input => { if (input.checked) seleccionadoAccion = true; });
+            if (!seleccionadoAccion) {
+                event.preventDefault();
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Debe seleccionar una acción (Encender o Apagar) antes de continuar.' });
+                return;
+            }
+
+            // Deshabilitar el botón y mostrar el Swal.fire de carga
+            ejecutarBtn.disabled = true;
+            ejecutarBtn.value = 'Ejecutando...';
+            Swal.fire({
+                title: 'Ejecutando Script',
+                html: 'Espere mientras se ejecuta el script...',
+                timerProgressBar: true,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                willClose: () => {
+                    // No habilitamos el botón aquí, la página de resultados se encargará
+                }
+            });
+
+            // Enviar el formulario
+            document.getElementById('myform').submit();
+        });
+    });
+
+    // Espera a que se cargue completamente el contenido de la página
+    document.addEventListener("DOMContentLoaded", function() {
+        // Obtiene la imagen
+        var switchImage = document.getElementById("switch-image");
+
+        // Agrega un evento de clic a la imagen
+        switchImage.addEventListener("click", function() {
+            // Verificar si la imagen está expandida
+            if (switchImage.classList.contains("img-expanded")) {
+                // Cambiar la imagen a "swd_modulos_min.jpg"
+                switchImage.src = "/media/swd_modulos_min.jpg";
+                // Establecer la altura máxima a 30px
+                switchImage.style.maxHeight = "30px";
+            } else {
+                // Cambiar la imagen a "swd_modulos_trs.jpg"
+                switchImage.src = "/media/swd_modulos_trs.jpg";
+                // Establecer la altura máxima a 400px
+                switchImage.style.maxHeight = "400px";
+            }
+            // Alternar la clase "img-expanded"
+            switchImage.classList.toggle("img-expanded");
+        });
+    });
+</script>
+
+{% endblock %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<h1 class="display-6 text-center">Script: ON/OFF | <strong>SWA</strong></h1>
+<form method="POST" style="display: flex; flex-direction: column; max-width:700px; margin-inline: auto" id="myform">
+    <div class="d-flex justify-content">
+        <p class="justificar"><br>
+            Este Script funciona sobre los SWA (Switches de Acceso), correspondiente a cuatro Racks por cada Switch de Distribución.
+            Los SWA se mostrarán en orden decreciente para relacionar facilmente su posición física con la realidad.
+        </p>
+    </div>
+    <div class="row justify-content-center">
+        <img id="switch-image" class="img-minimized" src="/media/swd_modulos_min.jpg" alt="Switches de Distribución">
+    </div>
+    <div class="container mx-auto">
+        <div class="row justify-content-center mt-3">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <div class="row justify-content-center mb-2" id="seleccionar-todos-container">
+                <div class="col-auto">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="seleccionar-todos">
+                        <label class="form-check-label" for="seleccionar-todos">Seleccionar Todos</label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group switches-de-acceso">
+                {{ form.switches_de_acceso }}
+            </div>
+            <style type="text/css">
+                .form-group.switches-de-acceso {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 5px;
+                    justify-content: center;
+                    align-items: center;
+                    justify-items: center;
+                    background-color: #c3c2c2;
+                    padding: 10px;
+                    border-radius: 10px;
+                    max-width: 250px; /* Ajusta el ancho máximo según necesites */
+                    margin: 0 auto;
+                    margin-bottom: 10px;
+                }
+
+                .form-group.switches-de-acceso input[type="checkbox"] {
+                    margin-right: 5px;
+                }
+
+                #div_id_accion>* {
+                    display: flex;
+                    justify-content: center;
+                    gap: 50px;
+                    background-color: #c3c2c2;
+                    padding: 10px;
+                    border-radius: 10px;
+                    max-width: 400px;
+                    margin: 0 auto;
+                    margin-bottom: 10px; /* Agregamos un margen inferior para separar del "Seleccionar Todos" */
+                }
+
+                #seleccionar-todos-container {
+                    display: flex;
+                    justify-content: center;
+                    width: 100%;
+                }
+
+                #seleccionar-todos-container .col-auto {
+                    padding: 5px;
+                }
+            </style>
+        </div>
+        <div class="container mx-auto">
+            <div class="row justify-content-center">
+                <input id="ejecutar-btn" class="btn btn-success" type="submit" value="Ejecutar Script">
+            </div>
+        </div>
+    </div>
+</form>
+
+
+<div class="row justify-content-center mt-3">
+        <h4>Historial de ejecuciones:</h4>
+        <div class="table-container">
+            <table class="table table-borderless table-sm table table-striped">
+                <tbody>
+                    {% for registro in historial %}
+                    <tr>
+                        <td style="vertical-align: middle;">{{ registro.usuario.username }}</td>
+                        <td style="text-align: center; vertical-align: middle;">{{registro.fecha_hora_ejecucion|date:'j M H:i' }}</td>
+                        <td style="text-align: center; vertical-align: middle;">{{ registro.nro_rack }}</td>
+                        <td style="text-align: center; vertical-align: middle;">{{ registro.portchannel }}</td>
+                        <td style="text-align: center; vertical-align: middle;">{{ registro.accion }}</td>
+                        <td style="text-align: right; vertical-align: middle;">{{ registro.resultado }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

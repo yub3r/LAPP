@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block js %}
+{% if ganadores %}
+<script>
+    Swal.fire({
+        title: 'SOOORRRTEANDO...',
+        html: 'Presiona <strong>Listo</strong> para ver los ganadores.',
+        showCancelButton: false,
+        confirmButtonText: 'Listo',
+        confirmButtonAriaLabel: 'Listo',
+        imageUrl: "/media/lottery2.gif",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: true,
+        didOpen: () => {
+            // No hacer nada adicional aquí
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar los ganadores directamente en la misma ventana
+            Swal.fire({
+                title: '¡Felicidades!',
+                html: 'Los ganadores son:<br><br>{% for ganador in ganadores %}<strong>{{ ganador.username }}</strong><br>{% endfor %}',
+                confirmButtonText: '<i class="bi bi-hand-thumbs-up-fill"></i> Genial!',
+                backdrop: 'rgba(0,0,123,0.4)',
+                imageUrl: '/media/hand_claps.gif',
+                imageWidth: 350,
+                imageHeight: 200,
+                imageAlt: 'Custom image',
+            }).then(function () {
+                window.location.href = "{% url 'historial_sorteos' %}";
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+<style>
+    body {
+        color: white;
+    }
+</style>
+{% load crispy_forms_tags %}
+
+<h1>Ganadores</h1>
+<ul>
+    {% for ganador in ganadores %}
+    <li>{{ ganador.username }}</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let mainDishSelect = document.querySelector('select[name="main_dish"]');
+    let saladSelect = document.querySelector('select[name="salad"]');
+    let otherDishSelect = document.querySelector('select[name="other_dish"]');
+    let sideDishSelect = document.querySelector('select[name="side_dish"]');
+    let commentsTextarea = document.querySelector('textarea[name="comments"]');
+    let resetButton = document.querySelector('button[type="reset"]');
+    let repeatForWeekCheckbox = document.getElementById("repeat_for_week");
+    let submitButton = document.querySelector('button[type="submit"]'); // Obtener el botón de envío
+
+    function toggleDisabled(selectElement, disable) {
+        selectElement.disabled = disable;
+        if (disable) {
+            selectElement.value = '';
+        }
+    }
+
+    mainDishSelect.addEventListener('change', function() {
+        let mainDishSelected = mainDishSelect.value !== '';
+        toggleDisabled(saladSelect, mainDishSelected);
+        toggleDisabled(otherDishSelect, mainDishSelected);
+
+        repeatForWeekCheckbox.disabled = mainDishSelected;
+        if (mainDishSelected) {
+            repeatForWeekCheckbox.checked = false;
+        }
+    });
+
+    saladSelect.addEventListener('change', function() {
+        let saladSelected = saladSelect.value !== '';
+        toggleDisabled(mainDishSelect, saladSelected);
+        toggleDisabled(otherDishSelect, saladSelected);
+    });
+
+    otherDishSelect.addEventListener('change', function() {
+        let selectedOption = otherDishSelect.options[otherDishSelect.selectedIndex];
+        let plusSide = selectedOption.getAttribute('data-plus-side') === "true";
+
+        toggleDisabled(sideDishSelect, !plusSide);
+
+        let otherDishSelected = otherDishSelect.value !== '';
+        toggleDisabled(mainDishSelect, otherDishSelected);
+        toggleDisabled(saladSelect, otherDishSelected);
+    });
+
+    document.getElementById("orderForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        // Deshabilitar el botón de envío inmediatamente
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...'; // O un texto indicativo
+
+        let selectedOtherDish = otherDishSelect.options[otherDishSelect.selectedIndex];
+        let requiresSideDish = selectedOtherDish.getAttribute('data-plus-side') === "true";
+        if (requiresSideDish && !sideDishSelect.value) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe seleccionar una guarnición para el plato seleccionado.'
+            }).then(() => {
+                submitButton.disabled = false; // Re-habilitar en caso de error
+                submitButton.innerHTML = 'Enviar Pedido';
+            });
+            return;
+        }
+
+        if (!mainDishSelect.value && !saladSelect.value && !otherDishSelect.value) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe seleccionar al menos un menú principal, una ensalada o un menú opcional.'
+            }).then(() => {
+                submitButton.disabled = false; // Re-habilitar en caso de error
+                submitButton.innerHTML = 'Enviar Pedido';
+            });
+            return;
+        }
+
+        let comments = commentsTextarea.value.trim();
+        if (comments) {
+            commentsTextarea.value = "1 " + comments;
+        }
+
+        let form = event.target;
+        let formData = new FormData(form);
+
+        fetch("{% url 'order' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            submitButton.disabled = false; // Re-habilitar después de la respuesta
+            submitButton.innerHTML = 'Enviar Pedido';
+            if (data.success) {
+                let audio = new Audio('/media/bell-ding.mp3'); // Ruta del sonido
+                audio.play(); // Reproducir sonido
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Gracias!',
+                    html: 'Hemos recibido tu pedido',
+                    confirmButtonText: '<i class="bi bi-hand-thumbs-up-fill"></i> Genial!',
+                    backdrop: 'rgba(0,0,123,0.4)',
+                    imageUrl: '/media/orderup.gif',
+                    imageWidth: 350,
+                    imageHeight: 200,
+                    imageAlt: 'Custom image',
+                }).then(function () {
+                    window.location.href = "{% url 'ruralapp' %}";
+                });
+            } else if (data.error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error
+                });
+            }
+        })
+        .catch(error => {
+            submitButton.disabled = false; // Re-habilitar en caso de error
+            submitButton.innerHTML = 'Enviar Pedido';
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Ocurrió un problema al procesar tu pedido. Inténtalo de nuevo más tarde.'
+            });
+        });
+    });
+
+    resetButton.addEventListener('click', function() {
+        mainDishSelect.disabled = false;
+        saladSelect.disabled = false;
+        otherDishSelect.disabled = false;
+        sideDishSelect.disabled = true;
+
+        repeatForWeekCheckbox.disabled = false;
+        repeatForWeekCheckbox.checked = false;
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<main class="container" style="max-width:600px;">
+    <section class="card card-body">
+        <header>
+            <h1 class="display-6 text-center">Pedido</h1>
+        </header>
+        <form id="orderForm" method="post" enctype="multipart/form-data" class="w-100">
+            {% csrf_token %}
+            <div class="row justify-content-center mt-3">
+                {% if error %}
+                <div class="alert alert-danger">
+                    {{ error }}
+                </div>
+                {% endif %}
+                <div class="form-group mb-2">
+                    <label for="main_dish">Menú del día {{ menu_day_name }}:</label>
+                    <select name="main_dish" class="form-control">
+                        <option value="">Seleccionar plato principal</option>
+                        {% for dish in main_dishes %}
+                        <option value="{{ dish }}">{{ dish }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mb-2">
+                    <label for="salad">Ensalada</label>
+                    <select name="salad" class="form-control">
+                        <option value="">Seleccionar ensalada</option>
+                        {% for salad in salads %}
+                        <option value="{{ salad.id }}">{{ salad.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mb-2">
+                    <label for="other_dish">Opcional</label>
+                    <select name="other_dish" class="form-control">
+                        <option value="">Seleccionar otro plato</option>
+                        {% for other_dish in other_dishes %}
+                        <option value="{{ other_dish.id }}" data-plus-side="{{ other_dish.plus_side|yesno:"true,false" }}">{{ other_dish.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group mb-2">
+                    <label for="side_dish">Guarnición</label>
+                    <select name="side_dish" class="form-control" disabled>
+                        <option value="">Seleccionar guarnición</option>
+                        {% for side_dish in side_dishes %}
+                        <option value="{{ side_dish.id }}">{{ side_dish.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mb-2">
+                    <label for="comments">Comentarios</label>
+                    <textarea name="comments" class="form-control" rows="3" placeholder="Algun ingrediente o elemento que quiera quitar de su pedido?"></textarea>
+                </div>
+
+                <div class="form-group mb-2 d-flex justify-content-end">
+                    <label for="repeat_for_week">Repetir pedido para toda la semana ┤ </label>
+                    <input type="checkbox" name="repeat_for_week" id="repeat_for_week">
+                </div>
+
+                <div class="d-flex mb-2">
+                    <p class="text-left">
+                        Postre: {{ dessert }}
+                    </p>
+                </div>
+            </div>
+            <button class="btn btn-primary w-100" style="margin-top: 12px" type="submit">Enviar Pedido</button>
+            <div class="d-flex">
+                <button type="reset" style="margin-top: 8px" class="btn btn-outline-secondary flex-fill me-3">Reset</button>
+                <a href="{% url 'ruralapp' %}" style="margin-top: 8px" class="btn btn-secondary flex-fill">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+    document.getElementById('ejecutar-btn').addEventListener('click', function (event) {
+        event.preventDefault(); // Prevenir el envío del formulario por defecto
+
+        // Validar el campo de selección de Grupo VLAN
+        const grupoVlanSelect = document.getElementById('id_grupo_vlan');
+        if (!grupoVlanSelect || grupoVlanSelect.value === '') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe seleccionar un Mod o Cont antes de continuar.',
+            });
+            return;
+        }
+
+        // Validar RadioSelect para la acción
+        const radioSelectInputs = document.querySelectorAll('[name="accion"]');
+        let seleccionado = false;
+        radioSelectInputs.forEach(input => {
+            if (input.checked) {
+                seleccionado = true;
+            }
+        });
+
+        if (!seleccionado) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe seleccionar una acción (Encender o Apagar) antes de continuar.',
+            });
+            return;
+        }
+
+        // Mostrar alerta de ejecución
+        Swal.fire({
+            title: 'Ejecutando Script',
+            html: 'Espere mientras se ejecuta el script...',
+            timerProgressBar: true,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Enviar el formulario usando fetch
+        const form = document.querySelector('form'); // Obtener el formulario
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Identificar que es una petición AJAX
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: data.message,
+                        timer: 3000,
+                        timerProgressBar: true
+                    }).then(() => {
+                        location.reload(); // Recargar la página para actualizar la tabla de historial
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error inesperado al ejecutar el script.',
+                });
+                console.error('Error:', error);
+            });
+    });
+
+
+
+
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<h1 class="display-6 text-center">Script: ON/OFF | <strong>SW-Core / VLANs</strong></h1>
+<form method="POST" style="display: flex; flex-direction: column; max-width:700px; margin-inline: auto">
+    <div class="d-flex justify-content">
+        <p class="justificar"><br>
+            Este Script permite realizar cambios en el estado de las VLANs de un grupo específico, 
+            como apagar (shutdown) o encender (no shutdown). Asegúrese de seleccionar el Módulo, 
+            luego la acción correspondiente antes de ejecutar el Script.
+        </p>
+    </div>
+
+    <div class="container mx-auto">
+        <div class="row justify-content-center mt-3">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <style type="text/css">
+                #div_id_accion>* {
+                    display: flex;
+                    justify-content: center;
+                    gap: 50px;
+                    margin-right: 20px;
+                    background-color: #e0e0e0;
+                    padding: 10px;
+                    border-radius: 10px;
+                    max-width: 400px;
+                    margin: 0 auto;
+                }
+            </style>
+        </div>
+
+        <div class="container mx-auto">
+            <div class="row justify-content-center">
+                <input id="ejecutar-btn" class="btn btn-primary" type="submit" value="Ejecutar Script">
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="row justify-content-center mt-3">
+    <h4>Historial de ejecuciones:</h4>
+    <div class="table-container">
+        <table class="table table-borderless table-sm table-striped">
+            <tbody>
+                {% for registro in historial %}
+                <tr>
+                    <td style="vertical-align: middle;">{{ registro.usuario.username }}</td>
+                    <td style="text-align: center; vertical-align: middle;">{{ registro.fecha_hora_ejecucion|date:'j M H:i' }}</td>
+                    <td style="text-align: center; vertical-align: middle;">{{ registro.grupo_vlan }}</td>
+                    <td style="text-align: center; vertical-align: middle;">{{ registro.accion }}</td>
+                    <td style="text-align: right; vertical-align: middle;">{{ registro.resultado }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

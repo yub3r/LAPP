@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block js%}
+{% if messages %}
+{% for m in messages %}
+<script>
+  Swal.fire({
+    // "position": 'top',
+    "title": "Vamos... Continua así!!!",
+    "timer": 3000,
+    "showConfirmButton": false,
+    "text": "{{m}}",
+    "backdrop": `rgba(36, 125, 250, 0.43)`,
+    // "imageUrl": 'https://gifdb.com/images/high/whip-angry-mr-burns-hans-moleman-simpsons-yoskjr7b6xpf12w5.gif',
+    // "imageUrl": '/media/whips_yelling.gif', 
+    "imageWidth": 350,
+    "imageHeight": 200,
+    "icon": 'success',
+  })
+</script>
+
+
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<h1 class="display-6 text-center">Ejecutando</h1>
+
+{% if tasks|length == 0 %}
+
+<div class="text-center py-4"><a class="btn btn-primary" href="{% url 'create_task' %}">
+    <i class="bi bi-clipboard2-pulse"></i> Nueva Tarea</a></div>
+
+{% endif %}
+
+{% comment %} <ul style="max-width: 50vw;"> {% endcomment %}
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <!-- <th scope="col">Location</th>
+        <th scope="col">Lado</th>
+        <th scope="col">Area</th>
+        <th scope="col">Tarea</th>
+        <th scope="col">Creada</th>
+        <th scope="col" style="margin-inline: auto; float: right;">Completar</th> -->
+      </tr>
+    </thead>
+    {% for task in tasks %}
+    <tbody>
+      <tr>
+        <td style="max-width: 200px;">{{task.location}} </a></td>
+        <td style="max-width: 200px;">{{task.zona}} </a></td>
+        <td style="max-width: 200px;">{{task.area}} </a></td>
+        <td style="max-width: 200px;">{{task.tarea}} </a></td>
+        <td style="max-width: 200px;">{{task.created|date:'j M H:i'}}</a></td>
+
+        <td>
+          <div style="float: right;">
+            <!-- <a class="btn btn-success" href="{% url 'complete_task' task.id %}"><i class="bi bi-check-square-fill"></i></a> -->
+            <form action="{% url 'complete_task' task.id %}" method="POST"
+              style="display: flex; flex-direction: column; max-width: 40vw; margin-inline: auto">
+              {% csrf_token %}
+              <button class="btn btn-success">
+                <i class="bi bi-check-square-fill"></i>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+    {% endfor %}
+  </table>
+  {% endblock %}

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+    document.getElementById('ejecutar-btn').addEventListener('click', function (event) {
+        // Obtener el formulario y el botón
+        const form = document.querySelector('form');
+        const nroSwdSelect = document.getElementById('nro_swd');
+        const ejecutarBtn = document.getElementById('ejecutar-btn');
+
+        // Validar si se ha seleccionado la opción inicial "Elija un SWD"
+        if (nroSwdSelect.value === '') {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe elegir un SWD antes de continuar.',
+            });
+            return;
+        }
+
+        // Validar si se ha seleccionado una opción de los RadioSelect
+        const radioSelectInputs = document.querySelectorAll('[name="accion"]');
+        let seleccionado = false;
+        radioSelectInputs.forEach(input => {
+            if (input.checked) {
+                seleccionado = true;
+            }
+        });
+
+        if (!seleccionado) {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe seleccionar una acción (Encender o Apagar) antes de continuar.',
+            });
+            return;
+        }
+
+        // Deshabilitar el botón de submit
+        ejecutarBtn.disabled = true;
+        ejecutarBtn.value = 'Ejecutando...';
+
+        // Mostrar alerta de ejecución *antes* de enviar el formulario
+        Swal.fire({
+            title: 'Ejecutando Script',
+            html: 'Espere mientras se ejecuta el script...',
+            timerProgressBar: true,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+                // Enviar el formulario después de mostrar la alerta
+                form.submit();
+            }
+        });
+
+        // Ya no necesitamos el event.preventDefault() aquí,
+        // porque queremos que el formulario se envíe después del Swal.fire
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var switchImage = document.getElementById("switch-image");
+        var isExpanded = false;
+        switchImage.addEventListener("click", function() {
+            if (isExpanded) {
+                switchImage.src = "/media/swd_modulos_min.jpg";
+                switchImage.style.maxHeight = "30px";
+            } else {
+                switchImage.src = "/media/swd_modulos_trs.jpg";
+                switchImage.style.maxHeight = "400px";
+            }
+            isExpanded = !isExpanded;
+        });
+    });
+
+    // Eliminamos este listener porque ya estamos enviando el formulario
+    // dentro del didOpen del Swal.fire
+    // document.querySelector('form').addEventListener('submit', function() {
+    //     const ejecutarBtn = document.getElementById('ejecutar-btn');
+    //     ejecutarBtn.disabled = true;
+    //     ejecutarBtn.value = 'Ejecutando...';
+    // });
+</script>
+{% endblock %}
+
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<h1 class="display-6 text-center">Script: ON/OFF | <strong>SWD</strong></h1>
+<form method="POST" style="display: flex; flex-direction: column; max-width:700px; margin-inline: auto ">
+    <div class="d-flex justify-content">
+        <p class="justificar"><br>
+            Este Script funciona exclusivamente sobre los SWD (Switches de Distribución), repartidos en cuatro por cada
+            módulo, y quedando distribuidos de la siguiente forma:
+        </p>
+
+
+    </div>
+    <div class="row justify-content-center">
+        <img id="switch-image" class="img-minimized" src="/media/swd_modulos_min.jpg" alt="Switches de Distribución">
+    </div>
+    <div class="container mx-auto">
+        <div class="row justify-content-center mt-3">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <style type="text/css">
+                #div_id_accion>* {
+                    display: flex;
+                    justify-content: center;
+                    gap: 50px;
+                    margin-right: 20px;
+                    background-color: #c3c2c2;
+                    padding: 10px;
+                    border-radius: 10px;
+                    max-width: 400px;
+                    margin: 0 auto;
+                    /* margin-top: 3px; */
+                }
+            </style>
+        </div>
+        <div class="container mx-auto">
+            <div class="row justify-content-center">
+                <input id="ejecutar-btn" class="btn btn-success" type="submit" value="Ejecutar Script">
+            </div>
+        </div>
+</form>
+
+<div class="row justify-content-center mt-3">
+    <h4>Historial de ejecuciones:</h4>
+    <div class="table-container">
+        <table class="table table-borderless table-sm table table-striped">
+            <tbody>
+                {% for registro in historial %}
+                <tr>
+                    <td style="vertical-align: middle;">{{ registro.usuario.username }}</td>
+                    <td style="text-align: center; vertical-align: middle;">{{ registro.fecha_hora_ejecucion|date:'j M H:i' }}</td>
+                    <td style="text-align: center; vertical-align: middle;">{{ registro.nro_swd }}</td>
+                    <td style="text-align: center; vertical-align: middle;">{{ registro.accion }}</td>
+                    <td style="text-align: right; vertical-align: middle;">{{ registro.resultado }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+{% endblock %}

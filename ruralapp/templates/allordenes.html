@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block js %}
+<script>
+</script>
+{% endblock %}
+
+{% block content %}
+<main class="container" style="max-width:600px;">
+    <section class="card card-body">
+        <header>
+            <h1 class="display-6 text-center">TODAS Realizadas</h1>
+        </header>
+        <ul class="list-group">
+            {% for order in orders %}
+                <li class="list-group-item">
+                    <strong>{{ order.order_date|date:"d/m/Y H:i" }}</strong>: 
+                    {{ order.main_dish }} - {{ order.salad }} - {{ order.other_dish }}
+                    <br/>
+                    <small>Comentarios: {{ order.comments }}</small>
+                </li>
+            {% empty %}
+                <li class="list-group-item">No se han realizado órdenes.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</main>
+{% endblock %}
