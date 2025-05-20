@@ -3,11 +3,37 @@
 
 <script>
 $(document).ready(function() {
+    // Definir un tipo de ordenamiento para fechas con hora en formato d/m/y H:i
+    $.fn.dataTable.ext.type.order['datetime-custom-pre'] = function (data) {
+        if (!data) {
+            return 0;
+        }
+        var parts = data.split(' ');
+        if (parts.length !== 2) {
+            return 0;
+        }
+        var dateParts = parts[0].split('/');
+        var timeParts = parts[1].split(':');
+        return new Date(parseInt(dateParts[2], 10),
+                        parseInt(dateParts[1], 10) - 1,
+                        parseInt(dateParts[0], 10),
+                        parseInt(timeParts[0], 10),
+                        parseInt(timeParts[1], 10)).getTime();
+    };
+
     var table = $('.table').DataTable({
         "order": [[1, "desc"]],
-        "scrollY": "640px",  
+        "scrollY": "640px",
         "columnDefs": [
-            { "orderable": false, "targets": [3, 6, 7] }
+            { "orderable": false, "targets": [3, 6, 8] }, // Ajusté los targets no ordenables
+            { "type": "datetime-custom", "targets": [1, 2] }, // Aplica el tipo personalizado a "Desde/Ini" y "Hasta/Fin"
+            {
+                "targets": [7],
+                "type": "datetime-custom",
+                "render": function(data, type, row) {
+                    return type === 'sort' || type === 'type' ? row[7] : data; // Usa el valor original para mostrar
+                }
+            }
         ],
         "language": {
             "search": "Buscar:",
@@ -19,19 +45,19 @@ $(document).ready(function() {
         }
     });
 
-    // Filtrado por rango de fechas
+    // Filtrado por rango de fechas (sin cambios)
     $('#start-date, #end-date').on('change', function() {
         table.draw();
     });
 
-    // Clear filters
+    // Clear filters (sin cambios)
     $('#clear-dates').on('click', function() {
         $('#start-date').val('');
         $('#end-date').val('');
         table.draw();
     });
 
-    // Filtro personalizado
+    // Filtro personalizado (sin cambios, pero ahora usa data-date)
     $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
         var startDateInput = $('#start-date').val() ? new Date($('#start-date').val()) : null;
         var endDateInput = $('#end-date').val() ? new Date($('#end-date').val()) : null;
@@ -39,9 +65,11 @@ $(document).ready(function() {
         var row = table.row(dataIndex).node();
         var startDateData = $(row).find('td').eq(1).data('date'); // Desde/Inicio
         var endDateData = $(row).find('td').eq(2).data('date');   // Hasta/Fin
+        var reviewDateData = $(row).find('td').eq(7).data('date'); // Fecha de Revisión (si la tuvieras como data-date)
 
         var startDateRow = startDateData ? new Date(startDateData) : null;
         var endDateRow = endDateData ? new Date(endDateData) : null;
+        var reviewDateRow = reviewDateData ? new Date(reviewDateData) : null;
 
         if (
             (!startDateInput && !endDateInput) ||
@@ -71,7 +99,6 @@ $(document).ready(function() {
 </div>
 
 
-<!-- Tabla: Detalles de horas extras -->
 <table class="table table-striped table-hover">
     <thead>
         <tr>
@@ -106,17 +133,16 @@ $(document).ready(function() {
                     <span class="text-danger">Rechazado</span>
                 {% endif %}
             </td>
-            <td style="text-align: center; vertical-align: middle;" data-date="{{ horas.fecha_aprobacion|date:"Y-m-d" }}">
+            <td style="text-align: center; vertical-align: middle;">
                 {{ horas.fecha_aprobacion|date:"d/m/y H:i" }}
             </td>
             <td>{{ horas.feedback_admin|default:"-" }}</td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="8" class="text-center">No hay registros de horas extras aprobadas o rechazadas.</td>
+            <td colspan="9" class="text-center">No hay registros de horas extras aprobadas o rechazadas.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% endblock %}
-

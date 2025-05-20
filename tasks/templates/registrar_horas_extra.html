@@ -14,6 +14,28 @@
         const today = new Date();
         const resetButton = document.querySelector('button[type="reset"]');
 
+        // Función para actualizar la hora de fin sumando una hora a la hora de inicio
+        function actualizarHoraFin() {
+            const horaInicioValue = horaInicio.value;
+            if (horaInicioValue) {
+                const [horas, minutos] = horaInicioValue.split(':').map(Number);
+                const fechaHoraInicio = new Date();
+                fechaHoraInicio.setHours(horas);
+                fechaHoraInicio.setMinutes(minutos);
+                fechaHoraInicio.setSeconds(0);
+                fechaHoraInicio.setMilliseconds(0);
+
+                const fechaHoraFin = new Date(fechaHoraInicio);
+                fechaHoraFin.setHours(fechaHoraInicio.getHours() + 1);
+
+                const nuevaHoraFin = `${String(fechaHoraFin.getHours()).padStart(2, '0')}:${String(fechaHoraFin.getMinutes()).padStart(2, '0')}`;
+                horaFin.value = nuevaHoraFin;
+                validarFormulario(); // Re-validar el formulario después de actualizar la hora
+            } else {
+                horaFin.value = ''; // Limpiar hora fin si hora inicio está vacía
+            }
+        }
+
         // Detectar y mostrar los mensajes de éxito y error usando Swal.fire directamente
         const alertMessage = document.querySelector('.alert');
         if (alertMessage) {
@@ -34,28 +56,27 @@
             }
         }
 
-
         // Resto del código que ya tienes
         resetButton.addEventListener('click', function(event) {
-            event.preventDefault();  // Evita el comportamiento por defecto del botón de reset
-            location.reload();  // Recarga la página sin reenviar el formulario
+            event.preventDefault(); // Evita el comportamiento por defecto del botón de reset
+            location.reload(); // Recarga la página sin reenviar el formulario
         });
 
-        // Asignar valores predeterminados
+        // Asignar valores predeterminados (se mantienen)
         horaInicio.value = '16:00';
         horaFin.value = '17:00';
 
-        // Copiar fecha_inicio a fecha_fin automáticamente si está vacía
+        // Copiar fecha_inicio a fecha_fin automáticamente si está vacía (se mantiene)
         fechaInicio.addEventListener('change', function () {
             fechaFin.value = fechaInicio.value;
             validarFormulario();
         });
 
         fechaFin.addEventListener('change', validarFormulario);
-        horaInicio.addEventListener('change', validarFormulario);
+        horaInicio.addEventListener('change', actualizarHoraFin); // Llamar a la función al cambiar hora inicio
         horaFin.addEventListener('change', validarFormulario);
 
-        // Validación de formulario
+        // Validación de formulario (se mantiene)
         function validarFormulario() {
             let mensajeError = "";
             const fechaInicioValue = new Date(fechaInicio.value);
@@ -77,23 +98,23 @@
                     text: mensajeError,
                 });
                 submitButton.disabled = true;
-                return false;  // Indicar que las validaciones fallaron
+                return false; // Indicar que las validaciones fallaron
             } else {
                 submitButton.disabled = false;
-                return true;  // Indicar que las validaciones pasaron
+                return true; // Indicar que las validaciones pasaron
             }
         }
 
         form.addEventListener('submit', function (event) {
             let formIsValid = validarFormulario();
-            
+
             // Si las validaciones fallan, evitar la acción por defecto
             if (!formIsValid) {
                 event.preventDefault();
-                return;  // No continuar si hay errores
+                return; // No continuar si hay errores
             }
 
-            // Validar si se ha seleccionado un porcentaje
+            // Validar si se ha seleccionado un porcentaje (se mantiene)
             const radioPorcentInputs = document.querySelectorAll('[name="porcent"]');
             let porcentajeSeleccionado = false;
             radioPorcentInputs.forEach(input => {
@@ -108,12 +129,12 @@
                     title: 'Error',
                     text: 'Debe seleccionar un porcentaje (50% o 100%) antes de continuar.',
                 });
-                event.preventDefault();  // Evitar el envío si no se ha seleccionado porcentaje
+                event.preventDefault(); // Evitar el envío si no se ha seleccionado porcentaje
                 return;
             }
         });
 
-        // Función para inicializar el campo de hora con botones de incremento/decremento
+        // Función para inicializar el campo de hora con botones de incremento/decremento (se mantiene)
         function initializeTimeField(fieldId) {
             const field = document.querySelector(fieldId);
 
@@ -134,7 +155,7 @@
                 const time = new Date('1970-01-01T' + field.value);
                 time.setMinutes(time.getMinutes() - 30);
                 field.value = time.toTimeString().slice(0, 5);
-                validarFormulario();  // Validar después de ajustar la hora
+                validarFormulario(); // Validar después de ajustar la hora
             };
             container.insertBefore(decrementButton, field);
 
@@ -147,7 +168,7 @@
                 const time = new Date('1970-01-01T' + field.value);
                 time.setMinutes(time.getMinutes() + 30);
                 field.value = time.toTimeString().slice(0, 5);
-                validarFormulario();  // Validar después de ajustar la hora
+                validarFormulario(); // Validar después de ajustar la hora
             };
             container.appendChild(incrementButton);
 
@@ -155,11 +176,11 @@
             field.style.width = 'auto';
         }
 
-        // Inicializar los campos de hora
+        // Inicializar los campos de hora (se mantiene)
         initializeTimeField('#id_hora_inicio');
         initializeTimeField('#id_hora_fin');
 
-        // Selecciona todos los botones de eliminación y aplica el evento
+        // Selecciona todos los botones de eliminación y aplica el evento (se mantiene)
         document.querySelectorAll('.eliminar-horas_extra').forEach(button => {
             button.addEventListener('click', function (event) {
                 event.preventDefault();

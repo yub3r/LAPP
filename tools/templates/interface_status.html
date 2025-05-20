@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const ipInicio = document.getElementById("ip_inicio");
+    const ipFinal = document.getElementById("ip_final");
+    const submitButton = form.querySelector("button[type='submit']");
+    const allowedIPs = Array.from(ipInicio.options).map(o => o.value);
+
+    // Actualiza opciones disponibles en IP Final
+    ipInicio.addEventListener("change", function () {
+        const inicioIndex = ipInicio.selectedIndex;
+
+        Array.from(ipFinal.options).forEach((opt, i) => {
+            opt.disabled = i < inicioIndex;
+        });
+
+        if (ipFinal.selectedIndex < inicioIndex) {
+            ipFinal.selectedIndex = inicioIndex;
+        }
+    });
+
+    const table = $('.table').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        responsive: true,
+        language: {
+            search: "Buscar:",
+            lengthMenu: "Mostrar _MENU_ registros",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            paginate: {
+                first: "Primero",
+                last: "Último",
+                next: "Siguiente",
+                previous: "Anterior"
+            }
+        },
+        columnDefs: [
+            { type: 'ip-address', targets: 0 }
+        ]
+    });
+
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const ipInicioVal = ipInicio.value;
+        const ipFinalVal = ipFinal.value;
+
+        if (!ipInicioVal || !ipFinalVal || allowedIPs.indexOf(ipFinalVal) < allowedIPs.indexOf(ipInicioVal)) {
+            Swal.fire({
+                icon: "warning",
+                title: "Rango Inválido",
+                text: "La IP final debe ser mayor o igual que la IP inicial.",
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: "Escaneando dispositivos...",
+            text: "Esto puede tardar unos segundos.",
+            imageUrl: "/media/launch_code.gif",
+            imageWidth: 450,
+            imageHeight: 300,
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        submitButton.disabled = true;
+
+        fetch("", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                ip_inicio: ipInicioVal,
+                ip_final: ipFinalVal
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            table.clear();
+            data.forEach(row => {
+                let newRow = table.row.add([
+                    row.ip || "N/A",
+                    row.swd_name || "N/A",
+                    row.descr || "N/A",
+                    row.status || "N/A",
+                    row.vlan || "N/A",
+                    row.duplex || "N/A",
+                    row.type || "N/A",
+                    row.port || "N/A"
+                ]).node();
+
+                if (row.status && row.status.toLowerCase() === "connected") {
+                    newRow.classList.add("table-success");
+                }
+                if (row.status && row.status.toLowerCase() === "error") {
+                    newRow.classList.add("table-danger");
+                }
+            });
+            table.draw();
+            Swal.close();
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error en la solicitud",
+                text: "Hubo un problema al procesar la información.",
+            });
+        })
+        .finally(() => {
+            submitButton.disabled = false;
+        });
+    });
+
+    document.getElementById("resetButton").addEventListener("click", function () {
+        location.reload();
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<h1 class="display-6 text-center">Script: Interface | <strong>Status</strong></h1>
+<form method="POST" class="ip-form">
+    {% csrf_token %}
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label for="ip_inicio" class="form-label">IP Inicial:</label>
+            <select id="ip_inicio" name="ip_inicio" class="form-select" required>
+                {% for ip in allowed_ips %}
+                <option value="{{ ip }}">{{ ip }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="ip_final" class="form-label">IP Final:</label>
+            <select id="ip_final" name="ip_final" class="form-select" required>
+                {% for ip in allowed_ips %}
+                <option value="{{ ip }}">{{ ip }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-secondary w-100" id="resetButton">Reset</button>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit">Escanear</button>
+        </div>
+    </div>
+</form>
+
+<div class="row justify-content-center mt-3">
+    <div class="table-container-cdp">
+        <table id="cdpTable" class="table table-bordered table-striped table">
+            <thead>
+                <tr>
+                    <th>IP</th>
+                    <th>SWD name</th>
+                    <th>Descrip</th>
+                    <th>Status</th>
+                    <th>Vlan</th>
+                    <th>Duplex</th>
+                    <th>Type</th>
+                    <th>Port</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr class="{% if row.status == 'connected' %}table-success{% elif row.status == 'no autorizado' %}table-warning{% else %}table-danger{% endif %}">
+                    <td>{{ row.ip }}</td>
+                    <td>{{ row.swd_name }}</td>
+                    <td>{{ row.descr }}</td>
+                    <td>{{ row.status }}</td>
+                    <td>{{ row.vlan }}</td>
+                    <td>{{ row.duplex }}</td>
+                    <td>{{ row.type }}</td>
+                    <td>{{ row.port }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+<style>
+.table-container-cdp {
+    overflow: hidden;
+    max-height: 600px;
+    overflow-y: auto;
+}
+</style>

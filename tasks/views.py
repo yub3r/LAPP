@@ -388,14 +388,29 @@ def signin(request):
     if request.method == 'GET':
         return render(request, 'signin.html', {"form": AuthenticationForm})
     else:
-        user = authenticate(
-            request, username=request.POST['username'], password=request.POST['password'])
+        identifier = request.POST['username']
+        password = request.POST['password']
+
+        # Verificamos si el input es un email y si corresponde a un usuario
+        if '@' in identifier:
+            try:
+                user_obj = User.objects.get(email=identifier)
+                username = user_obj.username
+            except User.DoesNotExist:
+                username = None
+        else:
+            username = identifier
+
+        user = authenticate(request, username=username, password=password)
+
         if user is None:
-            return render(request, 'signin.html', {"form": AuthenticationForm, "error": "Usuario o contraseña incorrecta."})
+            return render(request, 'signin.html', {
+                "form": AuthenticationForm,
+                "error": "Usuario o contraseña incorrecta."
+            })
 
         login(request, user)
-        messages.success(request, f"Bienvenido {user}")
-        # return render(request, 'home.html')
+        messages.success(request, f"Bienvenido {user.first_name or user.username}")
         return redirect('home')
 
 @login_required

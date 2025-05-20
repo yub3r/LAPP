@@ -49,7 +49,7 @@ class HistorialEjecucionSWA(models.Model):
     fecha_hora_ejecucion = models.DateTimeField(auto_now_add=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     nro_rack = models.ForeignKey(Rack, on_delete=models.CASCADE, related_name="historial_nro_rack")
-    portchannel = models.ForeignKey(SwitchDeAcceso, on_delete=models.CASCADE, related_name="historial_portchannel")
+    portchannel = models.ForeignKey(SwitchDeAcceso, on_delete=models.SET_NULL, null=True, blank=True)
     accion = models.CharField(max_length=10)
     resultado = models.CharField(max_length=255)
 

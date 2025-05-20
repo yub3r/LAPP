@@ -166,7 +166,6 @@ class HoraExtraForm(forms.ModelForm):
         fields = ['fecha_inicio', 'fecha_fin', 'hora_inicio', 'hora_fin', 'justificar', 'porcent']
 
     def __init__(self, *args, **kwargs):
-        # Recibimos el usuario y lo asignamos a una variable de instancia
         self.usuario = kwargs.pop('usuario', None)
         super().__init__(*args, **kwargs)
 
@@ -177,22 +176,36 @@ class HoraExtraForm(forms.ModelForm):
         hora_inicio = cleaned_data.get("hora_inicio")
         hora_fin = cleaned_data.get("hora_fin")
 
-        # Validación de fechas futuras
-        if fecha_inicio and fecha_fin:
-            datetime_fin = datetime.combine(fecha_fin, hora_fin)
-            if datetime_fin > datetime.now():
-                raise ValidationError("No se pueden registrar horas extras en fechas futuras.")
+        if not all([fecha_inicio, fecha_fin, hora_inicio, hora_fin]):
+            return cleaned_data
 
-        # Validación de duplicados
-        if fecha_inicio and self.usuario:
-            if HoraExtra.objects.filter(usuario=self.usuario, fecha_inicio=fecha_inicio).exists():
-                raise ValidationError("Ya tienes horas extras registradas en esta fecha.")
-        
-        # Validaciones adicionales
-        if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
+        datetime_inicio = datetime.combine(fecha_inicio, hora_inicio)
+        datetime_fin = datetime.combine(fecha_fin, hora_fin)
+
+        # Validación de fechas futuras
+        if datetime_fin > datetime.now():
+            raise ValidationError("No se pueden registrar horas extras en fechas futuras.")
+
+        # Validación de superposición de horarios
+        if self.usuario:
+            horas_extras_existentes = HoraExtra.objects.filter(
+                usuario=self.usuario,
+                fecha_inicio__lte=fecha_fin,
+                fecha_fin__gte=fecha_inicio
+            ).exclude(pk=self.instance.pk if self.instance.pk else None)  # Excluir la instancia actual en edición
+
+            for registro in horas_extras_existentes:
+                inicio_existente = datetime.combine(registro.fecha_inicio, registro.hora_inicio)
+                fin_existente = datetime.combine(registro.fecha_fin, registro.hora_fin)
+
+                if datetime_inicio < fin_existente and datetime_fin > inicio_existente:
+                    raise ValidationError("El horario de horas extras se superpone con un registro existente.")
+
+        # Validaciones adicionales (se mantienen igual)
+        if fecha_inicio > fecha_fin:
             raise ValidationError("La fecha de inicio debe ser anterior o igual a la fecha de fin.")
 
-        if fecha_inicio == fecha_fin and hora_inicio and hora_fin and hora_inicio >= hora_fin:
+        if fecha_inicio == fecha_fin and hora_inicio >= hora_fin:
             raise ValidationError("La hora de fin debe ser posterior a la hora de inicio si es el mismo día.")
 
         return cleaned_data
