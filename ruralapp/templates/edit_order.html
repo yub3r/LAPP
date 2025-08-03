@@ -155,7 +155,7 @@
             {% csrf_token %}
             <div class="row justify-content-center mt-3">
                 <div class="form-group mb-2">
-                    <label for="main_dish">Menú del día:</label>
+                    <label for="main_dish">Menú del día {{ menu_day_name }}:</label>
                     <select name="main_dish" class="form-control">
                         <option value="">Seleccionar plato principal</option>
                         {% for dish in main_dishes %}
@@ -179,7 +179,7 @@
                 </div>
 
                 <div class="form-group mb-2">
-                    <label for="other_dish">Dieta</label>
+                    <label for="other_dish">Opcional</label>
                     <select name="other_dish" class="form-control">
                         <option value="">Seleccionar otro plato</option>
                         {% for other_dish in other_dishes %}

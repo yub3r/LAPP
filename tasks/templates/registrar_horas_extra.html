@@ -237,7 +237,6 @@
 <form method="POST" style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto;">
     {% csrf_token %}
     <div class="d-flex flex-column gap-3">
-        <!-- Fecha y Hora de Inicio -->
         <div class="d-flex align-items-center gap-2">
             <div style="flex: 2;">
                 {{ form.fecha_inicio|as_crispy_field }}
@@ -247,7 +246,6 @@
             </div>
         </div>
 
-        <!-- Fecha y Hora de Fin -->
         <div class="d-flex align-items-center gap-2">
             <div style="flex: 2;">
                 {{ form.fecha_fin|as_crispy_field }}
@@ -258,7 +256,6 @@
         </div>
 
 
-        <!-- Campo de Porcentaje -->
         <div class="form-group d-flex flex-column gap-2">
             <div class="d-flex align-items-center w-100">
                 <label for="id_porcent" class="form-label mb-0 text-start" style="flex: 1;">Cálculo_%/H:</label>
@@ -273,7 +270,6 @@
             </div>
         </div>
 
-        <!-- Estilos -->
         <style>
             .form-check-inline {
                 display: flex;
@@ -297,13 +293,11 @@
 
 
 
-        <!-- Campo de Justificación -->
         <div class="d-flex flex-column gap-2">
             {{ form.justificar|as_crispy_field }}
         </div>
 
     </div>
-    <!-- Mostrar mensajes de error si existen -->
     {% if messages %}
         <div>
             {% for message in messages %}
@@ -317,7 +311,6 @@
         <a href="{% url 'home' %}" class="btn btn-secondary flex-fill">Cancelar</a>
     </div>
 
-    <!-- Tabla de logs de horas extras -->
     <div class="table-container mt-5">
         <table class="table table-borderless table-sm table-striped">
             <thead>
@@ -328,8 +321,7 @@
                     <th style="text-align: right; vertical-align: middle;">%/H</th>
                     <th style="text-align: right; vertical-align: middle;">Horas</th>
                     <th style="text-align: center; vertical-align: middle;">Feedback</th>
-                    <!-- <th style="text-align: right; vertical-align: middle;">Acción</th> -->
-                </tr>
+                    <th style="text-align: center; vertical-align: middle;">Revisado</th> </tr>
             </thead>
             <tbody>
                 {% for registro in horas_extras %}
@@ -346,6 +338,13 @@
                     <td style="text-align: left; vertical-align: middle;">
                         {{ registro.feedback_admin|default:"-" }}
                     </td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        {% if registro.aprobado_por %}
+                            {{ registro.aprobado_por.username }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                     <td style="text-align: right; vertical-align: middle;">
                         {% if registro.aprobado is None %}
                             <a href="{% url 'eliminar-horas_extra' registro.id %}" class="btn btn-dark btn-sm eliminar-horas_extra">
@@ -360,14 +359,13 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center">No hay registros de horas extras.</td>
-                </tr>
+                    <td colspan="7" class="text-center">No hay registros de horas extras.</td> </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    
+
 
 
 </form>

@@ -6,36 +6,85 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const fechaInicio = document.querySelector('#id_fecha_inicio');
-        fechaInicio.type = 'text';
-        fechaInicio.addEventListener('focus', function() {
-            this.type = 'date';
-        });
-        fechaInicio.addEventListener('blur', function() {
-            this.type = 'text';
-            this.value = formatDate(this.value);
-        });
-
         const fechaFin = document.querySelector('#id_fecha_fin');
-        fechaFin.type = 'text';
-        fechaFin.addEventListener('focus', function() {
-            this.type = 'date';
-        });
-        fechaFin.addEventListener('blur', function() {
-            this.type = 'text';
-            this.value = formatDate(this.value);
-        });
+        const horaInicio = document.querySelector('#id_hora_inicio');
+        const horaFin = document.querySelector('#id_hora_fin');
+        const form = document.querySelector('form');
+        const submitButton = form.querySelector('input[type="submit"]');
 
-        function formatDate(date) {
-            const [year, month, day] = date.split('-');
-            return `${day}/${month}/${year}`;
+        // Asegurarse de que los campos sean de tipo 'date' y 'time'.
+        // Esto es una buena práctica aunque Django Crispy Forms ya debería manejarlo.
+        fechaInicio.type = 'date';
+        fechaFin.type = 'date';
+        horaInicio.type = 'time';
+        horaFin.type = 'time';
+
+        // --- Inicio de la lógica JavaScript que se eliminó o ajustó ---
+        // La lógica de 'actualizarFechaYHoraFin' de reservar_guardia.html
+        // que sobrescribe los valores de fecha_fin, hora_inicio y hora_fin
+        // NO debe estar aquí, ya que queremos cargar los valores existentes.
+        // --- Fin de la lógica JavaScript que se eliminó o ajustó ---
+
+
+        // Función de validación de formulario (frontend)
+        function validarFormulario() {
+            let mensajeError = "";
+            
+            // Si algún campo esencial está vacío, no se puede validar completamente en frontend;
+            // Django se encargará de los errores de campos requeridos.
+            if (!fechaInicio.value || !fechaFin.value || !horaInicio.value || !horaFin.value) {
+                submitButton.disabled = false; 
+                return true; 
+            }
+
+            const inicioDatetime = new Date(fechaInicio.value + 'T' + horaInicio.value);
+            let finDatetime = new Date(fechaFin.value + 'T' + horaFin.value);
+
+            // Ajuste para guardias nocturnas en frontend para la validación
+            if (fechaInicio.value === fechaFin.value && finDatetime <= inicioDatetime) {
+                finDatetime.setDate(finDatetime.getDate() + 1);
+            }
+
+            if (inicioDatetime >= finDatetime) {
+                mensajeError = "La fecha y hora de inicio deben ser anteriores a la fecha y hora de fin.";
+            }
+
+            if (mensajeError) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de validación',
+                    text: mensajeError,
+                });
+                submitButton.disabled = true; 
+                return false;
+            } else {
+                submitButton.disabled = false; 
+                return true;
+            }
+        }
+        
+        // Asignar los listeners de eventos para validar cuando el usuario cambie los campos
+        fechaInicio.addEventListener('change', validarFormulario);
+        fechaFin.addEventListener('change', validarFormulario);
+        horaInicio.addEventListener('change', validarFormulario);
+        horaFin.addEventListener('change', validarFormulario);
+
+        // Llamar a validarFormulario al cargar la página para inicializar el estado del botón submit.
+        // Esto es importante si los datos precargados ya son inválidos.
+        validarFormulario();
+
+        // Botón de reset: recarga la página para mostrar los valores originales de la guardia
+        const resetButton = document.querySelector('button[type="reset"]');
+        if (resetButton) {
+            resetButton.addEventListener('click', function(event) {
+                event.preventDefault(); 
+                window.location.reload(); 
+            });
         }
     });
 </script>
 
-
-
 <h1 class="display-5 text-center">Actualizar Guardia</h1>
-
 
 <form action="" method="POST"
     style="display: flex; flex-direction: column; max-width:580px; margin-inline: auto ">
@@ -43,21 +92,20 @@
         <button type="reset" class="btn btn-outline-secondary">Reset</button>
     </div>
 
-
     {% csrf_token %}
     <div class="form-check-inline">
         {{form | crispy }}
-        <style type="text/css">
-            #div_id_tarea>* {
-                display: flex;
-                justify-content: center;
-            }
-        </style>
-    
     </div>
     <p><br></p>
-    <h5 class="display-7 text-center">{{error}}</h5>
+    {# Mensajes de Django (success/error) #}
+    {% if messages %}
+        <div>
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
     <input class="btn btn-primary" type="submit" value="Actualizar">
-    <a href="{% url 'guardias' %}" style=margin-top:8px; class="btn btn-secondary">Cancelar</a>
+    <a href="{% url 'guardias' %}" style="margin-top:8px;" class="btn btn-secondary">Cancelar</a>
 </form>
 {% endblock %}

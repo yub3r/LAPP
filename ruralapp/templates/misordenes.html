@@ -2,36 +2,33 @@
 
 {% block js %}
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Seleccionar la última fila con la clase 'clickable-row'
-        var lastRow = document.querySelector(".clickable-row[data-href]");
-        if (lastRow) {
-            lastRow.addEventListener("click", function(event) {
-                event.preventDefault(); // Prevenir redirección automática
+document.addEventListener("DOMContentLoaded", function() {
+    var editableRows = document.querySelectorAll(".clickable-row[data-href]");
 
-                // Obtener la hora actual del navegador
-                var now = new Date();
-                var currentHour = now.getHours();
-                var currentMinutes = now.getMinutes();
+    editableRows.forEach(function(row) {
+        row.addEventListener("click", function(event) {
+            event.preventDefault();
 
-                // Verificar si la hora está entre las 8:30 y 13:30
-                if (
-                    (currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && 
-                    (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))
-                ) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Acceso Restringido',
-                        text: 'No se puede editar la orden entre las 8:30 y las 13:10.',
-                        confirmButtonText: 'Entendido'
-                    });
-                } else {
-                    // Redirigir a "edit_order" si está fuera del horario restringido
-                    window.location.href = this.dataset.href;
-                }
-            });
-        }
+            var now = new Date();
+            var currentHour = now.getHours();
+            var currentMinutes = now.getMinutes();
+
+            if (
+                (currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && 
+                (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))
+            ) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Acceso Restringido',
+                    text: 'No se puede editar la orden entre las 8:30 y las 13:10.',
+                    confirmButtonText: 'Entendido'
+                });
+            } else {
+                window.location.href = this.dataset.href;
+            }
+        });
     });
+});
 </script>
 {% endblock %}
 
@@ -64,7 +61,7 @@
                 {% if orders %}
                 <tbody>
                     {% for order in orders %}
-                        <tr class="clickable-row" {% if forloop.first %}data-href="{% url 'edit_order' order.id %}"{% endif %}>
+                        <tr class="clickable-row" {% if order.order_date >= start_date and order.order_date <= end_date %}data-href="{% url 'edit_order' order.id %}"{% endif %}>
                             <td style="vertical-align: middle;">{{ order.order_date|date:"D d H:i" }}</td>
                             <td style="vertical-align: middle;">
                                 {% if order.main_dish %}
@@ -84,8 +81,6 @@
                             <td style="vertical-align: middle;">
                                 {% if order.side_dish %}
                                     {{ order.side_dish|slice:":30" }}{% if order.side_dish|length > 30 %}...{% endif %}
-                                {% else %}
-                                    <!-- Espacio en blanco si no hay guarnición -->
                                 {% endif %}
                             </td>
                         </tr>

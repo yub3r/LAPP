@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
+from netmiko import ConnectHandler, NetmikoAuthenticationException, NetmikoTimeoutException
 from .forms import SWDScriptForm, SWAScriptForm, SWCoreScriptForm
 from .models import HistorialEjecucionSWD, HistorialEjecucionSWA, Rack, SwitchDeAcceso, SwitchDeDistribucion, SwitchCore, GrupoVLAN, HistorialEjecucionSWCore
 from .swd_script import conectar_telnet, obtener_nombre_host, ejecutar_comandos
@@ -19,7 +20,6 @@ from datetime import date
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from config import usuario_sw, contraseña_sw, habilitar_contraseña_sw
-from netmiko import ConnectHandler, NetmikoAuthenticationException, NetmikoTimeoutException
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -470,13 +470,16 @@ def ejecutar_interface_status(host, contraseña_sw, habilitar_contraseña_sw):
         net_connect = ConnectHandler(**device)
         net_connect.enable()
 
+        # Obtener el nombre del dispositivo desde el prompt
+        device_name = net_connect.find_prompt().strip('#')
+
         # Comando optimizado
         cmd = "show interface status | i Gi1/1/|Gi2/1/"
         output = net_connect.send_command(cmd, expect_string=r"#", delay_factor=1)
 
         net_connect.disconnect()
         print(f"[{host}] Output recibido ({len(output)} bytes)", flush=True)
-        return output, None
+        return output, device_name
 
     except (NetmikoTimeoutException, NetmikoAuthenticationException) as e:
         print(f"[{host}] ERROR Netmiko: {e}", flush=True)
@@ -486,11 +489,8 @@ def ejecutar_interface_status(host, contraseña_sw, habilitar_contraseña_sw):
         return None, str(e)
 
 
-def parse_interface_output(output, host):
+def parse_interface_output(output, host, sw_name):
     """Parsea el output del show interface status filtrado."""
-    prom = re.search(r"(\S+?)#", output)
-    sw_name = prom.group(1) if prom else host
-
     iface_re = re.compile(
         r"^(?P<port>Gi[12]/1/\d+)\s+"
         r"(?P<desc>\S*)\s+"
@@ -507,7 +507,7 @@ def parse_interface_output(output, host):
         tipo = m.group("type").rstrip("\r")
         parsed.append({
             "ip":         host,
-            "swd_name": sw_name,
+            "swd_name":   sw_name,
             "descr":      m.group("desc"),
             "status":     m.group("status"),
             "vlan":       m.group("vlan"),
@@ -516,7 +516,6 @@ def parse_interface_output(output, host):
             "port":       m.group("port"),
         })
 
-    # Si no se encontró nada, agrega una fila vacía
     if not parsed:
         parsed.append({
             "ip":         host,
@@ -582,11 +581,12 @@ def interface_status_view(request):
             for future in as_completed(futures):
                 host = futures[future]
                 try:
-                    # Esperar máx 10 segundos por host individualmente
-                    out, err = future.result(timeout=10)
+                    out, sw_name = future.result(timeout=10)
                 except Exception as e:
-                    # Si falla por timeout, conexión o cualquier otro error
-                    out, err = None, str(e)
+                    out, sw_name = None, ""
+                    err = str(e)
+                else:
+                    err = None
 
                 if err or out is None:
                     data.append({
@@ -600,7 +600,8 @@ def interface_status_view(request):
                         "port":       ""
                     })
                 else:
-                    data.extend(parse_interface_output(out, host))
+                    data.extend(parse_interface_output(out, host, sw_name))
+
 
         # 6) Marcar como 'down' los que no respondieron al ping
         for host in hosts:

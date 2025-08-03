@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from django import forms
 from django.db.models import Count
 from .models import Task, Guardia, Sorteo, HoraExtra
@@ -26,25 +26,6 @@ class TaskForm(forms.ModelForm):
 
 
 class GuardiaForm(forms.ModelForm):
-    # Usuarios que pertenecen SOLO a Operaciones
-    usuario1 = forms.ModelChoiceField(
-        queryset=User.objects.annotate(group_count=Count('groups'))
-                      .filter(groups__name='Operaciones', group_count=1),
-        label='Operaciones'
-    )
-    
-    # Usuarios que pertenecen SOLO a Mantenimiento
-    usuario2 = forms.ModelChoiceField(
-        queryset=User.objects.annotate(group_count=Count('groups'))
-                      .filter(groups__name='Mantenimiento', group_count=1),
-        label='Mantenimiento'
-    )
-    
-    # Usuarios que pertenecen SOLO a IT
-    usuario3 = forms.ModelChoiceField(
-        queryset=User.objects.filter(groups__name='IT'), label='IT')
-        
-    # Añadimos los campos de hora de inicio y hora de fin
     hora_inicio = forms.TimeField(widget=forms.TimeInput(format='%H:%M'), initial="16:00", label='Hora de Inicio')
     hora_fin = forms.TimeField(widget=forms.TimeInput(format='%H:%M'), initial="07:00", label='Hora de Fin')
 
@@ -52,13 +33,30 @@ class GuardiaForm(forms.ModelForm):
         model = Guardia
         fields = ['usuario1', 'usuario2', 'usuario3', 'fecha_inicio', 'fecha_fin', 'hora_inicio', 'hora_fin']
         widgets = {
-            'fecha_inicio': forms.DateInput(attrs={'class': 'form-control'}),
-            'fecha_fin': forms.DateInput(attrs={'class': 'form-control'}),
+            'fecha_inicio': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'fecha_fin': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
 
-    # def __init__(self, *args, **kwargs):
-    #     super(GuardiaForm, self).__init__(*args, **kwargs)
-    #     self.fields['usuario3'].initial = User.objects.get(username='ymillan')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Aplicamos los querysets a los campos ya creados por el ModelForm
+        self.fields['usuario1'].queryset = User.objects.filter(groups__name='Operaciones').distinct()
+        self.fields['usuario1'].label = 'Operaciones'
+        self.fields['usuario2'].queryset = User.objects.filter(groups__name='Mantenimiento').distinct()
+        self.fields['usuario2'].label = 'Mantenimiento'
+        self.fields['usuario3'].queryset = User.objects.filter(groups__name='IT').distinct()
+        self.fields['usuario3'].label = 'IT'
+        
+        # ***** INICIO DE LA CORRECCIÓN PARA PRECARGA DE FECHAS *****
+        # Si estamos en modo de edición (hay una instancia de la guardia)
+        if self.instance:
+            # Formateamos las fechas a 'YYYY-MM-DD' para que el input type="date" las reconozca
+            if self.instance.fecha_inicio:
+                self.initial['fecha_inicio'] = self.instance.fecha_inicio.strftime('%Y-%m-%d')
+            if self.instance.fecha_fin:
+                self.initial['fecha_fin'] = self.instance.fecha_fin.strftime('%Y-%m-%d')
+        # ***** FIN DE LA CORRECCIÓN PARA PRECARGA DE FECHAS *****
 
     def clean(self):
         cleaned_data = super().clean()
@@ -67,23 +65,47 @@ class GuardiaForm(forms.ModelForm):
         hora_inicio = cleaned_data.get("hora_inicio")
         hora_fin = cleaned_data.get("hora_fin")
         
-        # Validar que la fecha de inicio no sea mayor a la fecha de fin
-        if fecha_inicio and fecha_fin:
-            if fecha_inicio > fecha_fin:
-                raise ValidationError("La fecha de inicio debe ser anterior a la fecha de fin.")
-            
-            # Verificar si ya existe una guardia reservada en las mismas fechas
-            guardias_exist = Guardia.objects.filter(
-                fecha_inicio__lte=fecha_fin, fecha_fin__gte=fecha_inicio).exclude(pk=self.instance.pk)
-            
-            if guardias_exist.exists():
-                raise ValidationError("Ya existe una guardia reservada en esa fecha.")
+        if not all([fecha_inicio, fecha_fin, hora_inicio, hora_fin]):
+            return cleaned_data
 
-        # Validar que la hora de fin no sea menor que la hora de inicio si es el mismo día
+        datetime_inicio_propuesta = datetime.combine(fecha_inicio, hora_inicio)
+        datetime_fin_propuesta = datetime.combine(fecha_fin, hora_fin)
+
+        # Ajuste crucial para guardias nocturnas que se extienden al día siguiente
+        if datetime_fin_propuesta <= datetime_inicio_propuesta:
+            datetime_fin_propuesta += timedelta(days=1)
+            if fecha_fin == fecha_inicio:
+                 cleaned_data['fecha_fin'] = fecha_fin + timedelta(days=1)
+
+
+        # Validación de superposición de horarios
+        guardias_existentes = Guardia.objects.filter(
+            fecha_inicio__lte=cleaned_data['fecha_fin'],
+            fecha_fin__gte=fecha_inicio
+        )
+        
+        if self.instance and self.instance.pk:
+            guardias_existentes = guardias_existentes.exclude(pk=self.instance.pk)
+
+        for guardia_existente in guardias_existentes:
+            inicio_existente = datetime.combine(guardia_existente.fecha_inicio, guardia_existente.hora_inicio)
+            fin_existente = datetime.combine(guardia_existente.fecha_fin, guardia_existente.hora_fin)
+            
+            if fin_existente <= inicio_existente:
+                fin_existente += timedelta(days=1)
+
+            if datetime_inicio_propuesta < fin_existente and datetime_fin_propuesta > inicio_existente:
+                raise ValidationError("Ya existe una guardia reservada que se solapa con el horario propuesto.")
+
+        if fecha_inicio > cleaned_data['fecha_fin']: 
+            raise ValidationError("La fecha de inicio debe ser anterior o igual a la fecha de fin (considerando el cruce de medianoche).")
+            
         if fecha_inicio == fecha_fin and hora_inicio >= hora_fin:
             raise ValidationError("La hora de fin debe ser posterior a la hora de inicio si es el mismo día.")
-        
+
         return cleaned_data
+
+    
 
 
 

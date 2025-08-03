@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.db.models import Sum, F, Func, IntegerField
 from django.db.models.functions import ExtractMonth
+from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
@@ -44,7 +45,7 @@ def sobremi(request):
     return render(request, "about.html")
 
 
-########################  GUARDIAS  ######################################################  GUARDIAS  ##############################
+########################  HORAS EXTRAS  ######################################################  HORAS EXTRAS  ##############################
 @login_required
 def registrar_horas_extra(request):
     horas_extras = HoraExtra.objects.filter(usuario=request.user).order_by('-fecha_inicio')
@@ -61,7 +62,7 @@ def registrar_horas_extra(request):
             # Si hay errores en el formulario, agrega mensajes de error
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, error) 
+                    messages.error(request, error)
                     print(f"Error en el campo '{field}': {error}")
     else:
         form = HoraExtraForm(usuario=request.user)  # Pasamos el usuario
@@ -73,19 +74,43 @@ def registrar_horas_extra(request):
 
 @user_passes_test(es_admin)
 def lista_horas_extra(request):
-    # Obtenemos el año actual
+    # Obtenemos el año actual (no usado directamente en este contexto de filtro, pero mantenido)
     current_year = now().year
 
-    # Obtenemos todos los registros de horas extra
-    horas_extras = HoraExtra.objects.all().order_by('-fecha_inicio')
+    # Definir los nombres de los grupos de usuarios
+    grupos_ops = ['Operaciones', 'Tecnico 1', 'Tecnico 2', 'Laboratorio', 'NOC']
+    grupo_mto = ['Mantenimiento']
+    grupo_it = ['IT']
 
-    # Filtro para identificar registros que provienen de guardias
-    horas_guardia = horas_extras.filter(es_guardia=True)
+    # Obtener el parámetro de filtro de la URL
+    filtro_grupo = request.GET.get('grupo', None)
+
+    # Inicializar el queryset de horas extras
+    # Asegúrate de cargar también el usuario relacionado para el username en el template
+    horas_extras = HoraExtra.objects.filter(aprobado__isnull=True).order_by('-fecha_inicio').select_related('usuario')
+
+    # Aplicar el filtro según el grupo seleccionado
+    if filtro_grupo == 'OPS':
+        # Obtener los usuarios que pertenecen a cualquiera de los grupos de 'OPS'
+        users_in_groups = User.objects.filter(groups__name__in=grupos_ops).distinct()
+        horas_extras = horas_extras.filter(usuario__in=users_in_groups)
+    elif filtro_grupo == 'MTO':
+        users_in_groups = User.objects.filter(groups__name__in=grupo_mto).distinct()
+        horas_extras = horas_extras.filter(usuario__in=users_in_groups)
+    elif filtro_grupo == 'IT':
+        users_in_groups = User.objects.filter(groups__name__in=grupo_it).distinct()
+        horas_extras = horas_extras.filter(usuario__in=users_in_groups)
+    # Si filtro_grupo es None o cualquier otro valor, se mostrarán todas las horas pendientes
+
+    # Filtro para identificar registros que provienen de guardias (se mantiene sin cambios)
+    horas_guardia = horas_extras.filter(es_guardia=True) # Esto filtraría aún más las horas extras ya filtradas por grupo
 
     return render(request, 'lista_horas_extra.html', {
         'horas_extras': horas_extras,
-        'horas_guardia': horas_guardia,
+        'horas_guardia': horas_guardia, # Podrías decidir si este lo necesitas o no con los nuevos filtros.
+        'filtro_activo': filtro_grupo, # Para resaltar el botón activo
     })
+
 
 @login_required
 def eliminar_horas_extra(request, id):
@@ -103,19 +128,32 @@ def aprobar_rechazar_horas_extra(request, id):
     if request.method == 'POST':
         accion = request.POST.get('accion')
         feedback = request.POST.get('feedback')
-        
+        # Captura el filtro de grupo de un campo oculto en el formulario
+        filtro_grupo_actual = request.POST.get('filtro_grupo', None)
+
         if accion == 'aprobar':
             hora_extra.aprobado = True
         elif accion == 'rechazar':
             hora_extra.aprobado = False
         hora_extra.feedback_admin = feedback
+        hora_extra.aprobado_por = request.user
+        hora_extra.fecha_aprobacion = now() # Asegúrate de que esta línea esté, es crucial para la fecha de revisión
         hora_extra.save()
-        return redirect('lista_horas_extra')
+
+        # Construye la URL de redirección manteniendo el filtro de grupo si existe
+        if filtro_grupo_actual:
+            # Usamos reverse para obtener la URL base y luego concatenamos el parámetro GET
+            url = reverse('lista_horas_extra')
+            return redirect(f"{url}?grupo={filtro_grupo_actual}") # Usamos un f-string para la URL
+        else:
+            return redirect('lista_horas_extra')
+
 
 @login_required
 @user_passes_test(es_admin)
 def horas_extras_aprobadas(request):
-    horas_extras_aprobadas_rechazadas = HoraExtra.objects.filter(aprobado__isnull=False).order_by('-fecha_inicio')
+    # Asegúrate de usar .select_related('aprobado_por')
+    horas_extras_aprobadas_rechazadas = HoraExtra.objects.filter(aprobado__isnull=False).order_by('-fecha_inicio').select_related('aprobado_por')
     return render(request, 'horas_aprobadas.html', {
         'horas_extras': horas_extras_aprobadas_rechazadas,
     })
@@ -220,16 +258,20 @@ def stats_horas(request):
         'horas_por_mes': horas_por_mes,
     })
 
+
+########################  GUARDIAS  ######################################################  GUARDIAS  ##############################
+
 @login_required
 def reservar_guardia(request):
     if request.method == "POST":
         form = GuardiaForm(request.POST)
         if form.is_valid():
-            # Crear la guardia
             guardia = form.save(commit=False)
-            guardia.creador = request.user
+            guardia.creador = request.user # Asegúrate de que 'creador' sea un campo en tu modelo Guardia
             guardia.save()
             return redirect('guardias') 
+        else:
+            messages.error(request, 'Hubo un error al reservar la guardia. Revisa los datos.')
     else:
         form = GuardiaForm()
 
@@ -263,8 +305,10 @@ def actualizar_guardia(request, pk):
         if form.is_valid():
             form.save()
             return redirect('guardias')
+        else:
+            messages.error(request, 'Hubo un error al actualizar la guardia. Revisa los datos.') # Mensaje de error
     else:
-        form = GuardiaForm(instance=guardia)
+        form = GuardiaForm(instance=guardia) # Aquí se pasa la instancia para precargar los datos
     return render(request, 'actualizar_guardia.html', {'form': form, 'guardia': guardia})
 
 

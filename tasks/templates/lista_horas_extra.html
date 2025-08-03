@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                const mensaje = data.registros > 0 
+                const mensaje = data.registros > 0
                     ? `${data.mensaje}<br>(${data.fecha_inicio} a ${data.fecha_fin})`
                     : data.mensaje;
 
@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
+                    title: 'Error',
                     text: 'Hubo un problema al cargar las guardias.',
                     confirmButtonText: 'Cerrar'
                 });
@@ -49,6 +50,23 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     });
+
+    // Lógica para los botones de filtro de grupo
+    document.querySelectorAll('.filter-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const grupo = this.dataset.grupo;
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('grupo', grupo);
+            window.location.href = currentUrl.toString();
+        });
+    });
+
+    // Lógica para el botón "Mostrar Todos"
+    document.getElementById('show-all-button').addEventListener('click', function() {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete('grupo'); // Eliminar el parámetro de grupo
+        window.location.href = currentUrl.toString();
+    });
 });
 </script>
 {% endblock %}
@@ -57,10 +75,18 @@ document.addEventListener('DOMContentLoaded', function () {
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="text-center mb-0">Lista de Horas Extra por Usuario</h2>
-    <form method="POST" action="{% url 'cargar_guardias_a_horas_extra' %}" id="cargarGuardiasForm">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-warning px-4"><i class="bi bi-calendar-check-fill"></i> Cargar Guardias</button>
-    </form>
+    <div class="d-flex align-items-center gap-2"> {# Contenedor para los botones de filtro y cargar guardias #}
+        {# Botones de filtro de grupo #}
+        <button class="btn btn-outline-primary btn-sm filter-button {% if filtro_activo == 'OPS' %}active{% endif %}" data-grupo="OPS">OPS</button>
+        <button class="btn btn-outline-primary btn-sm filter-button {% if filtro_activo == 'MTO' %}active{% endif %}" data-grupo="MTO">MTO</button>
+        <button class="btn btn-outline-primary btn-sm filter-button {% if filtro_activo == 'IT' %}active{% endif %}" data-grupo="IT">IT</button>
+        <button id="show-all-button" class="btn btn-outline-secondary btn-sm {% if not filtro_activo %}active{% endif %}">Todos</button>
+        {# Botón de Cargar Guardias #}
+        <form method="POST" action="{% url 'cargar_guardias_a_horas_extra' %}" id="cargarGuardiasForm" class="ms-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning px-4"><i class="bi bi-calendar-check-fill"></i> Cargar Guardias</button>
+        </form>
+    </div>
 </div>
 
 <table class="table table-striped table-hover">
@@ -85,11 +111,12 @@ document.addEventListener('DOMContentLoaded', function () {
             <td>{{ horas.justificar|default:"-" }}</td>
             <td style="text-align: left; vertical-align: middle;">{{ horas.porcent }}</td>
             <td style="text-align: left; vertical-align: middle;">{{ horas.total_horas }}</td>
-            <!-- <td style="text-align: center; vertical-align: middle;">Pendiente</td> -->
             <td>
                 <form method="post" action="{% url 'aprobar_rechazar_horas_extra' horas.id %}">
                     {% csrf_token %}
                     <input type="text" name="feedback" placeholder="Escriba el feedback" class="form-control mb-2">
+                    {# Campo oculto para mantener el filtro actual #}
+                    <input type="hidden" name="filtro_grupo" value="{{ filtro_activo|default:'' }}">
                     <div class="d-flex gap-2">
                         <button type="submit" name="accion" value="aprobar" class="btn btn-success btn-sm flex-fill">
                             <i class="bi bi-hand-thumbs-up-fill"></i>Aprobar

@@ -76,7 +76,7 @@ class SWCoreScriptForm(forms.Form):
         queryset=GrupoVLAN.objects.filter(id__range=(1, 5)),
         label="Módulo",
         required=True,
-        help_text="Seleccione el Modulo o Container."
+        help_text="Seleccione el Modulo."
     )
 
 

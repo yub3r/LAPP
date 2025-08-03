@@ -110,7 +110,7 @@ $(document).ready(function() {
             <th>Horas</th>
             <th>Estado</th>
             <th style="text-align: center; vertical-align: middle;">Fecha de Revisión</th>
-            <th>Feedback</th>
+            <th>Feedback</th> {# Este es el encabezado de la columna donde integrarás la información #}
         </tr>
     </thead>
     <tbody>
@@ -136,7 +136,20 @@ $(document).ready(function() {
             <td style="text-align: center; vertical-align: middle;">
                 {{ horas.fecha_aprobacion|date:"d/m/y H:i" }}
             </td>
-            <td>{{ horas.feedback_admin|default:"-" }}</td>
+            <td>
+                {# Aquí combinamos el usuario que aprueba/rechaza y el feedback #}
+                {% if horas.aprobado_por %}
+                    <strong>{{ horas.aprobado_por.username }}:</strong>
+                    {% if horas.feedback_admin %}
+                        {{ horas.feedback_admin }}
+                    {% else %}
+                        -
+                    {% endif %}
+                {% else %}
+                    {# En caso de que por alguna razón aprobado_por sea nulo (no debería pasar si aprobado is not None) #}
+                    {{ horas.feedback_admin|default:"-" }}
+                {% endif %}
+            </td>
         </tr>
         {% empty %}
         <tr>

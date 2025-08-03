@@ -79,8 +79,8 @@ class CryptoPrice(models.Model):
 
 
 class Guardia(models.Model):
-    usuario1 = models.ForeignKey(User, related_name='usuario1', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Tecnico 1'})
-    usuario2 = models.ForeignKey(User, related_name='usuario2', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Tecnico 2'})
+    usuario1 = models.ForeignKey(User, related_name='usuario1', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Operaciones'})
+    usuario2 = models.ForeignKey(User, related_name='usuario2', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Mantenimiento'})
     usuario3 = models.ForeignKey(User, related_name='usuario3', on_delete=models.CASCADE, limit_choices_to={'groups__name': 'IT'})
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
@@ -139,6 +139,7 @@ class HoraExtra(models.Model):
     aprobado = models.BooleanField(null=True, blank=True)
     feedback_admin = models.TextField(max_length=500, blank=True, null=True)
     fecha_aprobacion = models.DateTimeField(null=True, blank=True)
+    aprobado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='horas_extras_aprobadas') # Nuevo campo
     es_guardia = models.BooleanField(default=False)
     porcent = models.CharField(max_length=4, choices=PORCENT_OPTIONS, default='50%')
 
@@ -157,6 +158,7 @@ class HoraExtra(models.Model):
         self.total_horas = self.calcular_total_horas()
 
         # Actualiza la fecha de aprobación si cambia el estado
+        # y la fecha_aprobacion no ha sido establecida
         if self.aprobado is not None and not self.fecha_aprobacion:
             self.fecha_aprobacion = datetime.now()
 

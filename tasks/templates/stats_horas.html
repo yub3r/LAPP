@@ -54,12 +54,12 @@ $(document).ready(function() {
         <table class="tablet table-user-month table-striped table-hover">
             <thead>
                 <tr>
-                    <th>Año/Mes</th>
-                    <th>Usuario</th>
-                    <th>25%</th>
-                    <th>50%</th>
-                    <th>100%</th>
-                    <th>Total Horas</th>
+                    <th >Año/Mes</th>
+                    <th >Usuario</th>
+                    <th style="text-align: right; vertical-align: middle;">25%</th>
+                    <th style="text-align: right; vertical-align: middle;">50%</th>
+                    <th style="text-align: right; vertical-align: middle;">100%</th>
+                    <th style="text-align: right; vertical-align: middle;">Total Horas</th>
                 </tr>
             </thead>
             <tbody>
@@ -67,10 +67,10 @@ $(document).ready(function() {
                 <tr>
                     <td>{{ registro.anio_mes }}</td>
                     <td>{{ registro.usuario }}</td>
-                    <td>{% if registro|get_item:"25%" > 0 %}{{ registro|get_item:"25%"|floatformat:2 }}{% else %}{% endif %}</td>
-                    <td>{% if registro|get_item:"50%" > 0 %}{{ registro|get_item:"50%"|floatformat:2 }}{% else %}{% endif %}</td>
-                    <td>{% if registro|get_item:"100%" > 0 %}{{ registro|get_item:"100%"|floatformat:2 }}{% else %}{% endif %}</td>
-                    <td>{{ registro.total_horas|floatformat:2 }}</td>
+                    <td style="text-align: right; vertical-align: middle;">{% if registro|get_item:"25%" > 0 %}{{ registro|get_item:"25%"|floatformat:2 }}{% else %}{% endif %}</td>
+                    <td style="text-align: right; vertical-align: middle;">{% if registro|get_item:"50%" > 0 %}{{ registro|get_item:"50%"|floatformat:2 }}{% else %}{% endif %}</td>
+                    <td style="text-align: right; vertical-align: middle;">{% if registro|get_item:"100%" > 0 %}{{ registro|get_item:"100%"|floatformat:2 }}{% else %}{% endif %}</td>
+                    <td style="text-align: right; vertical-align: middle;">{{ registro.total_horas|floatformat:2 }}</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -88,14 +88,14 @@ $(document).ready(function() {
             <thead>
                 <tr>
                     <th>Año/Mes</th>
-                    <th>Total Horas</th>
+                    <th style="text-align: right; vertical-align: middle;">Total Horas</th>
                 </tr>
             </thead>
             <tbody>
                 {% for mes in horas_por_mes %}
                 <tr>
                     <td>{{ mes.anio_mes }}</td>
-                    <td>{{ mes.total_horas|floatformat:2 }}</td>
+                    <td style="text-align: right; vertical-align: middle;">{{ mes.total_horas|floatformat:2 }}</td>
                 </tr>
                 {% empty %}
                 <tr>

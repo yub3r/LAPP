@@ -1,8 +1,15 @@
+from datetime import timezone
 from django.db import IntegrityError, models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.timezone import localtime
+from django.utils import timezone
+from .utils import calculate_time_range
+
+
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -75,23 +82,50 @@ class WeeklyMenu(models.Model):
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    order_date = models.DateTimeField(auto_now_add=True, db_index=True)  # Índice agregado
+    order_date = models.DateTimeField(db_index=True, default=timezone.now)
     main_dish = models.CharField(max_length=100, blank=True, null=True)
-    salad = models.ForeignKey(Salad, on_delete=models.SET_NULL, null=True, blank=True)
-    other_dish = models.ForeignKey(OtherDish, on_delete=models.SET_NULL, null=True, blank=True)
-    side_dish = models.ForeignKey(SideDish, on_delete=models.SET_NULL, null=True, blank=True)
+    salad = models.ForeignKey('Salad', on_delete=models.SET_NULL, null=True, blank=True)
+    other_dish = models.ForeignKey('OtherDish', on_delete=models.SET_NULL, null=True, blank=True)
+    side_dish = models.ForeignKey('SideDish', on_delete=models.SET_NULL, null=True, blank=True)
     comments = models.TextField(blank=True)
     extra_requests = models.TextField(blank=True)
     repeat_for_week = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"Pedido de {self.user.username} el {self.order_date.strftime('%Y-%m-%d %H:%M:%S')}"
+    def clean(self):
+        if hasattr(self, '_user') and self._user and self._user.is_superuser:
+            return
+
+        if self.repeat_for_week:
+            # Verificar que no haya otro pedido con repeat_for_week activo para este usuario
+            repeat_orders = Order.objects.filter(
+                user=self.user,
+                repeat_for_week=True
+            ).exclude(pk=self.pk if self.pk else None)
+
+            if repeat_orders.exists():
+                raise ValidationError("Solo puede tener un pedido con repetición semanal activa.")
+
 
     def save(self, *args, **kwargs):
+        # Asegurar que _user esté disponible para clean()
+        self._user = getattr(self, '_user', kwargs.pop('user', None))
 
+        # Validar que haya al menos un plato seleccionado
         if not self.main_dish and not self.salad and not self.other_dish:
             raise ValidationError('Debe seleccionar al menos un plato principal, una ensalada o un plato adicional.')
+
+        # Si este pedido tiene repeat_for_week=True, desactivar otros
+        if self.repeat_for_week:
+            Order.objects.filter(
+                user=self.user,
+                repeat_for_week=True
+            ).exclude(pk=self.pk if self.pk else None).update(repeat_for_week=False)
+
+        self.full_clean()
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Pedido de {self.user.username} el {self.order_date.strftime('%Y-%m-%d %H:%M:%S')}"
 
     # def clean(self):
     #     if not self.main_dish and not self.salad and not self.other_dish:

@@ -3,6 +3,7 @@ from slack import WebClient
 from slack.errors import SlackApiError
 from celery import shared_task
 from django.utils import timezone
+from django.db.models import Max
 from ruralapp.models import WeeklyMenu, AppState, Order
 from datetime import timedelta
 from django.contrib.auth import get_user_model
@@ -11,6 +12,8 @@ import logging
 import requests
 import yfinance as yf
 from django.core.cache import cache
+from django.db import transaction, IntegrityError
+from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +108,7 @@ def send_slack_menu():
             f"- {main_dish_1}\n"
             f"- {main_dish_2}\n\n"
             "⏰ *Los que faltan, recuerden ordenar antes de las 8:30*\n"
-            "👮‍♂️ _Quien no alcance a ordenar a tiempo y lo notifica, se le pedirá el menú A._"
+            "👮‍♂️ _Quien no alcance a ordenar y *lo notifica a tiempo*, se le pedirá el menú A._"
         )
     except WeeklyMenu.DoesNotExist:
         message = f"🍽 *Hoy {menu_day_name} no hay menú configurado.*"
@@ -148,7 +151,7 @@ def send_slack_tomorrow_menu():
             f"*Desde ya puedes ordenar!! 🍽 Menú del día {tomorrow_menu_day_name}*:\n"
             f"- {main_dish_1}\n"
             f"- {main_dish_2}\n\n"
-            f"⏰ *Por favor ordenar antes de las 16:00*"
+            # f"⏰ *Por favor ordenar*"
         )
     except WeeklyMenu.DoesNotExist:
         message = f"🍽 *Mañana {tomorrow_menu_day_name} no hay menú configurado.*"
@@ -253,25 +256,58 @@ def send_slack_pending_orders():
 #         return f"Error al enviar mensaje a Slack: {e.response['error']}"
 
 
+
+
+
 @shared_task
 def create_daily_orders():
     today = timezone.localtime(timezone.now()).date()
     new_orders_count = 0
-    users_with_repeat = Order.objects.filter(repeat_for_week=True).values_list('user', flat=True).distinct()
-    for user_id in users_with_repeat:
-        latest_repeat_order = Order.objects.filter(user_id=user_id, repeat_for_week=True).order_by('-order_date').first()
-        if latest_repeat_order:
-            if not Order.objects.filter(user_id=user_id, order_date__date=today).exists(): # Simplificamos la verificación
-                Order.objects.create(
-                    user=latest_repeat_order.user,
-                    main_dish=latest_repeat_order.main_dish,
-                    salad=latest_repeat_order.salad,
-                    other_dish=latest_repeat_order.other_dish,
-                    side_dish=latest_repeat_order.side_dish,
-                    comments=latest_repeat_order.comments,
-                    order_date=today,
-                    repeat_for_week=True
-                )
-                new_orders_count += 1
-    return f"Se han generado {new_orders_count} pedidos para hoy."
 
+    # Obtener la última orden con repeat_for_week=True por usuario
+    latest_repeat_orders = (
+        Order.objects.filter(repeat_for_week=True)
+        .values('user')
+        .annotate(latest_order_id=Max('id'))  # Podés cambiar a Max('order_date') si querés usar la fecha como referencia
+    )
+
+    # Extraer los IDs de las órdenes a replicar
+    repeat_order_ids = [entry['latest_order_id'] for entry in latest_repeat_orders]
+
+    # Obtener las órdenes a replicar
+    orders_to_replicate = Order.objects.filter(id__in=repeat_order_ids)
+
+    for master_order in orders_to_replicate:
+        try:
+            with transaction.atomic():
+                # Crear nuevo pedido
+                new_order = Order(
+                    user=master_order.user,
+                    main_dish=master_order.main_dish,
+                    salad=master_order.salad,
+                    other_dish=master_order.other_dish,
+                    side_dish=master_order.side_dish,
+                    comments=master_order.comments,
+                    extra_requests=master_order.extra_requests,
+                    repeat_for_week=True,  # Nuevo pedido también queda activo
+                    order_date=timezone.now(),  # Fecha actual
+                )
+                
+                new_order.full_clean()
+                new_order.save()
+                new_orders_count += 1
+                logger.info(f"Creado pedido automático (ID: {new_order.id}) para {master_order.user.username} para el día {today}.")
+
+                # Desactivar repeat_for_week en la orden anterior
+                master_order.repeat_for_week = False
+                master_order.save(update_fields=['repeat_for_week'])
+                logger.info(f"Desactivado repeat_for_week para el pedido anterior (ID: {master_order.id}) de {master_order.user.username}.")
+
+        except (IntegrityError, ValidationError) as e:
+            logger.error(f"Error al crear pedido automático para {master_order.user.username}: {str(e)}")
+            continue
+        except Exception as e:
+            logger.exception(f"Error inesperado al procesar pedido automático para {master_order.user.username}.")
+            continue
+
+    return f"Se han generado {new_orders_count} pedidos automáticos para hoy."
