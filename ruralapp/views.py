@@ -1,16 +1,16 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.utils import timezone
-from django.db.models import Q
+from django.urls import reverse
 import json
-from django.db.models import Max
+from django.db.models import Max, Q
 from collections import defaultdict, OrderedDict, Counter
 from .models import Salad, OtherDish, WeeklyMenu, Order, SideDish, AppState
 from datetime import datetime, time, timedelta
 import logging
 from django.utils.timezone import localtime, now as timezone_now
-
+            
 
 
 @login_required
@@ -49,28 +49,50 @@ def advance_week():
 
     return app_state.current_week
 
-
 # Función auxiliar para calcular el rango de tiempo válido
 def calculate_time_range():
     now = timezone.localtime(timezone.now())
     current_hour = now.hour
     current_minute = now.minute
-    today_weekday = now.weekday()
+    today_weekday = now.weekday()  # 0=Lunes, 1=Martes, ..., 6=Domingo
+    
+    print(f"DEBUG: Hoy es {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'][today_weekday]}")
+    print(f"DEBUG: Hora actual: {current_hour}:{current_minute:02d}")
 
-    if current_hour > 13 or (current_hour == 13 and current_minute >= 10):
-        start_date = now.replace(hour=13, minute=10, second=0, microsecond=0)
-    else:
-        if today_weekday == 0:  # Lunes antes de las 13:10
-            last_friday = now - timedelta(days=3)
-            start_date = last_friday.replace(hour=13, minute=10, second=0, microsecond=0)
-        elif today_weekday in [5, 6]:  # Sábado o domingo
-            last_friday = now - timedelta(days=(today_weekday - 4))
-            start_date = last_friday.replace(hour=13, minute=10, second=0, microsecond=0)
+    # Caso 1: Es lunes, martes, miércoles, jueves o viernes
+    if today_weekday in [0, 1, 2, 3, 4]:  # Lunes a Viernes
+        if current_hour > 13 or (current_hour == 13 and current_minute >= 10):
+            # Después de las 13:10, mostrar menú del día siguiente
+            if today_weekday == 4:  # Viernes después de 13:10 -> menú del lunes
+                # El próximo período válido empieza hoy a las 13:10
+                start_date = now.replace(hour=13, minute=10, second=0, microsecond=0)
+            else:
+                # Cualquier otro día de semana después de 13:10
+                start_date = now.replace(hour=13, minute=10, second=0, microsecond=0)
         else:
-            yesterday = now - timedelta(days=1)
-            start_date = yesterday.replace(hour=13, minute=10, second=0, microsecond=0)
-
+            # Antes de las 13:10, mostrar menú de hoy
+            if today_weekday == 0:  # Lunes antes de 13:10 -> menú del lunes (desde viernes 13:10)
+                last_friday = now - timedelta(days=3)
+                start_date = last_friday.replace(hour=13, minute=10, second=0, microsecond=0)
+            else:
+                # Martes, miércoles, jueves o viernes antes de 13:10
+                yesterday = now - timedelta(days=1)
+                start_date = yesterday.replace(hour=13, minute=10, second=0, microsecond=0)
+    
+    # Caso 2: Es sábado o domingo
+    elif today_weekday in [5, 6]:  # Sábado o domingo
+        # Mostrar menú del lunes (desde viernes 13:10)
+        if today_weekday == 5:  # Sábado
+            last_friday = now - timedelta(days=1)
+        else:  # Domingo
+            last_friday = now - timedelta(days=2)
+        
+        start_date = last_friday.replace(hour=13, minute=10, second=0, microsecond=0)
+    
+    # El período termina 24 horas después
     end_date = start_date + timedelta(days=1)
+    
+    print(f"DEBUG: Rango de fechas - Desde: {start_date} Hasta: {end_date}")
     return start_date, end_date
 
 # Función auxiliar para determinar el menú diario
@@ -97,24 +119,29 @@ def get_menu_day_and_week():
         menu_day_name = "Lunes"
         displayed_week = (current_week % 4) + 1
 
+    print(f"DEBUG: Menú del día: {menu_day_name}, Semana: {displayed_week}")
     return menu_day_name, displayed_week
-
-
-
 
 @login_required
 def ruralapp(request):
-    start_date, _ = calculate_time_range()
-
-    recent_orders = Order.objects.filter(order_date__gte=start_date).order_by('-order_date')
+    # Obtener fechas y menú usando las funciones auxiliares
+    start_date, end_date = calculate_time_range()
+    menu_day_name, displayed_week = get_menu_day_and_week()
+    
+    # Filtrar órdenes en el rango de tiempo actual
+    recent_orders = Order.objects.filter(
+        order_date__gte=start_date,
+        order_date__lt=end_date
+    ).order_by('-order_date')
+    
     total_orders = recent_orders.count()
+    
+    print(f"DEBUG: Total de órdenes encontradas: {total_orders}")
+    for order in recent_orders[:5]:  # Mostrar las primeras 5 para debug
+        print(f"DEBUG: Orden {order.id} - Usuario: {order.user.username} - Fecha: {order.order_date}")
 
     # Validar si el usuario ya realizó un pedido en este rango
-    error_message = None
-    if not (request.user.is_staff and request.user.is_superuser):
-        user_orders = recent_orders.filter(user=request.user)
-        if user_orders.exists():
-            error_message = "Ya has realizado un pedido en este periodo. No puedes realizar otro."
+    has_existing_order = recent_orders.filter(user=request.user).exists()
 
     # Obtener el último pedido de cada usuario en el período
     latest_orders_by_user = {}
@@ -123,51 +150,35 @@ def ruralapp(request):
         if user_id not in latest_orders_by_user:
             latest_orders_by_user[user_id] = order
 
-    # Obtener la última fecha de pedido con repeat_for_week=True para cada usuario
-    last_repeat_orders = Order.objects.filter(repeat_for_week=True).values('user_id').annotate(
-        last_repeat_date=Max('order_date')
-    )
-    last_repeat_orders_dict = {entry['user_id']: entry['last_repeat_date'] for entry in last_repeat_orders}
-
-    # Marcar qué pedidos deben mostrar "(Auto)"
+    # Marcar pedidos automáticos
     for order in recent_orders:
         user_id = order.user_id
         is_latest_for_user = latest_orders_by_user.get(user_id) == order
-        
-        # Solo el último pedido del usuario puede mostrar "(Auto)"
-        if is_latest_for_user:
-            last_repeat_date = last_repeat_orders_dict.get(user_id, None)
-            
-            # Mostrar "(Auto)" si:
-            # 1. El pedido actual tiene repeat_for_week=True, O
-            # 2. El pedido fue creado automáticamente (después de la última fecha de repetición)
-            if order.repeat_for_week or (last_repeat_date and order.order_date > last_repeat_date):
-                order.show_auto = True
-            else:
-                order.show_auto = False
-        else:
-            order.show_auto = False
+        order.show_auto = is_latest_for_user and order.repeat_for_week
+
+    show_superuser_warning = request.user.is_superuser and has_existing_order
 
     return render(request, 'ruralapp.html', {
         'orders': recent_orders,
         'total_orders': total_orders,
-        'error_message': error_message,
+        'show_superuser_warning': show_superuser_warning,
     })
-
-
 
 @login_required
 def order_view(request):
     start_date, end_date = calculate_time_range()
 
     # Verificar si el usuario ya hizo un pedido hoy (excepto admins/superusuarios)
-    if not (request.user.is_staff and request.user.is_superuser):
+    if not request.user.is_superuser:
         user_orders = Order.objects.filter(
             user=request.user,
             order_date__range=(start_date, end_date)
         )
         if user_orders.exists():
-            return JsonResponse({'success': False, 'error': "Ya has realizado un pedido hoy. No puedes realizar otro."})
+
+            url = reverse('ruralapp') + '?pedido_existente=1'
+            return HttpResponseRedirect(url)
+
 
     menu_day_name, displayed_week = get_menu_day_and_week()
     try:
@@ -182,6 +193,7 @@ def order_view(request):
     other_dishes = OtherDish.objects.values('id', 'name', 'plus_side')
     side_dishes = SideDish.objects.all()
 
+
     if request.method == 'POST':
         main_dish = request.POST.get('main_dish')
         salad_id = request.POST.get('salad')
@@ -189,9 +201,6 @@ def order_view(request):
         side_dish_id = request.POST.get('side_dish')
         comments = request.POST.get('comments', '')
         repeat_for_week = request.POST.get('repeat_for_week') == 'on'
-
-        if not main_dish and not salad_id and not other_dish_id and not side_dish_id:
-            return JsonResponse({'success': False, 'error': "Debe seleccionar al menos un plato principal, una ensalada, un plato adicional o una guarnición."})
 
         # Desactivar repetición en otros pedidos
         if repeat_for_week:

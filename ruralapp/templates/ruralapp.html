@@ -3,26 +3,58 @@
 {% block js %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Mostrar alerta si el usuario ya tiene un pedido hoy (por parámetro GET)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('pedido_existente') === '1') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Ya has realizado un pedido hoy. No puedes realizar otro.',
+                confirmButtonText: 'OK'
+            });
+            // Limpiar el parámetro de la URL después de mostrar el mensaje
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+        }
         // Manejar la restricción de horario para el botón "Hacer Pedido"
         var misOrdenesButton = document.querySelector('a[href="{% url "order" %}"]');
-        misOrdenesButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            var now = new Date();
-            var currentHour = now.getHours();
-            var currentMinutes = now.getMinutes();
+        if (misOrdenesButton) {
+            misOrdenesButton.addEventListener('click', function (event) {
+                event.preventDefault();
 
-            // Restricción: entre las 8:30 y las 13:9
-            if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Acceso Restringido',
-                    text: 'No puede hacer pedidos entre las 8:30 y las 13:10.',
-                    confirmButtonText: 'Entendido'
-                });
-            } else {
-                window.location.href = this.href;
-            }
-        });
+                var now = new Date();
+                var currentHour = now.getHours();
+                var currentMinutes = now.getMinutes();
+
+                // Restricción: entre las 8:30 y las 13:9
+                if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Acceso Restringido',
+                        text: 'No puede hacer pedidos entre las 8:30 y las 13:10.',
+                        confirmButtonText: 'Entendido'
+                    });
+                } else {
+                    var showSuperuserWarning = '{{ show_superuser_warning|yesno:"true,false" }}';
+                    if (showSuperuserWarning === "true") {
+                        Swal.fire({
+                            title: 'Advertencia',
+                            text: "Ya tienes una Orden hecha, puedes Editarla o Continuar si quieres hacer un Pedido adicional.",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Continuar',
+                            cancelButtonText: 'Cancelar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = this.href;
+                            }
+                        });
+                    } else {
+                        window.location.href = this.href;
+                    }
+                }
+            });
+        }
 
         // Contador incremental por usuario (trabajando de atrás hacia adelante)
         const userCells = document.querySelectorAll('[data-username]');
