@@ -10,6 +10,7 @@ from .models import Salad, OtherDish, WeeklyMenu, Order, SideDish, AppState
 from datetime import datetime, time, timedelta
 import logging
 from django.utils.timezone import localtime, now as timezone_now
+from django.views.decorators.cache import never_cache
             
 
 
@@ -52,47 +53,52 @@ def advance_week():
 # Función auxiliar para calcular el rango de tiempo válido
 def calculate_time_range():
     now = timezone.localtime(timezone.now())
-    current_hour = now.hour
-    current_minute = now.minute
-    today_weekday = now.weekday()  # 0=Lunes, 1=Martes, ..., 6=Domingo
-    
-    print(f"DEBUG: Hoy es {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'][today_weekday]}")
-    print(f"DEBUG: Hora actual: {current_hour}:{current_minute:02d}")
+    today_weekday = now.weekday()  # 0=Lunes, ..., 6=Domingo
 
-    # Caso 1: Es lunes, martes, miércoles, jueves o viernes
-    if today_weekday in [0, 1, 2, 3, 4]:  # Lunes a Viernes
-        if current_hour > 13 or (current_hour == 13 and current_minute >= 10):
-            # Después de las 13:10, mostrar menú del día siguiente
-            if today_weekday == 4:  # Viernes después de 13:10 -> menú del lunes
-                # El próximo período válido empieza hoy a las 13:10
-                start_date = now.replace(hour=13, minute=10, second=0, microsecond=0)
-            else:
-                # Cualquier otro día de semana después de 13:10
-                start_date = now.replace(hour=13, minute=10, second=0, microsecond=0)
+    def at_1310(dt):
+        return dt.replace(hour=13, minute=10, second=0, microsecond=0)
+
+    today_1310 = at_1310(now)
+
+    # Casos por día de la semana
+    if today_weekday == 5 or today_weekday == 6:  # Sábado o Domingo
+        # Ventana de fin de semana: desde viernes 13:10 hasta lunes 13:10
+        last_friday = now - timedelta(days=(today_weekday - 4))  # 5->1, 6->2
+        next_monday = now + timedelta(days=(7 - today_weekday))  # 5->2, 6->1
+        start_date = at_1310(last_friday)
+        end_date = at_1310(next_monday)
+
+    elif today_weekday == 4:  # Viernes
+        if now >= today_1310:
+            # Después de viernes 13:10: ventana se extiende hasta lunes 13:10
+            start_date = today_1310
+            end_date = at_1310(now + timedelta(days=3))  # Lunes
         else:
-            # Antes de las 13:10, mostrar menú de hoy
-            if today_weekday == 0:  # Lunes antes de 13:10 -> menú del lunes (desde viernes 13:10)
-                last_friday = now - timedelta(days=3)
-                start_date = last_friday.replace(hour=13, minute=10, second=0, microsecond=0)
-            else:
-                # Martes, miércoles, jueves o viernes antes de 13:10
-                yesterday = now - timedelta(days=1)
-                start_date = yesterday.replace(hour=13, minute=10, second=0, microsecond=0)
-    
-    # Caso 2: Es sábado o domingo
-    elif today_weekday in [5, 6]:  # Sábado o domingo
-        # Mostrar menú del lunes (desde viernes 13:10)
-        if today_weekday == 5:  # Sábado
-            last_friday = now - timedelta(days=1)
-        else:  # Domingo
-            last_friday = now - timedelta(days=2)
-        
-        start_date = last_friday.replace(hour=13, minute=10, second=0, microsecond=0)
-    
-    # El período termina 24 horas después
-    end_date = start_date + timedelta(days=1)
-    
-    print(f"DEBUG: Rango de fechas - Desde: {start_date} Hasta: {end_date}")
+            # Antes de 13:10: desde jueves 13:10 hasta hoy 13:10
+            start_date = at_1310(now - timedelta(days=1))
+            end_date = today_1310
+
+    elif today_weekday == 0:  # Lunes
+        if now < today_1310:
+            # Lunes antes de 13:10: incluir todo el fin de semana y mañana de lunes
+            start_date = at_1310(now - timedelta(days=3))  # Viernes 13:10
+            end_date = today_1310  # Lunes 13:10
+        else:
+            # Lunes después de 13:10: ventana normal 24h
+            start_date = today_1310
+            end_date = at_1310(now + timedelta(days=1))
+
+    else:  # Martes, Miércoles, Jueves
+        if now < today_1310:
+            start_date = at_1310(now - timedelta(days=1))
+            end_date = today_1310
+        else:
+            start_date = today_1310
+            end_date = at_1310(now + timedelta(days=1))
+
+    print(
+        f"DEBUG: Rango de fechas - Desde: {start_date} Hasta: {end_date} (hoy={['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'][today_weekday]})"
+    )
     return start_date, end_date
 
 # Función auxiliar para determinar el menú diario
@@ -162,6 +168,32 @@ def ruralapp(request):
         'orders': recent_orders,
         'total_orders': total_orders,
         'show_superuser_warning': show_superuser_warning,
+    })
+
+@login_required
+@never_cache
+def ruralapp_orders_partial(request):
+    start_date, end_date = calculate_time_range()
+
+    recent_orders = Order.objects.filter(
+        order_date__gte=start_date,
+        order_date__lt=end_date
+    ).order_by('-order_date')
+
+    # Determinar últimos por usuario y flag show_auto igual que en ruralapp
+    latest_orders_by_user = {}
+    for order in recent_orders:
+        uid = order.user_id
+        if uid not in latest_orders_by_user:
+            latest_orders_by_user[uid] = order
+    for order in recent_orders:
+        uid = order.user_id
+        order.show_auto = (latest_orders_by_user.get(uid) == order) and order.repeat_for_week
+
+    html = render(request, 'ruralapp/_orders_table_body.html', {'orders': recent_orders}).content.decode('utf-8')
+    return JsonResponse({
+        'html': html,
+        'total': recent_orders.count(),
     })
 
 @login_required

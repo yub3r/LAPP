@@ -14,13 +14,13 @@ document.addEventListener("DOMContentLoaded", function() {
             var currentMinutes = now.getMinutes();
 
             if (
-                (currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && 
+                (currentHour > 9 || (currentHour === 9 && currentMinutes >= 0)) && 
                 (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))
             ) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Acceso Restringido',
-                    text: 'No se puede editar la orden entre las 8:30 y las 13:10.',
+                    text: 'No se puede editar la orden entre las 9:00 y las 13:10.',
                     confirmButtonText: 'Entendido'
                 });
             } else {

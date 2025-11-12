@@ -27,11 +27,11 @@
                 var currentMinutes = now.getMinutes();
 
                 // Restricción: entre las 8:30 y las 13:9
-                if ((currentHour > 8 || (currentHour === 8 && currentMinutes >= 30)) && (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))) {
+                if ((currentHour > 9 || (currentHour === 9 && currentMinutes >= 0)) && (currentHour < 13 || (currentHour === 13 && currentMinutes <= 9))) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Acceso Restringido',
-                        text: 'No puede hacer pedidos entre las 8:30 y las 13:10.',
+                        text: 'No puede hacer pedidos entre las 9:00 y las 13:10.',
                         confirmButtonText: 'Entendido'
                     });
                 } else {
@@ -56,29 +56,49 @@
             });
         }
 
-        // Contador incremental por usuario (trabajando de atrás hacia adelante)
-        const userCells = document.querySelectorAll('[data-username]');
-        const userCount = {};
-
-        // Recorremos las celdas en orden inverso (últimos pedidos primero)
-        for (let i = userCells.length - 1; i >= 0; i--) {
-            const cell = userCells[i];
-            const username = cell.dataset.username;
-            
-            // Incrementamos el contador para el usuario correspondiente
-            userCount[username] = (userCount[username] || 0) + 1;
-            // Solo mostrar el contador a partir del segundo pedido
-            if (userCount[username] > 1) {
-                const counter = document.createElement('small');
-                counter.textContent = ` (x${userCount[username]})`;
-                counter.style.color = '#6c757d'; // Gris
-                // Buscar el span con el apellido
-                const lastNameSpan = cell.querySelector('.last-name');
-                if (lastNameSpan) {
-                    lastNameSpan.appendChild(counter);
+        function applyUserCounters() {
+            const userCells = document.querySelectorAll('[data-username]');
+            const userCount = {};
+            for (let i = userCells.length - 1; i >= 0; i--) {
+                const cell = userCells[i];
+                const username = cell.dataset.username;
+                userCount[username] = (userCount[username] || 0) + 1;
+                if (userCount[username] > 1) {
+                    const counter = document.createElement('small');
+                    counter.textContent = ` (x${userCount[username]})`;
+                    counter.style.color = '#6c757d';
+                    const lastNameSpan = cell.querySelector('.last-name');
+                    if (lastNameSpan) {
+                        lastNameSpan.appendChild(counter);
+                    }
                 }
             }
         }
+
+        applyUserCounters();
+
+        async function refreshOrders() {
+            try {
+                const resp = await fetch('{% url "ruralapp_orders_partial" %}', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const tbody = document.getElementById('orders-tbody');
+                if (tbody) {
+                    tbody.innerHTML = data.html;
+                }
+                const totalEl = document.getElementById('total-orders');
+                if (totalEl) {
+                    totalEl.textContent = data.total;
+                }
+                applyUserCounters();
+            } catch (e) {
+                // Silencioso para no molestar al usuario
+                console.debug('refreshOrders error', e);
+            }
+        }
+
+        // Auto-refresh cada 15 segundos 
+        setInterval(refreshOrders, 15000);
     });
 </script>
 {% endblock %}
@@ -96,10 +116,11 @@
         {% endif %}
     </section>
 
-    <!-- Tabla de órdenes en las últimas 24 horas -->
+    <!-- Tabla de órdenes - Período vigente -->
     <section class="card card-body mt-2">
         <header>
-            <h5 style="text-align: center;">Total de pedidos: {{ total_orders }}</h5>
+            <h5 style="text-align: center;">Total de pedidos: <span id="total-orders">{{ total_orders }}</span></h5>
+            <!-- <div class="text-center text-muted"><small>Período vigente</small></div> -->
         </header>
         <div class="table-container-menu">
             <table class="table table-striped">
@@ -110,38 +131,9 @@
                         <th style="text-align: center;">Plato/Comentarios</th>
                     </tr> -->
                 </thead>
-                {% if orders %}
-                <tbody>
-                    {% for order in orders %}
-                    <tr>
-                        <td style="text-align: center; vertical-align: middle;">
-                            {{ order.order_date|date:"Dd" }}<br>{{ order.order_date|date:"H:i" }}
-                        </td>
-                        <td style="text-align: left; vertical-align: middle;" data-username="{{ order.user.username }}">
-                            <span class="first-name">{{ order.user.first_name }}</span><br>
-                            <span class="last-name">{{ order.user.last_name }}</span>
-                        </td>
-                        <td style="text-align: left;">
-                            {% if order.show_auto %}
-                                (Auto)
-                            {% endif %}
-                            {{ order.main_dish|default:"" }} 
-                            {% if order.salad %}Ensalada {{ order.salad.id }}{% endif %} 
-                            {{ order.other_dish.name|default:"" }} 
-                            {{ order.side_dish|default:"" }}
-                            <br>
-                            {% if order.comments %}
-                                <small>({{ order.comments|slice:":30" }}{% if order.comments|length > 30 %}...{% endif %})</small>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
+                <tbody id="orders-tbody">
+                    {% include 'ruralapp/_orders_table_body.html' with orders=orders %}
                 </tbody>
-                {% else %}
-                <tr>
-                    <td colspan="3" class="text-center">No se han realizado órdenes en las últimas 24 horas.</td>
-                </tr>
-                {% endif %}
             </table>
         </div>
     </section>

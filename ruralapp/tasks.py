@@ -107,7 +107,7 @@ def send_slack_menu():
             f"🍽 *El menú de hoy {menu_day_name}*:\n"
             f"- {main_dish_1}\n"
             f"- {main_dish_2}\n\n"
-            "⏰ *Los que faltan, recuerden ordenar antes de las 8:30*\n"
+            "⏰ *Los que faltan, recuerden ordenar antes de las 9:00*\n"
             "👮‍♂️ _Quien no alcance a ordenar y *lo notifica a tiempo*, se le pedirá el menú A._"
         )
     except WeeklyMenu.DoesNotExist:

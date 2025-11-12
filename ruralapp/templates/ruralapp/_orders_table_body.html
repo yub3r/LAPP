@@ -1,0 +1,30 @@
+{% if orders and orders|length > 0 %}
+    {% for order in orders %}
+    <tr>
+        <td style="text-align: center; vertical-align: middle;">
+            {{ order.order_date|date:"Dd" }}<br>{{ order.order_date|date:"H:i" }}
+        </td>
+        <td style="text-align: left; vertical-align: middle;" data-username="{{ order.user.username }}">
+            <span class="first-name">{{ order.user.first_name }}</span><br>
+            <span class="last-name">{{ order.user.last_name }}</span>
+        </td>
+        <td style="text-align: left;">
+            {% if order.show_auto %}
+                (Auto)
+            {% endif %}
+            {{ order.main_dish|default:"" }} 
+            {% if order.salad %}Ensalada {{ order.salad.id }}{% endif %} 
+            {{ order.other_dish.name|default:"" }} 
+            {{ order.side_dish|default:"" }}
+            <br>
+            {% if order.comments %}
+                <small>({{ order.comments|slice:":30" }}{% if order.comments|length > 30 %}...{% endif %})</small>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="3" class="text-center">No se han realizado órdenes en el período vigente.</td>
+    </tr>
+{% endif %}
