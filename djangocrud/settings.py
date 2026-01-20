@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(oa(omhdw75#3qzk_p-6zfdfmvj#%tn=oci!ww+ssog(ib%-o='
+SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -108,16 +108,6 @@ WSGI_APPLICATION = 'djangocrud.wsgi.application'
 #     }
 # }
 
-#DATABASES = {
-#    "default": {
-#        "ENGINE": 'django.db.backends.postgresql_psycopg2',
-#        "NAME": "lapp_db",
-#        "USER": "admin",
-#        "PASSWORD": "btf.1234",
-#        "HOST": "localhost",
-#        "PORT": "5432",
-#    }
-#}
 
 
 DATABASES = {
@@ -140,16 +130,6 @@ CACHES = {
     }
 }
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-#         "NAME": os.environ.get("SQL_DATABASE", BASE_DIR / "db.sqlite3"),
-#         "USER": os.environ.get("SQL_USER", "user"),
-#         "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
-#         "HOST": os.environ.get("SQL_HOST", "localhost"),
-#         "PORT": os.environ.get("SQL_PORT", "5432"),
-#     }
-# }
 
 
 # Password validation
